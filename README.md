@@ -26,3 +26,11 @@ Deep Java Library (DJL) and the Bytedeco PyTorch presets call the native PyTorch
 ## Licence
 
 No licence has been chosen yet, so the code is not yet open source in the legal sense. Add a `LICENSE` file (the design expects one, plus `NOTICE`) before accepting outside contributions.
+
+## Future SLOPOS/PARAMA integration and Pi Zero 2 W efficiency
+
+**Planned only.** jtorch is an original project proposed for SLOPOS's **developer/runtime library, not a default SLOPOS desktop application**. Linux/SLOPOS integration must be validated against actual application workflows and dependencies. PARAMA is a future native port requiring its own kernel/runtime/graphics/filesystem/tooling proofs; this README does not claim executable compatibility.
+
+For the Raspberry Pi Zero 2 W (512 MB, quad Cortex-A53), prioritize: Prefer correct small-tensor and stride/view operations with predictable allocation, no compulsory ML framework/native GPU dependency, zero-copy views only when aliasing semantics correct, bounded tensor allocations and thread pools with explicit memory preflight. Make CPU reference work without accelerator and avoid GPU-context startup when idle. Large transformer/diffusion workloads are not promised on a 512 MB board.
+
+The low-memory profile must be demonstrated on real hardware with process/runtime and system-wide memory accounting, accurate output, cancellations and truthful unavailable states. **No Pi Zero 2 W or PARAMA support has been verified.** Detailed requirements: [AGENTS.md](AGENTS.md#future-sloposparama-targets-and-edge-efficiency-requirements).
