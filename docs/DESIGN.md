@@ -2947,3 +2947,7 @@ Use primary official sources and pin exact versions in the repository. Starting 
 - `jpackage`: https://docs.oracle.com/en/java/javase/25/docs/specs/man/jpackage.html
 
 When prose and implementation disagree, create a focused differential test and record observed behavior for the pinned versions. Do not infer compatibility from documentation alone.
+
+## Future SLOPOS/PARAMA and constrained-device execution profile
+
+**Design goal only; no implementation or additional acceptance credit.** JTorch is a pure-Java tensor/autograd *library*, **not a default GUI/daemon** for SLOPOS. Its eventual SLOPOS/Linux AArch64 role is an optional developer/runtime dependency with correct small-tensor, storage/view aliasing and autograd semantics, bounded allocation/CPU pools, explicit shape-byte memory preflight, lazy GPU provider loading, fallback to reference CPU and deterministic failures before OOM. Raspberry Pi Zero 2 W (4× Cortex-A53, 512 MB) is a **small-workload conformance/performance reference**, not a promise for training large models; require an actual supported JDK 25 on the board, tensor fixtures with expected values/gradients, PSS/RSS/heap/GC/input-to-completion, allocation/swap and cancellation traces. A native PARAMA target is conditional on a verified Java 25 VM, garbage collector, files, threads and OS ABI; GPU/FFM must be separately ported and tested. No Linux executable compatibility or present board support is claimed. Preserve correctness-first architecture and existing milestone ordering.
