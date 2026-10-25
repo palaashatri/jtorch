@@ -58,3 +58,13 @@ When you add or change a task, update this section in the same PR so it lists on
 - Branch and open a PR per backlog item unless the owner explicitly asks for a direct push to `main`.
 - Before pushing: `./gradlew check` passes on JDK 25. Say in the PR which OSes you ran it on and what you couldn't run.
 - Don't add other planning Markdown files; status belongs in `compat/` and GitHub issues.
+
+## Independent library portability and Raspberry Pi Zero 2 W efficiency
+
+**JTorch is a numerical runtime/library, not a SLOPOS or PARAMA desktop application candidate.** It is explicitly **excluded from first-party bundled apps and the curated SLOPOS/PARAMA Software catalog**, including optional developer application entries. No SLOPOS launcher, icon, UI theme integration, platform-specific port or packaged OS app is required by this roadmap. Existing planned JTorch demos remain JTorch's own work and do not imply OS bundle eligibility.
+
+- **Keep JTorch independent:** Prioritize Java 25 pure-Java CPU tensor, autograd, correctness and cross-platform JVM support. Any Java runtime independently available under a Linux/SLOPOS desktop can use JTorch as a normal library without SLOPOS-specific adapters. A hypothetical PARAMA JVM is an unrelated platform prerequisite, **not a JTorch PARAMA deliverable or current compatibility claim**.
+- **Pi Zero 2 W (four Cortex-A53 cores, 512 MB RAM):** Treat small-tensor correctness/performance as a desired device profile when a suitable JDK 25 works there; do not assume that it currently does. Check actual shape-size and allocator overhead before allocation; use bounded worker pools, small storage footprints, correct tensor/view aliases, lazy optional CPU-vector/FFM/GPU modules and CPU reference fallback. Do not advertise large-model training under 512 MB.
+- **Acceptance:** On any actual supported resource-constrained ARM64 Java platform, run reference tensor and gradient fixtures; measure JVM heap, off-heap and whole-process PSS/peak RSS, GC overhead, CPU utilization, allocation counts, step latency and correctness under pressure. A Pi-specific PASS requires real board and JVM evidence. Handle oversized shapes predictably before host OOM. Benchmarks and model comparisons must not trade away PyTorch-compatible semantics.
+- **Governance:** Maintain existing design-only status, canonical `docs/DESIGN.md` milestones and application/demo separation, and no unsupported platform claims. These are efficiency objectives, not permission to advance milestones or claim a shipped framework.
+

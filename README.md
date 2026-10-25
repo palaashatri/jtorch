@@ -26,3 +26,10 @@ Deep Java Library (DJL) and the Bytedeco PyTorch presets call the native PyTorch
 ## Licence
 
 No licence has been chosen yet, so the code is not yet open source in the legal sense. Add a `LICENSE` file (the design expects one, plus `NOTICE`) before accepting outside contributions.
+
+## Independent JTorch library and edge efficiency
+
+**JTorch is not a candidate for bundled SLOPOS/PARAMA desktop applications or their curated first-party Software catalogs.** It remains an independently distributed Java numerical library with its own examples and planned demos; no new desktop icon, OS-specific app wrapper or PARAMA port is required. If a Linux/SLOPOS device supports Java 25, library usage follows ordinary Java deployment.
+
+The Raspberry Pi Zero 2 W remains an **aspirational small-tensor efficiency reference**, conditional on a compatible JDK. Prioritize bounded allocation, correct views/gradients, CPU-first operation, low memory footprint and honest rejection of out-of-memory tensor shapes. Keep measured resource tests distinct from large-model promises and from unverified board/OS compatibility. See [AGENTS.md](AGENTS.md#independent-library-portability-and-raspberry-pi-zero-2-w-efficiency).
+

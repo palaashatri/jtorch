@@ -2947,3 +2947,9 @@ Use primary official sources and pin exact versions in the repository. Starting 
 - `jpackage`: https://docs.oracle.com/en/java/javase/25/docs/specs/man/jpackage.html
 
 When prose and implementation disagree, create a focused differential test and record observed behavior for the pinned versions. Do not infer compatibility from documentation alone.
+
+## Independent-library portability and constrained-device efficiency
+
+JTorch is a **standalone Java tensor/autograd framework** and **not a proposed bundled application** for SLOPOS or PARAMA. The platform ecosystem may use JTorch as an ordinary optional *library dependency* on supported JVM systems, but does not mandate launcher integration, custom themes, GUI distribution or a native PARAMA port. Any JTorch-owned graphical demos remain subject to JTorch's separate demo acceptance and are not first-party SLOPOS desktop apps by default.
+
+Preserve a future **Pi Zero 2 W small-workload efficiency profile** (four Cortex-A53 cores and 512 MB), only after the exact Java 25 runtime and platform are verified on real hardware. Demand correct tensor storage/view/gradient results, limited heap and native memory use, bounded concurrency, shape-byte preflight, lazy optional acceleration and CPU fallback. Compare allocation/GC CPU and tail latency under thermal/low-RAM constraints using an actual board. Large neural models and local GPU inference are outside this low-memory profile. No runtime or native PARAMA support is implied; preserve all current milestones and design-only status.
