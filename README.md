@@ -1,5 +1,10 @@
 # JTorch
 
+<img src="assets/brand/app-icon.svg" alt="JTorch icon" width="96" align="right" />
+
+[Icon, wordmark, and brand assets](assets/brand/README.md)
+
+
 PyTorch-style tensors, autograd and neural networks in pure Java (JDK 25): exact PyTorch semantics for shapes, strides, views and gradients, a CPU reference backend with no native dependencies, and optional native/GPU backends through the Foreign Function & Memory API instead of JNI.
 
 **Status: design only — there is no code yet.** Nothing can be built or run today.
