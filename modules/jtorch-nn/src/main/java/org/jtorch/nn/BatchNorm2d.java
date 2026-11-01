@@ -1,14 +1,10 @@
 package org.jtorch.nn;
 
 import org.jtorch.api.Torch;
-import org.jtorch.core.JTorchException;
 import org.jtorch.core.Shape;
 import org.jtorch.core.Tensor;
 
-/**
- * Inference-mode batch normalization over NCHW tensors. Training-mode batch statistics are not implemented; use
- * {@code eval()} before calling the module and fail loudly otherwise.
- */
+/** Batch normalization over NCHW tensors with per-channel running statistics and standard momentum. */
 public final class BatchNorm2d extends Module {
     private final Parameter weight;
     private final Parameter bias;
@@ -17,17 +13,23 @@ public final class BatchNorm2d extends Module {
     private final Tensor numBatchesTracked;
     private final int channels;
     private final double eps;
+    private final double momentum;
 
     public BatchNorm2d(int channels) {
-        this(channels, 1e-5);
+        this(channels, 1e-5, 0.1);
     }
 
     public BatchNorm2d(int channels, double eps) {
+        this(channels, eps, 0.1);
+    }
+
+    public BatchNorm2d(int channels, double eps, double momentum) {
         if (channels < 0) {
             throw new IllegalArgumentException("BatchNorm2d channels must be non-negative");
         }
         this.channels = channels;
         this.eps = eps;
+        this.momentum = momentum;
         this.weight = registerParameter("weight", new Parameter(Torch.ones(Shape.of(channels))));
         this.bias = registerParameter("bias", new Parameter(Torch.zeros(Shape.of(channels))));
         this.runningMean = registerBuffer("running_mean", Torch.zeros(Shape.of(channels)), true);
@@ -39,11 +41,16 @@ public final class BatchNorm2d extends Module {
 
     @Override
     public Tensor forward(Tensor input) {
-        if (isTraining()) {
-            throw new JTorchException(
-                    "BatchNorm2d training mode is not implemented; call eval() or training(false)");
+        if (input.dim() != 4 || input.size(1) != channels) {
+            throw new org.jtorch.core.ShapeException(
+                    "BatchNorm2d expects NCHW input with " + channels + " channels, got " + input.shape());
         }
-        return input.batchNorm(weight, bias, runningMean, runningVar, false, 0.0, eps);
+        if (isTraining()) {
+            Tensor output = input.batchNorm(weight, bias, runningMean, runningVar, true, momentum, eps);
+            org.jtorch.api.Torch.noGrad(() -> numBatchesTracked.add_(1));
+            return output;
+        }
+        return input.batchNorm(weight, bias, runningMean, runningVar, false, momentum, eps);
     }
 
     public Parameter weight() {

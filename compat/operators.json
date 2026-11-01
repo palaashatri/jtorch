@@ -1,8 +1,8 @@
 {
   "generatedFrom": "schema/ops",
-  "total": 97,
+  "total": 99,
   "byStatus": {
-    "autograd": 66,
+    "autograd": 68,
     "forward": 31
   },
   "operators": [
@@ -217,6 +217,12 @@
       "reverse": null
     },
     {
+      "name": "aten::group_norm.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": null
+    },
+    {
       "name": "aten::gt.Tensor",
       "status": "forward",
       "differentiable": false,
@@ -227,6 +233,12 @@
       "status": "autograd",
       "differentiable": true,
       "reverse": "index_select_backward"
+    },
+    {
+      "name": "aten::layer_norm.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": null
     },
     {
       "name": "aten::le.Tensor",

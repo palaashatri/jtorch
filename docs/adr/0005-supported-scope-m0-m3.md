@@ -18,8 +18,8 @@ still human work. The CNN path, prefetch, accessibility metadata and real-MNIST 
 Implemented and oracle-tested (PyTorch 2.11.0):
 
 - dense strided CPU and meta tensors for float32/float64/int32/int64/bool;
-- 97 public operators with forward, shape/stride metadata, meta execution and (where declared) reverse-mode
-  gradients, including convolution/pooling, inference-mode batch normalization, gather/index_select/slice/scatter,
+- 99 public operators with forward, shape/stride metadata, meta execution and (where declared) reverse-mode
+  gradients, including convolution/pooling, batch/layer/group normalization, gather/index_select/slice/scatter,
   constant padding (including negative/trailing padding) and flip with oracle-checked backward formulas;
 - views, storage aliasing, shared version counters and saved-tensor mutation detection;
 - `Linear`/`Conv2d`/`MaxPool2d`/`Sequential`/activation modules, MSE/cross-entropy, SGD/Adam/AdamW,
@@ -34,8 +34,7 @@ Explicitly unsupported in this build:
 - float16, bfloat16, complex, float8 and quantized dtypes; sparse/nested layouts;
 - in-place autograd on tensors that require grad (a clear error is raised; `noGrad` is required);
 - `create_graph`/higher-order gradients, forward AD, vmap/JVP/VJP/Jacobian/Hessian/functionalization;
-- advanced indexing outside the implemented gather/index_select/slice/scatter subset, batch-normalization training
-  statistics, and convolution configurations beyond groups=1/NCHW; `max_pool2d` supports ceil_mode=false only;
+- advanced indexing outside the implemented gather/index_select/slice/scatter subset, convolution configurations beyond groups=1/NCHW; `max_pool2d` supports ceil_mode=false only;
 - reverse-mode gradients for `prod` (forward-only), and `cross_entropy` beyond 2-D logits;
 - optimizer state serialization and parameter groups;
 - real MNIST accuracy claims: the demo uses a labelled synthetic dataset unless IDX files are supplied.

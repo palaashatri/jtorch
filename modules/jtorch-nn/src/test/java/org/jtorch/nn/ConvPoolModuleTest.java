@@ -2,6 +2,7 @@ package org.jtorch.nn;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -64,16 +65,18 @@ class ConvPoolModuleTest {
     }
 
     @Test
-    void batchNorm2dIsInferenceOnlyAndExposesRunningBuffers() {
+    void batchNorm2dTrainsAndUpdatesRunningStatistics() {
         BatchNorm2d norm = new BatchNorm2d(3);
         assertEquals(List.of("weight", "bias", "running_mean", "running_var", "num_batches_tracked"),
                 List.copyOf(norm.stateDict().keySet()));
         assertEquals(Shape.of(3), norm.runningVar().shape());
-        assertThrows(org.jtorch.core.JTorchException.class,
-                () -> norm.call(Torch.ones(Shape.of(2, 3, 4, 4))));
-        norm.eval();
         Tensor output = norm.call(Torch.ones(Shape.of(2, 3, 4, 4)));
         assertEquals(Shape.of(2, 3, 4, 4), output.shape());
+        assertEquals(1, norm.numBatchesTracked().itemLong());
+        assertArrayEquals(new double[] {0.1, 0.1, 0.1}, norm.runningMean().toDoubleArray(), 1e-6);
+        assertArrayEquals(new double[] {0.9, 0.9, 0.9}, norm.runningVar().toDoubleArray(), 1e-6);
+        norm.eval();
+        assertEquals(Shape.of(2, 3, 4, 4), norm.call(Torch.ones(Shape.of(2, 3, 4, 4))).shape());
     }
 
     @Test

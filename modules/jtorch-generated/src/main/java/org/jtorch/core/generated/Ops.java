@@ -40,8 +40,10 @@ public final class Ops {
     public static final String FULL = "aten::full.default";
     public static final String GATHER = "aten::gather.default";
     public static final String GE_TENSOR = "aten::ge.Tensor";
+    public static final String GROUP_NORM = "aten::group_norm.default";
     public static final String GT_TENSOR = "aten::gt.Tensor";
     public static final String INDEX_SELECT = "aten::index_select.default";
+    public static final String LAYER_NORM = "aten::layer_norm.default";
     public static final String LE_TENSOR = "aten::le.Tensor";
     public static final String LINEAR = "aten::linear.default";
     public static final String LOG = "aten::log.default";

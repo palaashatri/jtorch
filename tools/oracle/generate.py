@@ -290,6 +290,13 @@ def build_cases():
     batch_var = tensor([1.0, 0.5], dtype="float64")
     case("aten::batch_norm.default",
          [batch_input, batch_weight, batch_bias, batch_mean, batch_var, False, 0.1, 1e-5])
+    train_input = leaf(ramp(8), (1, 2, 2, 2))
+    train_weight = leaf([1.5, 0.5])
+    train_bias = leaf([0.1, -0.1])
+    train_mean = tensor([0.1, -0.2], dtype="float64")
+    train_var = tensor([1.0, 0.5], dtype="float64")
+    case("aten::batch_norm.default",
+         [train_input, train_weight, train_bias, train_mean, train_var, True, 0.1, 1e-5])
 
     slice_input = leaf(ramp(8), (2, 4))
     case("aten::slice.Tensor", [slice_input, 1, 1, 4, 2])
@@ -302,6 +309,16 @@ def build_cases():
     scatter_index = tensor([0, 2, 1, 0], dtype="int64").reshape(2, 2)
     scatter_src = leaf([10.0, 11.0, 12.0, 13.0], (2, 2))
     case("aten::scatter.default", [scatter_self, 1, scatter_index, scatter_src])
+
+    layer_input = leaf(ramp(24), (2, 3, 4))
+    layer_weight = leaf([1.0, 1.5, 0.5, 2.0])
+    layer_bias = leaf([0.1, -0.1, 0.2, -0.2])
+    case("aten::layer_norm.default", [layer_input, [4], layer_weight, layer_bias, 1e-5])
+
+    group_input = leaf(ramp(16), (1, 4, 2, 2))
+    group_weight = leaf([1.0, 0.5, 1.5, 2.0])
+    group_bias = leaf([0.1, -0.1, 0.2, -0.2])
+    case("aten::group_norm.default", [group_input, 2, group_weight, group_bias, 1e-5])
 
     # ------------------------------------------------------------------ combination
     case("aten::cat.default", [[A(), Positive6()], 1])
@@ -511,6 +528,10 @@ def call_case(spec):
         return [args[0][tuple(selection)]]
     if operator == "aten::scatter.default":
         return [torch.scatter(args[0], args[1], args[2], args[3])]
+    if operator == "aten::layer_norm.default":
+        return [F.layer_norm(args[0], tuple(args[1]), weight=args[2], bias=args[3], eps=args[4])]
+    if operator == "aten::group_norm.default":
+        return [F.group_norm(args[0], args[1], weight=args[2], bias=args[3], eps=args[4])]
     if operator == "aten::batch_norm.default":
         return [F.batch_norm(args[0], args[3], args[4], weight=args[1], bias=args[2],
                              training=args[5], momentum=args[6], eps=args[7])]

@@ -5,7 +5,7 @@ results; differential results live in the parity suite. No percentage is claimed
 
 | Status | Operators |
 | --- | --- |
-| autograd | 66 |
+| autograd | 68 |
 | forward | 31 |
 
 ## Declared operators
@@ -45,8 +45,10 @@ results; differential results live in the parity suite. No percentage is claimed
 - `aten::full.default` — forward
 - `aten::gather.default` — autograd
 - `aten::ge.Tensor` — forward
+- `aten::group_norm.default` — autograd (composite)
 - `aten::gt.Tensor` — forward
 - `aten::index_select.default` — autograd
+- `aten::layer_norm.default` — autograd (composite)
 - `aten::le.Tensor` — forward
 - `aten::linear.default` — autograd (composite)
 - `aten::log.default` — autograd

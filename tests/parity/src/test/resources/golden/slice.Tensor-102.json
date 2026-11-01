@@ -35,14 +35,16 @@
       "value": 1
     },
     {
-      "kind": "none"
-    },
-    {
-      "kind": "none"
+      "kind": "int",
+      "value": 1
     },
     {
       "kind": "int",
-      "value": 1
+      "value": 4
+    },
+    {
+      "kind": "int",
+      "value": 2
     }
   ],
   "outputs": [
@@ -51,22 +53,18 @@
       "dtype": "float64",
       "shape": [
         2,
-        4
+        2
       ],
       "strides": [
         4,
-        1
+        2
       ],
-      "storageOffset": 0,
+      "storageOffset": 1,
       "requiresGrad": true,
       "data": [
-        0.0,
         0.1,
-        0.2,
         0.3,
-        0.4,
         0.5,
-        0.6,
         0.7
       ]
     }
@@ -88,13 +86,13 @@
         "storageOffset": 0,
         "requiresGrad": false,
         "data": [
+          0.0,
           1.0,
+          0.0,
           1.0,
+          0.0,
           1.0,
-          1.0,
-          1.0,
-          1.0,
-          1.0,
+          0.0,
           1.0
         ]
       }

@@ -673,6 +673,26 @@ public class Tensor {
                 Value.tensor(src));
     }
 
+    public Tensor layerNorm(long[] normalizedShape, Tensor weight, Tensor bias, double eps) {
+        return first(
+                OpRegistry.LAYER_NORM,
+                Value.tensor(this),
+                Value.integers(normalizedShape),
+                weight == null ? Value.none() : Value.tensor(weight),
+                bias == null ? Value.none() : Value.tensor(bias),
+                Value.scalar(Scalar.of(eps)));
+    }
+
+    public Tensor groupNorm(int groups, Tensor weight, Tensor bias, double eps) {
+        return first(
+                OpRegistry.GROUP_NORM,
+                Value.tensor(this),
+                Value.integer(groups),
+                weight == null ? Value.none() : Value.tensor(weight),
+                bias == null ? Value.none() : Value.tensor(bias),
+                Value.scalar(Scalar.of(eps)));
+    }
+
     public Tensor mseLoss(Tensor target, String reduction) {
         return first(OpRegistry.MSE_LOSS, Value.tensor(this), Value.tensor(target), Value.string(reduction));
     }
@@ -701,7 +721,8 @@ public class Tensor {
     }
 
     public Tensor add_(long scalar) {
-        return add_((double) scalar);
+        return inPlace(OpRegistry.ADD__TENSOR, Value.tensor(this), Value.tensor(scalarTensor(Scalar.of(scalar))),
+                Value.scalar(Scalar.of(1)));
     }
 
     public Tensor sub_(double scalar) {
@@ -710,7 +731,8 @@ public class Tensor {
     }
 
     public Tensor sub_(long scalar) {
-        return sub_((double) scalar);
+        return inPlace(OpRegistry.SUB__TENSOR, Value.tensor(this), Value.tensor(scalarTensor(Scalar.of(scalar))),
+                Value.scalar(Scalar.of(1)));
     }
 
     public Tensor mul_(double scalar) {

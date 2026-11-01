@@ -201,7 +201,7 @@ public final class Schemas {
                     true,
                     false,
                     "autograd",
-                    "Inference-mode batch normalization using running statistics (training mode is not implemented)."),
+                    "Batch normalization with running statistics; training mode updates the supplied running buffers."),
             new Schema(
                     "aten",
                     "bmm",
@@ -653,6 +653,26 @@ public final class Schemas {
                     "Elementwise ge comparison producing a bool tensor."),
             new Schema(
                     "aten",
+                    "group_norm",
+                    "default",
+                    "aten::group_norm.default",
+                    List.of(
+                            new Arg("input", "Tensor", null, false),
+                            new Arg("num_groups", "int", null, false),
+                            new Arg("weight", "Tensor?", null, false),
+                            new Arg("bias", "Tensor?", null, false),
+                            new Arg("eps", "Scalar", null, false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    null,
+                    List.of("function", "method"),
+                    true,
+                    false,
+                    "autograd",
+                    "Group normalization over NCHW tensors."),
+            new Schema(
+                    "aten",
                     "gt",
                     "Tensor",
                     "aten::gt.Tensor",
@@ -686,6 +706,26 @@ public final class Schemas {
                     false,
                     "autograd",
                     "Selects positions along one dimension using int32 or int64 indices."),
+            new Schema(
+                    "aten",
+                    "layer_norm",
+                    "default",
+                    "aten::layer_norm.default",
+                    List.of(
+                            new Arg("input", "Tensor", null, false),
+                            new Arg("normalized_shape", "int[]", null, false),
+                            new Arg("weight", "Tensor?", null, false),
+                            new Arg("bias", "Tensor?", null, false),
+                            new Arg("eps", "Scalar", null, false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    null,
+                    List.of("function", "method"),
+                    true,
+                    false,
+                    "autograd",
+                    "Layer normalization over the trailing dimensions."),
             new Schema(
                     "aten",
                     "le",

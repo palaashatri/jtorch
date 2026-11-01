@@ -42,8 +42,10 @@ public final class OpRegistry {
     public static final Op FULL = Op.of(Ops.FULL);
     public static final Op GATHER = Op.of(Ops.GATHER);
     public static final Op GE_TENSOR = Op.of(Ops.GE_TENSOR);
+    public static final Op GROUP_NORM = Op.of(Ops.GROUP_NORM);
     public static final Op GT_TENSOR = Op.of(Ops.GT_TENSOR);
     public static final Op INDEX_SELECT = Op.of(Ops.INDEX_SELECT);
+    public static final Op LAYER_NORM = Op.of(Ops.LAYER_NORM);
     public static final Op LE_TENSOR = Op.of(Ops.LE_TENSOR);
     public static final Op LINEAR = Op.of(Ops.LINEAR);
     public static final Op LOG = Op.of(Ops.LOG);

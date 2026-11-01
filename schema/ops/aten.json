@@ -2354,6 +2354,80 @@
       "reverse": "index_select_backward"
     },
     {
+      "name": "layer_norm",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "normalized_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor?"
+        },
+        {
+          "name": "bias",
+          "type": "Tensor?"
+        },
+        {
+          "name": "eps",
+          "type": "Scalar"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Layer normalization over the trailing dimensions.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": true
+    },
+    {
+      "name": "group_norm",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "num_groups",
+          "type": "int"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor?"
+        },
+        {
+          "name": "bias",
+          "type": "Tensor?"
+        },
+        {
+          "name": "eps",
+          "type": "Scalar"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Group normalization over NCHW tensors.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": true
+    },
+    {
       "name": "batch_norm",
       "overload": "default",
       "args": [
@@ -2395,7 +2469,7 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "Inference-mode batch normalization using running statistics (training mode is not implemented).",
+      "summary": "Batch normalization with running statistics; training mode updates the supplied running buffers.",
       "variants": [
         "function",
         "method"

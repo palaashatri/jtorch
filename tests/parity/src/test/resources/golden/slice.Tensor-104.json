@@ -32,19 +32,18 @@
     },
     {
       "kind": "int",
-      "value": 1
+      "value": 0
+    },
+    {
+      "kind": "int",
+      "value": -1
+    },
+    {
+      "kind": "none"
     },
     {
       "kind": "int",
       "value": 1
-    },
-    {
-      "kind": "int",
-      "value": 4
-    },
-    {
-      "kind": "int",
-      "value": 2
     }
   ],
   "outputs": [
@@ -52,19 +51,19 @@
       "kind": "tensor",
       "dtype": "float64",
       "shape": [
-        2,
-        2
+        1,
+        4
       ],
       "strides": [
         4,
-        2
+        1
       ],
-      "storageOffset": 1,
+      "storageOffset": 4,
       "requiresGrad": true,
       "data": [
-        0.1,
-        0.3,
+        0.4,
         0.5,
+        0.6,
         0.7
       ]
     }
@@ -87,12 +86,12 @@
         "requiresGrad": false,
         "data": [
           0.0,
-          1.0,
+          0.0,
+          0.0,
           0.0,
           1.0,
-          0.0,
           1.0,
-          0.0,
+          1.0,
           1.0
         ]
       }
