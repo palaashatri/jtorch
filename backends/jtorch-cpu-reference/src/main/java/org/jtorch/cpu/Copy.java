@@ -25,6 +25,15 @@ final class Copy {
             throw new org.jtorch.core.ShapeException(
                     "copy_: source rank " + source.dim() + " exceeds target rank " + targetShape.rank());
         }
+        int offset = targetShape.rank() - source.dim();
+        for (int i = 0; i < source.dim(); i++) {
+            long sourceSize = source.size(i);
+            long targetSize = targetShape.dim(offset + i);
+            if (sourceSize != 1 && sourceSize != targetSize) {
+                throw new org.jtorch.core.ShapeException("copy_: source shape " + source.shape()
+                        + " cannot broadcast to target " + targetShape);
+            }
+        }
         Iteration.forEach(target, new Tensor[] {source}, (outOffset, inOffsets) ->
                 copyElement(source, target, inOffsets[0], outOffset));
     }

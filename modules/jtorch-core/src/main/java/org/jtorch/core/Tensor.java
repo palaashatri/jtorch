@@ -818,7 +818,12 @@ public class Tensor {
         if (dtype().isIntegral()) {
             long value = TensorAccess.getLong(impl, impl.storageOffset());
             double converted = (double) value;
-            if ((long) converted != value) {
+            try {
+                if (new java.math.BigDecimal(converted).toBigIntegerExact().longValueExact() != value) {
+                    throw new JTorchException("item() cannot represent int64 value " + value
+                            + " exactly as a double; use itemLong()");
+                }
+            } catch (ArithmeticException error) {
                 throw new JTorchException("item() cannot represent int64 value " + value
                         + " exactly as a double; use itemLong()");
             }

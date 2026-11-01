@@ -492,6 +492,10 @@ final class MetaKernels {
             case "aten::max.default", "aten::min.default", "aten::max.dim", "aten::min.dim" -> input.dtype();
             default -> ShapeRules.integralPromotion(input.dtype());
         };
+        if ((op.name().equals("aten::max.default") || op.name().equals("aten::min.default"))
+                && input.numel() == 0) {
+            throw new ShapeException(op.name() + "(): Expected reduction dim to have non-zero size");
+        }
         return meta(shape, dtype, op, args);
     }
 
@@ -522,6 +526,9 @@ final class MetaKernels {
 
     private static Tensor argReduce(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
+        if (input.numel() == 0) {
+            throw new ShapeException(op.name() + "(): cannot reduce an empty tensor");
+        }
         if (input.dtype().isBoolean()) {
             throw new org.jtorch.core.DTypeException(op.name() + "(): does not support bool input");
         }
@@ -537,7 +544,11 @@ final class MetaKernels {
         if (dim == null) {
             shape = Shape.scalar();
         } else {
-            shape = ShapeRules.reductionShape(input.shape(), new int[] {input.shape().normalizeDim(dim)}, keepdim);
+            int normalized = input.shape().normalizeDim(dim);
+            if (input.size(normalized) == 0) {
+                throw new ShapeException(op.name() + "(): Expected reduction dim to have non-zero size");
+            }
+            shape = ShapeRules.reductionShape(input.shape(), new int[] {normalized}, keepdim);
         }
         return meta(shape, DType.INT64, op, args);
     }

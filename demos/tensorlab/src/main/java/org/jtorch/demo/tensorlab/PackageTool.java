@@ -20,7 +20,9 @@ public final class PackageTool {
         Path input = Path.of(args[0]).toAbsolutePath();
         Path destination = Path.of(args[1]).toAbsolutePath();
         Path checkpoint = Path.of(args[2]).toAbsolutePath();
-        Path jpackage = Path.of(System.getProperty("java.home"), "bin", "jpackage");
+        boolean windows = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("win");
+        Path jpackage = Path.of(System.getProperty("java.home"), "bin",
+                windows ? "jpackage.exe" : "jpackage");
         if (!Files.isExecutable(jpackage)) {
             throw new IllegalStateException("jpackage not found at " + jpackage);
         }

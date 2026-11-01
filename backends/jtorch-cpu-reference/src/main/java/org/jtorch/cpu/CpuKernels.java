@@ -516,9 +516,15 @@ final class CpuKernels {
                 TensorAccess.setLong(output.impl(), outOffset, result);
             });
         } else {
+            final boolean float32 = dtype == DType.FLOAT32;
             Iteration.forEach(output, new Tensor[] {left, right}, (outOffset, in) -> {
                 double a = TensorAccess.getDouble(left.impl(), in[0]);
                 double b = TensorAccess.getDouble(right.impl(), in[1]);
+                if (float32) {
+                    // PyTorch converts both operands to the promoted dtype before arithmetic.
+                    a = (float) a;
+                    b = (float) b;
+                }
                 double value = switch (op.name()) {
                     case "aten::add.Tensor" -> a + alphaValue * b;
                     case "aten::sub.Tensor" -> a - alphaValue * b;
@@ -567,6 +573,8 @@ final class CpuKernels {
         Shape shape = ShapeRules.broadcastShape(left, right);
         Tensor output = fresh(shape, DType.BOOL, false);
         boolean integral = left.dtype().isIntegral() && right.dtype().isIntegral();
+        final DType comparisonDtype = ShapeRules.binaryDtype(left, right);
+        final boolean float32 = comparisonDtype == DType.FLOAT32;
         Iteration.forEach(output, new Tensor[] {left, right}, (outOffset, in) -> {
             boolean value;
             if (integral) {
@@ -584,6 +592,10 @@ final class CpuKernels {
             } else {
                 double a = TensorAccess.getDouble(left.impl(), in[0]);
                 double b = TensorAccess.getDouble(right.impl(), in[1]);
+                if (float32) {
+                    a = (float) a;
+                    b = (float) b;
+                }
                 value = switch (op.name()) {
                     case "aten::eq.Tensor" -> a == b;
                     case "aten::ne.Tensor" -> a != b;
@@ -2266,12 +2278,16 @@ final class CpuKernels {
             throw new org.jtorch.core.JTorchException("unsupported operation: some elements of the input tensor and "
                     + "the written-to tensor refer to a single memory location; clone the tensor first");
         }
-        double alpha = 1;
+        Scalar alphaScalar = Scalar.of(1);
         if (op.name().equals("aten::add_.Tensor") || op.name().equals("aten::sub_.Tensor")) {
-            alpha = args[2].asScalar().toDouble();
+            alphaScalar = args[2].asScalar();
         }
-        final double alphaValue = alpha;
-        final long alphaLong = (long) alpha;
+        if ((resultDtype.isIntegral() || resultDtype.isBoolean()) && alphaScalar.isFloatingPoint()) {
+            throw new DTypeException(
+                    "For integral input tensors, argument alpha must not be a floating point number");
+        }
+        final double alphaValue = alphaScalar.toDouble();
+        final long alphaLong = alphaScalar.toLong();
         Iteration.forEach(self, new Tensor[] {self, other}, (outOffset, in) -> {
             if (self.dtype().isIntegral() || self.dtype().isBoolean()) {
                 long a = TensorAccess.getLong(self.impl(), in[0]);
