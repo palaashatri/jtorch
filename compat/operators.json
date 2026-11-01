@@ -1,8 +1,8 @@
 {
-  "generatedFrom": "schema/ops/aten.json",
-  "total": 87,
+  "generatedFrom": "schema/ops",
+  "total": 89,
   "byStatus": {
-    "autograd": 56,
+    "autograd": 58,
     "forward": 31
   },
   "operators": [
@@ -83,6 +83,12 @@
       "status": "autograd",
       "differentiable": true,
       "reverse": "contiguous_backward"
+    },
+    {
+      "name": "aten::conv2d.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "conv2d_backward"
     },
     {
       "name": "aten::copy_.default",
@@ -245,6 +251,12 @@
       "status": "autograd",
       "differentiable": true,
       "reverse": "max_dim_backward"
+    },
+    {
+      "name": "aten::max_pool2d.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "max_pool2d_backward"
     },
     {
       "name": "aten::maximum.default",

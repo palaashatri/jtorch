@@ -19,7 +19,7 @@ public final class IdxReader {
     private IdxReader() {}
 
     public static Tensor readImages(Path path) throws IOException {
-        byte[] bytes = Files.readAllBytes(path);
+        byte[] bytes = readMaybeGzip(path);
         ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN);
         if (bytes.length < 16) {
             throw new IOException("IDX image file is truncated: " + path);
@@ -45,8 +45,19 @@ public final class IdxReader {
         return Torch.tensor(values, Shape.of(count, (long) rows * columns));
     }
 
+    private static byte[] readMaybeGzip(Path path) throws IOException {
+        byte[] raw = Files.readAllBytes(path);
+        if (!path.getFileName().toString().endsWith(".gz")) {
+            return raw;
+        }
+        try (java.util.zip.GZIPInputStream gzip =
+                new java.util.zip.GZIPInputStream(new java.io.ByteArrayInputStream(raw))) {
+            return gzip.readAllBytes();
+        }
+    }
+
     public static Tensor readLabels(Path path) throws IOException {
-        byte[] bytes = Files.readAllBytes(path);
+        byte[] bytes = readMaybeGzip(path);
         if (bytes.length < 8) {
             throw new IOException("IDX label file is truncated: " + path);
         }

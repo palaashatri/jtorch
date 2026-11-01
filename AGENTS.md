@@ -2,13 +2,13 @@
 
 JTorch is a JDK 25-native, Java-first tensor and deep-learning library with PyTorch-compatible semantics: tensors with exact view/alias behaviour, a dispatcher, reverse-mode autograd, `nn` modules and optimizers, running on a pure-Java CPU reference backend first, with optional FFM-based native and GPU backends later.
 
-**Status:** the M0–M2 reference build and most of M3 exist in this repository and are tested against PyTorch 2.11.0 fixtures on the development host (macOS arm64, JDK 25, Gradle 9.8.2). Scope and limitations are recorded in [`compat/`](compat/) and [ADR 0005](docs/adr/0005-supported-scope-m0-m3.md). Do not describe M4–M16 capabilities (CUDA, distributed, compiler, convolution, float16/bfloat16, vmap/forward-AD, Python parity) as working; they are design targets, not deliverables yet.
+**Status:** the M0–M2 reference build and nearly all of M3 exist in this repository and are tested against PyTorch 2.11.0 fixtures on the development host (macOS arm64, JDK 25, Gradle 9.8.2). Scope and limitations are recorded in [`compat/`](compat/) and [ADR 0005](docs/adr/0005-supported-scope-m0-m3.md). Do not describe M4–M16 capabilities (CUDA, distributed, compiler, broader convolution/normalization, float16/bfloat16, vmap/forward-AD, Python parity) as working; they are design targets, not deliverables yet.
 
 The full design (tensor/storage model, dispatcher, autograd, compiler, backends, demo apps, CI matrix, testing strategy, milestones M0–M16) is [`docs/DESIGN.md`](docs/DESIGN.md); § numbers below refer to it.
 
 ## Where to start
 
-M0–M2 are complete and most of M3 is implemented. Read the design, then work the remaining backlog in dependency order (§34). The completed first vertical slice is in §0.2 and runs from [`examples/vertical-slice`](examples/vertical-slice):
+M0–M2 are complete and M3 is implemented except for sampler/prefetch breadth and the UI/accessibility gate. Read the design, then work the remaining backlog in dependency order (§34). The completed first vertical slice is in §0.2 and runs from [`examples/vertical-slice`](examples/vertical-slice):
 
 ```java
 Tensor x = Torch.tensor(new float[] {1, 2, 3, 4}, Shape.of(2, 2)).requiresGrad(true);
@@ -18,11 +18,11 @@ loss.backward();
 SGD.builder().parameters(List.of(new Parameter(w))).learningRate(1e-2).build().step();
 ```
 
-Completed in this build: M0 (Gradle wrapper, JPMS skeleton, schema generator, pinned oracle, CI workflow matrix, demo shell/packaging), M1 (shape/strides, FFM storage, strided views, reference kernels), M2 (dispatcher, meta, reverse autograd, Linear/MSE/SGD vertical slice) and most of M3 (modules, Adam/AdamW, tensor datasets and batching, checkpoints/Safetensors, TensorLab with checkpoint resume and packaged launcher). M3 remains open for a CNN, sampler/prefetch breadth, real-MNIST acceptance evidence and the UI/accessibility gate.
+Completed in this build: M0 (Gradle wrapper, JPMS skeleton, schema generator, pinned oracle, CI workflow matrix, demo shell/packaging), M1 (shape/strides, FFM storage, strided views, reference kernels), M2 (dispatcher, meta, reverse autograd, Linear/MSE/SGD vertical slice) and most of M3 (modules, Adam/AdamW, tensor datasets and batching, checkpoints/Safetensors, TensorLab with checkpoint resume and packaged launcher). M3's CNN path and real-MNIST acceptance are now implemented (`Conv2d`, `MaxPool2d`, TensorLab `--mnist-dir`, 0.95 held-out threshold); sampler/prefetch breadth and the UI/accessibility gate remain open.
 
-Remaining design milestones: M4 broad dense operators/convolution and Vision Inspector, M5 transforms, M6 transformer inference/search, M7 optimized CPU, M8 LLM chat, M9 CUDA/AMP, M10 audio/Transcribe, M11 compiler/export, M12 distributed, M13 diffusion/Image Studio, M14 GC Doctor, M15 ROCm, M16 release candidate. Do not start GPU, distributed, compiler, diffusion or Python-facade work before the preceding capability gates are met (§34).
+Remaining design milestones: M4 broad dense operators and Vision Inspector, M5 transforms, M6 transformer inference/search, M7 optimized CPU, M8 LLM chat, M9 CUDA/AMP, M10 audio/Transcribe, M11 compiler/export, M12 distributed, M13 diffusion/Image Studio, M14 GC Doctor, M15 ROCm, M16 release candidate. Do not start GPU, distributed, compiler, diffusion or Python-facade work before the preceding capability gates are met (§34).
 
-Known limitations that must stay documented: only float32/float64/int32/int64/bool, only CPU and meta execution, no in-place autograd on tensors requiring grad, no higher-order gradients, `prod` is forward-only, cross-entropy supports 2-D logits, optimizer state is not serialized, and TensorLab's default data is a labelled synthetic set rather than real MNIST.
+Known limitations that must stay documented: only float32/float64/int32/int64/bool, only CPU and meta execution, no in-place autograd on tensors requiring grad, no higher-order gradients, `prod` is forward-only, cross-entropy supports 2-D logits, convolution/pooling support groups=1/NCHW/ceil_mode=false only, optimizer state is not serialized, and TensorLab's default synthetic check uses a labelled synthetic set (real MNIST is available through `--mnist-dir`).
 
 ## Commands
 
@@ -32,6 +32,7 @@ Known limitations that must stay documented: only float32/float64/int32/int64/bo
 ./gradlew demoPackage                # jpackage app image + packaged headless smoke test
 ./gradlew regenerateSchemas verifyGeneratedClean
 ./gradlew :examples:vertical-slice:run
+./gradlew :demos:tensorlab:mnistCheck -PmnistDir=/path/to/mnist-idx
 ```
 
 The oracle generators are optional Python tools and are never needed for a normal build:

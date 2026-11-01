@@ -111,6 +111,11 @@ final class CpuKernels {
 
         dispatcher.register(OpRegistry.CAT, DispatchKey.CPU, CpuKernels::cat);
         dispatcher.register(OpRegistry.STACK, DispatchKey.CPU, CpuKernels::stack);
+        dispatcher.register(OpRegistry.CONV2D, DispatchKey.CPU, CpuKernels::conv2d);
+        dispatcher.register(OpRegistry.MAX_POOL2D, DispatchKey.CPU, CpuKernels::maxPool2d);
+        dispatcher.register(OpRegistry.CONV2D_BACKWARD_INPUT, DispatchKey.CPU, CpuKernels::conv2dBackwardInput);
+        dispatcher.register(OpRegistry.CONV2D_BACKWARD_WEIGHT, DispatchKey.CPU, CpuKernels::conv2dBackwardWeight);
+        dispatcher.register(OpRegistry.MAX_POOL2D_BACKWARD, DispatchKey.CPU, CpuKernels::maxPool2dBackward);
         dispatcher.register(OpRegistry.CROSS_ENTROPY, DispatchKey.CPU, CpuKernels::crossEntropy);
 
         dispatcher.register(OpRegistry.ADD__TENSOR, DispatchKey.CPU, CpuKernels::inPlaceBinary);
@@ -849,6 +854,14 @@ final class CpuKernels {
         return new Value[] {Value.tensor(result)};
     }
 
+    private static long offset(Tensor tensor, long... indices) {
+        long offset = tensor.storageOffset();
+        for (int dim = 0; dim < indices.length; dim++) {
+            offset += indices[dim] * tensor.stride(dim);
+        }
+        return offset;
+    }
+
     private static void decompose(long linear, Shape shape, long[] index) {
         long remaining = linear;
         for (int d = shape.rank() - 1; d >= 0; d--) {
@@ -1322,6 +1335,272 @@ final class CpuKernels {
             }
         }
         return new Value[] {Value.tensor(output)};
+    }
+
+    // ------------------------------------------------------------------ convolution and pooling
+
+    private static Value[] conv2d(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Tensor weight = args[1].asTensor();
+        Tensor bias = args[2].asOptionalTensor();
+        Convolution.ConvConfig config = Convolution.convConfig(
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), args[6].asInt());
+        Convolution.validateConv(input, weight, bias, config);
+        Shape shape = Convolution.convOutputShape(input, weight, config);
+        Tensor output = fresh(shape, input.dtype(), outputRequiresGrad(op, args));
+        int batch = (int) input.size(0);
+        int outChannels = (int) weight.size(0);
+        int inChannels = (int) input.size(1);
+        int kernelH = (int) weight.size(2);
+        int kernelW = (int) weight.size(3);
+        int outH = (int) shape.dim(2);
+        int outW = (int) shape.dim(3);
+        long inputOffset = input.storageOffset();
+        long weightOffset = weight.storageOffset();
+        long strideN = input.stride(0);
+        long strideC = input.stride(1);
+        long strideH = input.stride(2);
+        long strideW = input.stride(3);
+        long weightStrideO = weight.stride(0);
+        long weightStrideC = weight.stride(1);
+        long weightStrideH = weight.stride(2);
+        long weightStrideW = weight.stride(3);
+        for (int n = 0; n < batch; n++) {
+            for (int o = 0; o < outChannels; o++) {
+                for (int y = 0; y < outH; y++) {
+                    for (int x = 0; x < outW; x++) {
+                        double sum = bias == null ? 0 : TensorAccess.getDouble(bias.impl(), o);
+                        for (int c = 0; c < inChannels; c++) {
+                            for (int ky = 0; ky < kernelH; ky++) {
+                                int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
+                                if (iy < 0 || iy >= input.size(2)) {
+                                    continue;
+                                }
+                                for (int kx = 0; kx < kernelW; kx++) {
+                                    int ix = x * config.stride()[1] - config.padding()[1]
+                                            + kx * config.dilation()[1];
+                                    if (ix < 0 || ix >= input.size(3)) {
+                                        continue;
+                                    }
+                                    long in = inputOffset + n * strideN + c * strideC + iy * strideH + ix * strideW;
+                                    long w = weightOffset + o * weightStrideO + c * weightStrideC
+                                            + ky * weightStrideH + kx * weightStrideW;
+                                    sum += TensorAccess.getDouble(input.impl(), in)
+                                            * TensorAccess.getDouble(weight.impl(), w);
+                                }
+                            }
+                        }
+                        TensorAccess.setDouble(output.impl(), output.elementOffset(
+                                ((long) n * outChannels + o) * outH * outW + (long) y * outW + x), sum);
+                    }
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static Value[] maxPool2d(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Convolution.PoolConfig config = Convolution.poolConfig(
+                args[1].asLongArray(), args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(),
+                args[5].asBoolean());
+        Convolution.validatePool(input, config);
+        Shape shape = Convolution.poolOutputShape(input, config);
+        Tensor output = fresh(shape, input.dtype(), outputRequiresGrad(op, args));
+        int batch = (int) input.size(0);
+        int channels = (int) input.size(1);
+        int outH = (int) shape.dim(2);
+        int outW = (int) shape.dim(3);
+        for (int n = 0; n < batch; n++) {
+            for (int c = 0; c < channels; c++) {
+                for (int y = 0; y < outH; y++) {
+                    for (int x = 0; x < outW; x++) {
+                        double best = Double.NEGATIVE_INFINITY;
+                        for (int ky = 0; ky < config.kernel()[0]; ky++) {
+                            int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
+                            if (iy < 0 || iy >= input.size(2)) {
+                                continue;
+                            }
+                            for (int kx = 0; kx < config.kernel()[1]; kx++) {
+                                int ix = x * config.stride()[1] - config.padding()[1]
+                                        + kx * config.dilation()[1];
+                                if (ix < 0 || ix >= input.size(3)) {
+                                    continue;
+                                }
+                                double value = TensorAccess.getDouble(input.impl(),
+                                        offset(input,n, c, iy, ix));
+                                if (value > best || (Double.isNaN(value) && !Double.isNaN(best))) {
+                                    best = value;
+                                }
+                            }
+                        }
+                        TensorAccess.setDouble(output.impl(),
+                                offset(output,n, c, y, x), best);
+                    }
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static Value[] conv2dBackwardInput(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        Tensor weight = args[1].asTensor();
+        long[] inputShape = args[2].asLongArray();
+        Convolution.ConvConfig config = Convolution.convConfig(
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+        Tensor output = fresh(Shape.of(inputShape), grad.dtype(), false);
+        fillLongDouble(output, 0);
+        int batch = (int) inputShape[0];
+        int inChannels = (int) inputShape[1];
+        int height = (int) inputShape[2];
+        int width = (int) inputShape[3];
+        int outChannels = (int) weight.size(0);
+        int kernelH = (int) weight.size(2);
+        int kernelW = (int) weight.size(3);
+        int outH = (int) grad.size(2);
+        int outW = (int) grad.size(3);
+        for (int n = 0; n < batch; n++) {
+            for (int o = 0; o < outChannels; o++) {
+                for (int y = 0; y < outH; y++) {
+                    for (int x = 0; x < outW; x++) {
+                        double g = TensorAccess.getDouble(grad.impl(), offset(grad,n, o, y, x));
+                        if (g == 0) {
+                            continue;
+                        }
+                        for (int c = 0; c < inChannels; c++) {
+                            for (int ky = 0; ky < kernelH; ky++) {
+                                int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
+                                if (iy < 0 || iy >= height) {
+                                    continue;
+                                }
+                                for (int kx = 0; kx < kernelW; kx++) {
+                                    int ix = x * config.stride()[1] - config.padding()[1]
+                                            + kx * config.dilation()[1];
+                                    if (ix < 0 || ix >= width) {
+                                        continue;
+                                    }
+                                    double w = TensorAccess.getDouble(weight.impl(),
+                                            offset(weight,o, c, ky, kx));
+                                    long offset = offset(output,n, c, iy, ix);
+                                    TensorAccess.setDouble(output.impl(), offset,
+                                            TensorAccess.getDouble(output.impl(), offset) + g * w);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static Value[] conv2dBackwardWeight(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Tensor grad = args[1].asTensor();
+        long[] weightShape = args[2].asLongArray();
+        Convolution.ConvConfig config = Convolution.convConfig(
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+        Tensor output = fresh(Shape.of(weightShape), grad.dtype(), false);
+        fillLongDouble(output, 0);
+        int batch = (int) input.size(0);
+        int inChannels = (int) input.size(1);
+        int height = (int) input.size(2);
+        int width = (int) input.size(3);
+        int outChannels = (int) weightShape[0];
+        int kernelH = (int) weightShape[2];
+        int kernelW = (int) weightShape[3];
+        int outH = (int) grad.size(2);
+        int outW = (int) grad.size(3);
+        for (int n = 0; n < batch; n++) {
+            for (int o = 0; o < outChannels; o++) {
+                for (int y = 0; y < outH; y++) {
+                    for (int x = 0; x < outW; x++) {
+                        double g = TensorAccess.getDouble(grad.impl(), offset(grad,n, o, y, x));
+                        if (g == 0) {
+                            continue;
+                        }
+                        for (int c = 0; c < inChannels; c++) {
+                            for (int ky = 0; ky < kernelH; ky++) {
+                                int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
+                                if (iy < 0 || iy >= height) {
+                                    continue;
+                                }
+                                for (int kx = 0; kx < kernelW; kx++) {
+                                    int ix = x * config.stride()[1] - config.padding()[1]
+                                            + kx * config.dilation()[1];
+                                    if (ix < 0 || ix >= width) {
+                                        continue;
+                                    }
+                                    long offset = offset(output,o, c, ky, kx);
+                                    TensorAccess.setDouble(output.impl(), offset,
+                                            TensorAccess.getDouble(output.impl(), offset)
+                                                    + g * TensorAccess.getDouble(input.impl(),
+                                                            offset(input,n, c, iy, ix)));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static Value[] maxPool2dBackward(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        Tensor input = args[1].asTensor();
+        Convolution.PoolConfig config = Convolution.poolConfig(
+                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), false);
+        Tensor output = fresh(input.shape(), grad.dtype(), false);
+        fillLongDouble(output, 0);
+        int batch = (int) input.size(0);
+        int channels = (int) input.size(1);
+        int outH = (int) grad.size(2);
+        int outW = (int) grad.size(3);
+        for (int n = 0; n < batch; n++) {
+            for (int c = 0; c < channels; c++) {
+                for (int y = 0; y < outH; y++) {
+                    for (int x = 0; x < outW; x++) {
+                        double best = Double.NEGATIVE_INFINITY;
+                        int bestY = -1;
+                        int bestX = -1;
+                        for (int ky = 0; ky < config.kernel()[0]; ky++) {
+                            int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
+                            if (iy < 0 || iy >= input.size(2)) {
+                                continue;
+                            }
+                            for (int kx = 0; kx < config.kernel()[1]; kx++) {
+                                int ix = x * config.stride()[1] - config.padding()[1]
+                                        + kx * config.dilation()[1];
+                                if (ix < 0 || ix >= input.size(3)) {
+                                    continue;
+                                }
+                                double value = TensorAccess.getDouble(input.impl(), offset(input,n, c, iy, ix));
+                                if (value > best || (Double.isNaN(value) && !Double.isNaN(best))) {
+                                    best = value;
+                                    bestY = iy;
+                                    bestX = ix;
+                                }
+                            }
+                        }
+                        if (bestY >= 0) {
+                            long offset = offset(output,n, c, bestY, bestX);
+                            TensorAccess.setDouble(output.impl(), offset,
+                                    TensorAccess.getDouble(output.impl(), offset)
+                                            + TensorAccess.getDouble(grad.impl(), offset(grad,n, c, y, x)));
+                        }
+                    }
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static void fillLongDouble(Tensor tensor, double value) {
+        for (long i = 0; i < tensor.numel(); i++) {
+            TensorAccess.setDouble(tensor.impl(), tensor.elementOffset(i), value);
+        }
     }
 
     // ------------------------------------------------------------------ losses

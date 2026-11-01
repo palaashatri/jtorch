@@ -506,79 +506,109 @@
       "inplace": false
     },
     {
-      "file": "cat.default-084.json",
+      "file": "conv2d.default-084.json",
+      "operator": "aten::conv2d.default",
+      "nondeterministic": false,
+      "inplace": false
+    },
+    {
+      "file": "conv2d.default-085.json",
+      "operator": "aten::conv2d.default",
+      "nondeterministic": false,
+      "inplace": false
+    },
+    {
+      "file": "conv2d.default-086.json",
+      "operator": "aten::conv2d.default",
+      "nondeterministic": false,
+      "inplace": false
+    },
+    {
+      "file": "max_pool2d.default-087.json",
+      "operator": "aten::max_pool2d.default",
+      "nondeterministic": false,
+      "inplace": false
+    },
+    {
+      "file": "max_pool2d.default-088.json",
+      "operator": "aten::max_pool2d.default",
+      "nondeterministic": false,
+      "inplace": false
+    },
+    {
+      "file": "cat.default-089.json",
       "operator": "aten::cat.default",
       "nondeterministic": false,
       "inplace": false
     },
     {
-      "file": "stack.default-085.json",
+      "file": "stack.default-090.json",
       "operator": "aten::stack.default",
       "nondeterministic": false,
       "inplace": false
     },
     {
-      "file": "mse_loss.default-086.json",
+      "file": "mse_loss.default-091.json",
       "operator": "aten::mse_loss.default",
       "nondeterministic": false,
       "inplace": false
     },
     {
-      "file": "cross_entropy.default-087.json",
+      "file": "cross_entropy.default-092.json",
       "operator": "aten::cross_entropy.default",
       "nondeterministic": false,
       "inplace": false
     },
     {
-      "file": "cross_entropy.default-088.json",
+      "file": "cross_entropy.default-093.json",
       "operator": "aten::cross_entropy.default",
       "nondeterministic": false,
       "inplace": false
     },
     {
-      "file": "cross_entropy.default-089.json",
+      "file": "cross_entropy.default-094.json",
       "operator": "aten::cross_entropy.default",
       "nondeterministic": false,
       "inplace": false
     },
     {
-      "file": "add_.Tensor-090.json",
+      "file": "add_.Tensor-095.json",
       "operator": "aten::add_.Tensor",
       "nondeterministic": false,
       "inplace": true
     },
     {
-      "file": "sub_.Tensor-091.json",
+      "file": "sub_.Tensor-096.json",
       "operator": "aten::sub_.Tensor",
       "nondeterministic": false,
       "inplace": true
     },
     {
-      "file": "mul_.Tensor-092.json",
+      "file": "mul_.Tensor-097.json",
       "operator": "aten::mul_.Tensor",
       "nondeterministic": false,
       "inplace": true
     },
     {
-      "file": "div_.Tensor-093.json",
+      "file": "div_.Tensor-098.json",
       "operator": "aten::div_.Tensor",
       "nondeterministic": false,
       "inplace": true
     },
     {
-      "file": "copy_.default-094.json",
+      "file": "copy_.default-099.json",
       "operator": "aten::copy_.default",
       "nondeterministic": false,
       "inplace": true
     },
     {
-      "file": "zero_.default-095.json",
+      "file": "zero_.default-100.json",
       "operator": "aten::zero_.default",
       "nondeterministic": false,
       "inplace": true
     },
     {
-      "file": "fill_.Scalar-096.json",
+      "file": "fill_.Scalar-101.json",
       "operator": "aten::fill_.Scalar",
       "nondeterministic": false,
       "inplace": true

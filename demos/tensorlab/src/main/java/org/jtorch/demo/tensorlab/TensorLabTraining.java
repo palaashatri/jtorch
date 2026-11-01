@@ -9,8 +9,11 @@ import org.jtorch.data.DataLoader;
 import org.jtorch.data.Sample;
 import org.jtorch.data.SyntheticDigits;
 import org.jtorch.data.TensorDataset;
+import org.jtorch.nn.Conv2d;
 import org.jtorch.nn.CrossEntropyLoss;
+import org.jtorch.nn.Flatten;
 import org.jtorch.nn.Linear;
+import org.jtorch.nn.MaxPool2d;
 import org.jtorch.nn.Module;
 import org.jtorch.nn.ReLU;
 import org.jtorch.nn.Sequential;
@@ -33,31 +36,94 @@ public final class TensorLabTraining {
     private final TensorDataset testData;
     private final DataLoader trainingLoader;
     private final DataLoader testLoader;
+    private final boolean convolutional;
+    private final int inputSide;
     private final List<Double> lossHistory = new ArrayList<>();
     private final List<Double> accuracyHistory = new ArrayList<>();
     private int epoch;
 
     public TensorLabTraining(long seed, int samples, double learningRate) {
+        this(seed, samples, learningRate, false);
+    }
+
+    public TensorLabTraining(long seed, int samples, double learningRate, boolean convolutional) {
+        this(splitTraining(seed, samples), splitTest(seed, samples), seed, learningRate, convolutional, 0.0);
+    }
+
+    /** Builds a training run over explicit train/test datasets (for example real MNIST IDX files). */
+    public static TensorLabTraining forDatasets(
+            TensorDataset training, TensorDataset test, long seed, double learningRate, boolean convolutional) {
+        return new TensorLabTraining(training, test, seed, learningRate, convolutional, 0.0);
+    }
+
+    public static TensorLabTraining forDatasets(
+            TensorDataset training,
+            TensorDataset test,
+            long seed,
+            double learningRate,
+            boolean convolutional,
+            double momentum) {
+        return new TensorLabTraining(training, test, seed, learningRate, convolutional, momentum);
+    }
+
+    private TensorLabTraining(
+            TensorDataset training,
+            TensorDataset test,
+            long seed,
+            double learningRate,
+            boolean convolutional,
+            double momentum) {
         Torch.manualSeed(seed);
-        TensorDataset full = SyntheticDigits.create(samples, seed);
-        int trainCount = (int) (samples * 0.8);
-        Tensor images = full.columns().get(0);
-        Tensor labels = full.columns().get(1);
-        this.trainingData = new TensorDataset(
-                images.narrow(0, 0, trainCount), labels.narrow(0, 0, trainCount));
-        this.testData = new TensorDataset(
-                images.narrow(0, trainCount, samples - trainCount),
-                labels.narrow(0, trainCount, samples - trainCount));
-        this.model = new Sequential(
-                new Linear(FEATURES, 64),
-                new ReLU(),
-                new Linear(64, CLASSES));
+        this.trainingData = training;
+        this.testData = test;
+        long features = training.columns().get(0).size(1);
+        int side = (int) Math.round(Math.sqrt(features));
+        if (convolutional && (long) side * side != features) {
+            throw new IllegalArgumentException("CNN input must be square, got " + features + " features");
+        }
+        this.convolutional = convolutional;
+        this.inputSide = side;
+        if (convolutional) {
+            int pooled = side / 2;
+            this.model = new Sequential(
+                    new Conv2d(1, 8, new int[] {3, 3}, new int[] {1, 1}, new int[] {1, 1}),
+                    new ReLU(),
+                    new MaxPool2d(2, 2, 0),
+                    new Flatten(),
+                    new Linear(8 * pooled * pooled, CLASSES));
+        } else {
+            this.model = new Sequential(
+                    new Linear(FEATURES, 64),
+                    new ReLU(),
+                    new Linear(64, CLASSES));
+        }
         this.optimizer = SGD.builder()
                 .parameters(model.parameters())
                 .learningRate(learningRate)
+                .momentum(momentum)
                 .build();
         this.trainingLoader = new DataLoader(trainingData, 64, true, false, seed);
         this.testLoader = new DataLoader(testData, 256, false, false, seed);
+    }
+
+    private static TensorDataset splitTraining(long seed, int samples) {
+        TensorDataset full = SyntheticDigits.create(samples, seed);
+        int trainCount = (int) (samples * 0.8);
+        return new TensorDataset(
+                full.columns().get(0).narrow(0, 0, trainCount),
+                full.columns().get(1).narrow(0, 0, trainCount));
+    }
+
+    private static TensorDataset splitTest(long seed, int samples) {
+        TensorDataset full = SyntheticDigits.create(samples, seed);
+        int trainCount = (int) (samples * 0.8);
+        return new TensorDataset(
+                full.columns().get(0).narrow(0, trainCount, samples - trainCount),
+                full.columns().get(1).narrow(0, trainCount, samples - trainCount));
+    }
+
+    private Tensor prepareInputs(Tensor inputs) {
+        return convolutional ? inputs.reshape(inputs.size(0), 1, inputSide, inputSide) : inputs;
     }
 
     public double trainEpoch() {
@@ -65,7 +131,7 @@ public final class TensorLabTraining {
         double totalLoss = 0;
         long totalSamples = 0;
         for (Sample batch : trainingLoader) {
-            Tensor inputs = batch.tensor(0);
+            Tensor inputs = prepareInputs(batch.tensor(0));
             Tensor targets = batch.tensor(1);
             Tensor logits = model.call(inputs);
             Tensor loss = criterion.forward(logits, targets);
@@ -90,7 +156,7 @@ public final class TensorLabTraining {
             long correct = 0;
             long total = 0;
             for (Sample batch : testLoader) {
-                Tensor inputs = batch.tensor(0);
+                Tensor inputs = prepareInputs(batch.tensor(0));
                 Tensor targets = batch.tensor(1);
                 Tensor predictions = model.call(inputs).argmax(1, false);
                 correct += predictions.eq(targets).sum().itemLong();

@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "namespace": "jtorch",
+  "operators": [
+    {
+      "name": "conv2d_backward_input",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor"
+        },
+        {
+          "name": "input_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal conv2d backward helper for the input gradient.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "conv2d_backward_weight",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "weight_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal conv2d backward helper for the weight gradient.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "max_pool2d_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "kernel_size",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal max_pool2d backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    }
+  ]
+}

@@ -542,6 +542,64 @@ final class BackwardKernels {
             };
         });
 
+        // ---------------------------------------------------------------- convolution and pooling
+        single(dispatcher, OpRegistry.CONV2D, (in, out, args) -> new Node("Conv2dBackward0", 1) {
+            {
+                save(in[0]);
+                save(in[1]);
+            }
+
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                Tensor input = saved(0);
+                Tensor weight = saved(1);
+                long[] stride = args[3].asLongArray();
+                long[] padding = args[4].asLongArray();
+                long[] dilation = args[5].asLongArray();
+                Tensor gradInput = Dispatcher.get()
+                        .call(
+                                OpRegistry.CONV2D_BACKWARD_INPUT,
+                                Value.tensor(g[0]),
+                                Value.tensor(weight),
+                                Value.integers(input.shape().toArray()),
+                                Value.integers(stride),
+                                Value.integers(padding),
+                                Value.integers(dilation))[0]
+                        .asTensor();
+                Tensor gradWeight = Dispatcher.get()
+                        .call(
+                                OpRegistry.CONV2D_BACKWARD_WEIGHT,
+                                Value.tensor(input),
+                                Value.tensor(g[0]),
+                                Value.integers(weight.shape().toArray()),
+                                Value.integers(stride),
+                                Value.integers(padding),
+                                Value.integers(dilation))[0]
+                        .asTensor();
+                Tensor gradBias = args[2].isNone() ? null : g[0].sum(new int[] {0, 2, 3}, false);
+                return new Tensor[] {gradInput, gradWeight, gradBias};
+            }
+        });
+        single(dispatcher, OpRegistry.MAX_POOL2D, (in, out, args) -> new Node("MaxPool2dBackward0", 1) {
+            {
+                save(in[0]);
+            }
+
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {Dispatcher.get()
+                        .call(
+                                OpRegistry.MAX_POOL2D_BACKWARD,
+                                Value.tensor(g[0]),
+                                Value.tensor(saved(0)),
+                                Value.integers(args[1].asLongArray()),
+                                Value.integers(args[2].asLongArray()),
+                                Value.integers(args[3].asLongArray()),
+                                Value.integers(args[4].asLongArray()))[0]
+                        .asTensor()};
+            }
+        });
+
         // ---------------------------------------------------------------- losses
         single(dispatcher, OpRegistry.CROSS_ENTROPY, (in, out, args) -> {
             String reduction = args[2].asString();

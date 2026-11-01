@@ -12,15 +12,17 @@ violate the project's no-false-completeness rule.
 ## Decision
 
 The repository reports exactly what is implemented and tested, and records everything else as `unsupported` in
-`compat/`. M0–M2 are complete; M3 is partially complete (no CNN, real-MNIST acceptance, sampler/prefetch breadth or
-UI/accessibility gate):
+`compat/`. M0–M2 are complete; M3 is complete except sampler/prefetch breadth and the UI/accessibility gate. The CNN path
+and real-MNIST acceptance test are implemented:
 
 Implemented and oracle-tested (PyTorch 2.11.0):
 
 - dense strided CPU and meta tensors for float32/float64/int32/int64/bool;
-- 87 operators with forward, shape/stride metadata, meta execution and (where declared) reverse-mode gradients;
+- 89 public operators with forward, shape/stride metadata, meta execution and (where declared) reverse-mode
+  gradients, including `conv2d` and `max_pool2d` with oracle-checked backward formulas;
 - views, storage aliasing, shared version counters and saved-tensor mutation detection;
-- `Linear`/`Sequential`/activation modules, MSE/cross-entropy, SGD/Adam/AdamW, StepLR/ExponentialLR;
+- `Linear`/`Conv2d`/`MaxPool2d`/`Sequential`/activation modules, MSE/cross-entropy, SGD/Adam/AdamW,
+  StepLR/ExponentialLR;
 - tensor datasets, deterministic batching, MNIST IDX reader and a synthetic ten-class demo dataset;
 - native checkpoints with SHA-256 validation and Safetensors read/write;
 - TensorLab headless training with checkpoint resume and a packaged jpackage smoke test (macOS host proven).
@@ -31,7 +33,8 @@ Explicitly unsupported in this build:
 - float16, bfloat16, complex, float8 and quantized dtypes; sparse/nested layouts;
 - in-place autograd on tensors that require grad (a clear error is raised; `noGrad` is required);
 - `create_graph`/higher-order gradients, forward AD, vmap/JVP/VJP/Jacobian/Hessian/functionalization;
-- advanced indexing, gather/scatter, convolution, pooling and normalization;
+- advanced indexing, gather/scatter, normalization breadth and convolution configurations beyond groups=1/NCHW;
+  `max_pool2d` supports ceil_mode=false only;
 - reverse-mode gradients for `prod` (forward-only), and `cross_entropy` beyond 2-D logits;
 - optimizer state serialization and parameter groups;
 - real MNIST accuracy claims: the demo uses a labelled synthetic dataset unless IDX files are supplied.

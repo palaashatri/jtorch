@@ -569,6 +569,42 @@ public class Tensor {
                 bias == null ? Value.none() : Value.tensor(bias));
     }
 
+    public Tensor conv2d(Tensor weight, Tensor bias, int[] stride, int[] padding, int[] dilation, int groups) {
+        return first(
+                OpRegistry.CONV2D,
+                Value.tensor(this),
+                Value.tensor(weight),
+                bias == null ? Value.none() : Value.tensor(bias),
+                Value.integers(toLongs(stride)),
+                Value.integers(toLongs(padding)),
+                Value.integers(toLongs(dilation)),
+                Value.integer(groups));
+    }
+
+    public Tensor conv2d(Tensor weight, Tensor bias, int[] stride, int[] padding) {
+        return conv2d(weight, bias, stride, padding, new int[] {1, 1}, 1);
+    }
+
+    public Tensor maxPool2d(int[] kernel, int[] stride, int[] padding, int[] dilation, boolean ceilMode) {
+        return first(
+                OpRegistry.MAX_POOL2D,
+                Value.tensor(this),
+                Value.integers(toLongs(kernel)),
+                Value.integers(toLongs(stride)),
+                Value.integers(toLongs(padding)),
+                Value.integers(toLongs(dilation)),
+                Value.bool(ceilMode));
+    }
+
+    public Tensor maxPool2d(int kernel, int stride, int padding) {
+        return maxPool2d(
+                new int[] {kernel, kernel},
+                new int[] {stride, stride},
+                new int[] {padding, padding},
+                new int[] {1, 1},
+                false);
+    }
+
     public Tensor mseLoss(Tensor target, String reduction) {
         return first(OpRegistry.MSE_LOSS, Value.tensor(this), Value.tensor(target), Value.string(reduction));
     }

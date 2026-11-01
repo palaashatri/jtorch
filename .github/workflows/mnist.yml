@@ -1,0 +1,33 @@
+name: MNIST acceptance
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  cnn:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-jtorch-build
+      - name: Download MNIST IDX files
+        run: |
+          mkdir -p "$RUNNER_TEMP/mnist"
+          for file in train-images-idx3-ubyte train-labels-idx1-ubyte t10k-images-idx3-ubyte t10k-labels-idx1-ubyte; do
+            curl -L --fail --retry 3 -o "$RUNNER_TEMP/mnist/$file.gz" \
+              "https://ossci-datasets.s3.amazonaws.com/mnist/$file.gz"
+            gunzip "$RUNNER_TEMP/mnist/$file.gz"
+          done
+      - name: Train and evaluate the CNN
+        run: ./gradlew --no-daemon :demos:tensorlab:mnistCheck -PmnistDir="$RUNNER_TEMP/mnist"
+      - name: Upload checkpoint
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mnist-cnn-checkpoint
+          path: demos/tensorlab/build/demo/tensorlab-mnist-checkpoint.jtch
+          if-no-files-found: ignore

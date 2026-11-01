@@ -45,6 +45,11 @@ public final class Op {
         return schema.reverse();
     }
 
+    /** Internal operators are implementation details and are hidden from the public compatibility ledger. */
+    public boolean internal() {
+        return schema.internal();
+    }
+
     public String namespace() {
         return schema.namespace();
     }

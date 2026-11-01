@@ -112,6 +112,14 @@ final class MetaKernels {
         // Combination
         dispatcher.registerTensor(OpRegistry.CAT, DispatchKey.META, MetaKernels::cat);
         dispatcher.registerTensor(OpRegistry.STACK, DispatchKey.META, MetaKernels::stack);
+        dispatcher.registerTensor(OpRegistry.CONV2D, DispatchKey.META, MetaKernels::conv2d);
+        dispatcher.registerTensor(OpRegistry.MAX_POOL2D, DispatchKey.META, MetaKernels::maxPool2d);
+        dispatcher.registerTensor(OpRegistry.CONV2D_BACKWARD_INPUT, DispatchKey.META,
+                MetaKernels::conv2dBackwardInput);
+        dispatcher.registerTensor(OpRegistry.CONV2D_BACKWARD_WEIGHT, DispatchKey.META,
+                MetaKernels::conv2dBackwardWeight);
+        dispatcher.registerTensor(OpRegistry.MAX_POOL2D_BACKWARD, DispatchKey.META,
+                MetaKernels::maxPool2dBackward);
 
         // Loss
         dispatcher.registerTensor(OpRegistry.CROSS_ENTROPY, DispatchKey.META, MetaKernels::crossEntropy);
@@ -610,6 +618,38 @@ final class MetaKernels {
         }
         Shape output = base.withDim(dim < 0 ? dim + base.rank() + 1 : dim, tensors.length);
         return meta(output, dtype, op, args);
+    }
+
+    private static Tensor conv2d(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Tensor weight = args[1].asTensor();
+        Tensor bias = args[2].asOptionalTensor();
+        Convolution.ConvConfig config = Convolution.convConfig(
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), args[6].asInt());
+        Convolution.validateConv(input, weight, bias, config);
+        return meta(Convolution.convOutputShape(input, weight, config), input.dtype(), op, args);
+    }
+
+    private static Tensor maxPool2d(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Convolution.PoolConfig config = Convolution.poolConfig(
+                args[1].asLongArray(), args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(),
+                args[5].asBoolean());
+        Convolution.validatePool(input, config);
+        return meta(Convolution.poolOutputShape(input, config), input.dtype(), op, args);
+    }
+
+    private static Tensor conv2dBackwardInput(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        return meta(Shape.of(args[2].asLongArray()), args[0].asTensor().dtype(), op, args);
+    }
+
+    private static Tensor conv2dBackwardWeight(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        return meta(Shape.of(args[2].asLongArray()), args[1].asTensor().dtype(), op, args);
+    }
+
+    private static Tensor maxPool2dBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[1].asTensor();
+        return meta(input.shape(), args[0].asTensor().dtype(), op, args);
     }
 
     private static Tensor crossEntropy(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {

@@ -234,6 +234,25 @@ def build_cases():
     bias = leaf([0.5, -0.5, 0.25, 0.75])
     case("aten::linear.default", [A(), weight, bias])
 
+    # ------------------------------------------------------------------ convolution and pooling
+    def ramp(n):
+        return [i / 10.0 for i in range(n)]
+
+    conv_input = leaf(ramp(32), (1, 2, 4, 4))
+    conv_weight = leaf(ramp(54), (3, 2, 3, 3))
+    conv_bias = leaf([0.1, -0.2, 0.3])
+    case("aten::conv2d.default", [conv_input, conv_weight, conv_bias, [1, 1], [0, 0], [1, 1], 1])
+    conv_input = leaf(ramp(50), (1, 2, 5, 5))
+    conv_weight = leaf(ramp(36), (2, 2, 3, 3))
+    case("aten::conv2d.default", [conv_input, conv_weight, None, [2, 2], [1, 1], [1, 1], 1])
+    conv_input = leaf(ramp(9), (1, 1, 3, 3))
+    conv_weight = leaf(ramp(8), (2, 1, 2, 2))
+    case("aten::conv2d.default", [conv_input, conv_weight, None, [1, 1], [1, 1], [2, 2], 1])
+    pool_input = leaf(ramp(32), (1, 2, 4, 4))
+    case("aten::max_pool2d.default", [pool_input, [2, 2], [2, 2], [0, 0], [1, 1], False])
+    pool_input = leaf(ramp(50), (1, 2, 5, 5))
+    case("aten::max_pool2d.default", [pool_input, [3, 3], [2, 2], [1, 1], [1, 1], False])
+
     # ------------------------------------------------------------------ combination
     case("aten::cat.default", [[A(), Positive6()], 1])
     case("aten::stack.default", [[A(), Positive6()], 0])
@@ -419,6 +438,12 @@ def call_case(spec):
         return [torch.addmm(args[0], args[1], args[2], beta=args[3], alpha=args[4])]
     if operator == "aten::linear.default":
         return [F.linear(args[0], args[1], args[2])]
+    if operator == "aten::conv2d.default":
+        return [F.conv2d(args[0], args[1], args[2], stride=tuple(args[3]), padding=tuple(args[4]),
+                         dilation=tuple(args[5]), groups=args[6])]
+    if operator == "aten::max_pool2d.default":
+        return [F.max_pool2d(args[0], kernel_size=tuple(args[1]), stride=tuple(args[2]),
+                             padding=tuple(args[3]), dilation=tuple(args[4]), ceil_mode=args[5])]
     if operator == "aten::cat.default":
         return [torch.cat(tuple(args[0]), dim=args[1])]
     if operator == "aten::stack.default":

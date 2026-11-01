@@ -72,6 +72,9 @@ class ParityTest {
         }
         List<String> missing = new ArrayList<>();
         for (Schemas.Schema schema : Schemas.ALL) {
+            if (schema.internal()) {
+                continue;
+            }
             if (!covered.contains(schema.fullName())) {
                 missing.add(schema.fullName());
             }

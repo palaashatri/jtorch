@@ -2,7 +2,7 @@
 
 PyTorch-style tensors, autograd and neural networks in pure Java (JDK 25): exact PyTorch semantics for shapes, strides, views and gradients, a CPU reference backend with no native dependencies, and planned optional native/GPU backends through the Foreign Function & Memory API instead of JNI.
 
-**Status: M0–M2 are complete and most of M3 is implemented and tested on the host.** This is not a PyTorch-class 1.0 and does not claim to be: CUDA, distributed training, the compiler, advanced indexing/convolution, CNN/real-MNIST demos and the remaining applications (M4–M16) are not implemented. M3 still lacks a CNN, samplers/prefetch, real-MNIST acceptance and the UI/accessibility gate. See [compat/](compat/) for the machine-readable ledger and [ADR 0005](docs/adr/0005-supported-scope-m0-m3.md) for the precise scope.
+**Status: M0–M2 are complete and M3 is implemented except for sampler/prefetch breadth and the UI/accessibility gate.** This is not a PyTorch-class 1.0 and does not claim to be: CUDA, distributed training, the compiler, advanced indexing, normalization breadth and the remaining applications (M4–M16) are not implemented. The CNN path and real-MNIST acceptance test are implemented; the synthetic TensorLab check plus the real-IDX CNN check are both runnable. See [compat/](compat/) for the machine-readable ledger and [ADR 0005](docs/adr/0005-supported-scope-m0-m3.md) for the precise scope.
 
 - Design, architecture, testing strategy and milestones: [docs/DESIGN.md](docs/DESIGN.md)
 - Contributor and coding-agent instructions: [AGENTS.md](AGENTS.md)
@@ -13,16 +13,16 @@ PyTorch-style tensors, autograd and neural networks in pure Java (JDK 25): exact
 - **Tensors:** dense strided CPU and meta tensors for `float32`, `float64`, `int32`, `int64` and `bool`; immutable `Shape`/`Strides`; FFM `MemorySegment` storage with Cleaner-based release; mapped-file tensors; exact `int64` arithmetic (use `itemLong()` for integer scalars; `item()` refuses values a double cannot represent); views (`reshape`, `view`, `transpose`, `permute`, `narrow`, `select`, `squeeze`, `unsqueeze`, `expand`, `flatten`, `t`, `contiguous`, `clone`, `detach`) with shared storage and version counters.
 - **Dispatcher:** priority-ordered `DispatchKeySet` with `AUTOGRAD`, `META`, `CPU` and `COMPOSITE` keys; schema-validated typed arguments; per-key registration; composite decompositions; duplicate registration and missing-coverage failures.
 - **Autograd:** reverse-mode engine with topological traversal, gradient accumulation, broadcast reduction, saved-tensor version validation, tensor hooks, `retainGraph`, and explicit rejection of `create_graph`.
-- **Operators:** 87 schema-declared operators (`aten` namespace) with forward, meta and backward coverage where declared. Every operator has a PyTorch 2.11.0 fixture; 93 fixtures contain exact values and gradients, while `empty`/`rand`/`randn`/`randint` fixtures are metadata-only because JTorch does not promise PyTorch's random stream. The parity runner checks values, shapes, strides, storage offsets, dtypes, gradients and meta/CPU agreement.
-- **Neural networks:** `Module` with explicit parameter/buffer/child registration, state dictionaries, strict/non-strict loading, forward hooks and train/eval; `Linear`, `ReLU`, `Sigmoid`, `Tanh`, `Flatten`, `Sequential`; MSE and cross-entropy criteria.
+- **Operators:** 89 schema-declared public operators (`aten` namespace) with forward, meta and backward coverage where declared. Every operator has a PyTorch 2.11.0 fixture; 98 fixtures contain exact values and gradients, while `empty`/`rand`/`randn`/`randint` fixtures are metadata-only because JTorch does not promise PyTorch's random stream. The parity runner checks values, shapes, strides, storage offsets, dtypes, gradients and meta/CPU agreement.
+- **Neural networks:** `Module` with explicit parameter/buffer/child registration, state dictionaries, strict/non-strict loading, forward hooks and train/eval; `Linear`, `Conv2d`, `MaxPool2d`, `ReLU`, `Sigmoid`, `Tanh`, `Flatten`, `Sequential`; MSE and cross-entropy criteria.
 - **Optimization:** SGD (momentum, weight decay, dampening, Nesterov), Adam, AdamW, StepLR and ExponentialLR; optimizer updates match PyTorch fixtures.
 - **Data:** tensor datasets, deterministic shuffling and batching, an MNIST IDX reader, and a deterministic ten-class synthetic digit dataset for demos/tests.
 - **Serialization:** checksummed native checkpoints (JSON manifest + little-endian payload + SHA-256) and Safetensors read/write, both validated for corruption, truncation and offset tampering. No pickle, ever.
-- **TensorLab:** a Swing training workbench and a headless smoke test that trains a small MLP, saves a checkpoint, loads it into a fresh training object and requires the resumed epoch to be exactly equal to the uninterrupted one. `demoPackage` builds a jpackage app image and runs the packaged launcher.
+- **TensorLab:** a Swing training workbench and headless smoke tests for an MLP and a CNN. The synthetic MLP/CNN checks train, save a checkpoint, load it into a fresh training object and require the resumed epoch to be exactly equal to the uninterrupted one. `--mnist-dir` runs the same CNN over real IDX files; the acceptance threshold is 0.95 on held-out samples, and the host run reached 0.956 on 1,000 test images after four epochs over 12,000 training images. `demoPackage` builds a jpackage app image and runs the packaged launcher.
 
 Java array overloads choose the dtype from the primitive type: `float[]` is float32, `double[]` is float64, `long[]` is int64, `int[]` is int32 and `boolean[]` is bool. This differs from Python literal defaults, which are float32; pass `TensorOptions` when a specific dtype is required.
 
-Not implemented yet: CUDA/ROCm/Metal/Vulkan, distributed training, the compiler/export pipeline, AMP/quantization, float16/bfloat16/complex dtypes, sparse/nested layouts, convolution/pooling/normalization, advanced indexing, vmap/JVP/VJP/Jacobian/Hessian/functionalization, in-place autograd on tensors that require grad, higher-order gradients, optimizer state checkpointing, and real-MNIST accuracy claims. Each is recorded as unsupported rather than silently emulated.
+Not implemented yet: CUDA/ROCm/Metal/Vulkan, distributed training, the compiler/export pipeline, AMP/quantization, float16/bfloat16/complex dtypes, sparse/nested layouts, normalization and activation breadth, advanced indexing, vmap/JVP/VJP/Jacobian/Hessian/functionalization, in-place autograd on tensors that require grad, higher-order gradients, optimizer state checkpointing, sampler/prefetch breadth and the accessibility gate. In the implemented convolution/pooling kernels, only groups=1, ceil_mode=false and the documented NCHW layouts are supported; unsupported configurations fail explicitly. Everything else is recorded as unsupported rather than silently emulated.
 
 ## Commands
 
@@ -34,6 +34,7 @@ JDK 25 and the checked-in Gradle 9.8.2 wrapper are required. There are no third-
 ./gradlew check demoCheck demoPackage
 ./gradlew regenerateSchemas verifyGeneratedClean
 ./gradlew :examples:vertical-slice:run
+./gradlew :demos:tensorlab:mnistCheck -PmnistDir=/path/to/mnist-idx
 ```
 
 The PyTorch oracle is optional; the generated fixtures are checked in and the build never needs Python:

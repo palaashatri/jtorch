@@ -20,6 +20,7 @@ public final class OpRegistry {
     public static final Op CLAMP = Op.of(Ops.CLAMP);
     public static final Op CLONE = Op.of(Ops.CLONE);
     public static final Op CONTIGUOUS = Op.of(Ops.CONTIGUOUS);
+    public static final Op CONV2D = Op.of(Ops.CONV2D);
     public static final Op COPY_ = Op.of(Ops.COPY_);
     public static final Op COS = Op.of(Ops.COS);
     public static final Op CROSS_ENTROPY = Op.of(Ops.CROSS_ENTROPY);
@@ -47,6 +48,7 @@ public final class OpRegistry {
     public static final Op MATMUL = Op.of(Ops.MATMUL);
     public static final Op MAX = Op.of(Ops.MAX);
     public static final Op MAX_DIM = Op.of(Ops.MAX_DIM);
+    public static final Op MAX_POOL2D = Op.of(Ops.MAX_POOL2D);
     public static final Op MAXIMUM = Op.of(Ops.MAXIMUM);
     public static final Op MEAN = Op.of(Ops.MEAN);
     public static final Op MEAN_DIM = Op.of(Ops.MEAN_DIM);
@@ -94,4 +96,7 @@ public final class OpRegistry {
     public static final Op VIEW = Op.of(Ops.VIEW);
     public static final Op ZERO_ = Op.of(Ops.ZERO_);
     public static final Op ZEROS = Op.of(Ops.ZEROS);
+    public static final Op CONV2D_BACKWARD_INPUT = Op.of(Ops.CONV2D_BACKWARD_INPUT);
+    public static final Op CONV2D_BACKWARD_WEIGHT = Op.of(Ops.CONV2D_BACKWARD_WEIGHT);
+    public static final Op MAX_POOL2D_BACKWARD = Op.of(Ops.MAX_POOL2D_BACKWARD);
 }

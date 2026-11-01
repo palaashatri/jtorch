@@ -18,6 +18,7 @@ public final class Ops {
     public static final String CLAMP = "aten::clamp.default";
     public static final String CLONE = "aten::clone.default";
     public static final String CONTIGUOUS = "aten::contiguous.default";
+    public static final String CONV2D = "aten::conv2d.default";
     public static final String COPY_ = "aten::copy_.default";
     public static final String COS = "aten::cos.default";
     public static final String CROSS_ENTROPY = "aten::cross_entropy.default";
@@ -45,6 +46,7 @@ public final class Ops {
     public static final String MATMUL = "aten::matmul.default";
     public static final String MAX = "aten::max.default";
     public static final String MAX_DIM = "aten::max.dim";
+    public static final String MAX_POOL2D = "aten::max_pool2d.default";
     public static final String MAXIMUM = "aten::maximum.default";
     public static final String MEAN = "aten::mean.default";
     public static final String MEAN_DIM = "aten::mean.dim";
@@ -92,4 +94,7 @@ public final class Ops {
     public static final String VIEW = "aten::view.default";
     public static final String ZERO_ = "aten::zero_.default";
     public static final String ZEROS = "aten::zeros.default";
+    public static final String CONV2D_BACKWARD_INPUT = "jtorch::conv2d_backward_input.default";
+    public static final String CONV2D_BACKWARD_WEIGHT = "jtorch::conv2d_backward_weight.default";
+    public static final String MAX_POOL2D_BACKWARD = "jtorch::max_pool2d_backward.default";
 }

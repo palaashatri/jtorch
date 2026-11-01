@@ -2108,6 +2108,94 @@
       "reverse": "cross_entropy_backward"
     },
     {
+      "name": "conv2d",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor"
+        },
+        {
+          "name": "bias",
+          "type": "Tensor?"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        },
+        {
+          "name": "groups",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "2-D convolution over NCHW tensors with groups=1.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "conv2d_backward"
+    },
+    {
+      "name": "max_pool2d",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "kernel_size",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        },
+        {
+          "name": "ceil_mode",
+          "type": "bool"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "2-D max pooling over NCHW tensors; ceil_mode is not supported.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "max_pool2d_backward"
+    },
+    {
       "name": "add_",
       "overload": "Tensor",
       "args": [
