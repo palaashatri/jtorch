@@ -145,6 +145,47 @@ class DataTest {
     }
 
     @Test
+    void samplersAreDeterministicAndCoverEveryIndex() {
+        SequentialSampler sequential = new SequentialSampler();
+        assertArrayEquals(new int[] {0, 1, 2, 3}, sequential.indices(4, 0));
+        RandomSampler random = new RandomSampler(42);
+        int[] first = random.indices(16, 0);
+        assertArrayEquals(first, new RandomSampler(42).indices(16, 0));
+        assertNotEquals(java.util.Arrays.toString(first),
+                java.util.Arrays.toString(new RandomSampler(42).indices(16, 1)));
+        boolean[] seen = new boolean[16];
+        for (int index : first) {
+            assertTrue(index >= 0 && index < 16 && !seen[index]);
+            seen[index] = true;
+        }
+
+        BatchSampler batches = new BatchSampler(new SequentialSampler(), 3, false);
+        List<int[]> batchList = batches.batches(8, 0);
+        assertEquals(3, batchList.size());
+        assertArrayEquals(new int[] {0, 1, 2}, batchList.get(0));
+        assertArrayEquals(new int[] {6, 7}, batchList.get(2));
+        assertEquals(2, new BatchSampler(new SequentialSampler(), 3, true).batches(8, 0).size());
+    }
+
+    @Test
+    void dataLoaderAcceptsAnExplicitSampler() {
+        Tensor data = Torch.arange(0, 12).reshape(6, 2);
+        DataLoader loader = new DataLoader(new TensorDataset(data), 2, new SequentialSampler(), false);
+        List<Long> order = collectOrder(loader);
+        assertEquals(List.of(0L, 2L, 4L, 6L, 8L, 10L), order);
+        DataLoader reversed = new DataLoader(new TensorDataset(data), 2, (size, epoch) -> {
+            int[] indices = new int[size];
+            for (int i = 0; i < size; i++) {
+                indices[i] = size - 1 - i;
+            }
+            return indices;
+        }, false);
+        assertEquals(List.of(10L, 8L, 6L, 4L, 2L, 0L), collectOrder(reversed));
+        assertThrows(IllegalArgumentException.class,
+                () -> new DataLoader(new TensorDataset(data), 2, (size, epoch) -> new int[] {0}, false).iterator().next());
+    }
+
+    @Test
     void sampleEqualityUsesTensorIdentity() {
         Tensor tensor = Torch.zeros(Shape.of(1));
         assertEquals(new Sample(new Tensor[] {tensor}), new Sample(new Tensor[] {tensor}));

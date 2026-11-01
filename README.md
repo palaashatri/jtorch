@@ -2,7 +2,7 @@
 
 PyTorch-style tensors, autograd and neural networks in pure Java (JDK 25): exact PyTorch semantics for shapes, strides, views and gradients, a CPU reference backend with no native dependencies, and planned optional native/GPU backends through the Foreign Function & Memory API instead of JNI.
 
-**Status: M0–M2 are complete and M3 is implemented except for sampler/prefetch breadth and the UI/accessibility gate.** This is not a PyTorch-class 1.0 and does not claim to be: CUDA, distributed training, the compiler, advanced indexing, normalization breadth and the remaining applications (M4–M16) are not implemented. The CNN path and real-MNIST acceptance test are implemented; the synthetic TensorLab check plus the real-IDX CNN check are both runnable. See [compat/](compat/) for the machine-readable ledger and [ADR 0005](docs/adr/0005-supported-scope-m0-m3.md) for the precise scope.
+**Status: M0–M2 are complete and M3 is implemented except for prefetch and the UI/accessibility gate.** This is not a PyTorch-class 1.0 and does not claim to be: CUDA, distributed training, the compiler, advanced indexing, normalization breadth and the remaining applications (M4–M16) are not implemented. The CNN path and real-MNIST acceptance test are implemented; the synthetic TensorLab check plus the real-IDX CNN check are both runnable. See [compat/](compat/) for the machine-readable ledger and [ADR 0005](docs/adr/0005-supported-scope-m0-m3.md) for the precise scope.
 
 - Design, architecture, testing strategy and milestones: [docs/DESIGN.md](docs/DESIGN.md)
 - Contributor and coding-agent instructions: [AGENTS.md](AGENTS.md)
@@ -22,7 +22,7 @@ PyTorch-style tensors, autograd and neural networks in pure Java (JDK 25): exact
 
 Java array overloads choose the dtype from the primitive type: `float[]` is float32, `double[]` is float64, `long[]` is int64, `int[]` is int32 and `boolean[]` is bool. This differs from Python literal defaults, which are float32; pass `TensorOptions` when a specific dtype is required.
 
-Not implemented yet: CUDA/ROCm/Metal/Vulkan, distributed training, the compiler/export pipeline, AMP/quantization, float16/bfloat16/complex dtypes, sparse/nested layouts, normalization and activation breadth, advanced indexing, vmap/JVP/VJP/Jacobian/Hessian/functionalization, in-place autograd on tensors that require grad, higher-order gradients, optimizer state checkpointing, sampler/prefetch breadth and the accessibility gate. In the implemented convolution/pooling kernels, only groups=1, ceil_mode=false and the documented NCHW layouts are supported; unsupported configurations fail explicitly. Everything else is recorded as unsupported rather than silently emulated.
+Not implemented yet: CUDA/ROCm/Metal/Vulkan, distributed training, the compiler/export pipeline, AMP/quantization, float16/bfloat16/complex dtypes, sparse/nested layouts, normalization and activation breadth, advanced indexing, vmap/JVP/VJP/Jacobian/Hessian/functionalization, in-place autograd on tensors that require grad, higher-order gradients, optimizer state checkpointing, prefetch and the accessibility gate. In the implemented convolution/pooling kernels, only groups=1, ceil_mode=false and the documented NCHW layouts are supported; unsupported configurations fail explicitly. Everything else is recorded as unsupported rather than silently emulated.
 
 ## Commands
 

@@ -70,9 +70,6 @@ final class Convolution {
             if (config.stride()[i] <= 0 || config.dilation()[i] <= 0 || config.padding()[i] < 0) {
                 throw new ShapeException("conv2d stride and dilation must be positive and padding non-negative");
             }
-            if (config.padding()[i] > config.dilation()[i] * (weight.size(i + 2) - 1) / 2) {
-                throw new ShapeException("conv2d padding must not exceed half the effective kernel size");
-            }
         }
     }
 

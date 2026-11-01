@@ -8,7 +8,7 @@ The full design (tensor/storage model, dispatcher, autograd, compiler, backends,
 
 ## Where to start
 
-M0–M2 are complete and M3 is implemented except for sampler/prefetch breadth and the UI/accessibility gate. Read the design, then work the remaining backlog in dependency order (§34). The completed first vertical slice is in §0.2 and runs from [`examples/vertical-slice`](examples/vertical-slice):
+M0–M2 are complete and M3 is implemented except for prefetch and the UI/accessibility gate. Read the design, then work the remaining backlog in dependency order (§34). The completed first vertical slice is in §0.2 and runs from [`examples/vertical-slice`](examples/vertical-slice):
 
 ```java
 Tensor x = Torch.tensor(new float[] {1, 2, 3, 4}, Shape.of(2, 2)).requiresGrad(true);
@@ -18,7 +18,7 @@ loss.backward();
 SGD.builder().parameters(List.of(new Parameter(w))).learningRate(1e-2).build().step();
 ```
 
-Completed in this build: M0 (Gradle wrapper, JPMS skeleton, schema generator, pinned oracle, CI workflow matrix, demo shell/packaging), M1 (shape/strides, FFM storage, strided views, reference kernels), M2 (dispatcher, meta, reverse autograd, Linear/MSE/SGD vertical slice) and most of M3 (modules, Adam/AdamW, tensor datasets and batching, checkpoints/Safetensors, TensorLab with checkpoint resume and packaged launcher). M3's CNN path and real-MNIST acceptance are now implemented (`Conv2d`, `MaxPool2d`, TensorLab `--mnist-dir`, 0.95 held-out threshold); sampler/prefetch breadth and the UI/accessibility gate remain open.
+Completed in this build: M0 (Gradle wrapper, JPMS skeleton, schema generator, pinned oracle, CI workflow matrix, demo shell/packaging), M1 (shape/strides, FFM storage, strided views, reference kernels), M2 (dispatcher, meta, reverse autograd, Linear/MSE/SGD vertical slice) and most of M3 (modules, Adam/AdamW, tensor datasets and batching, checkpoints/Safetensors, TensorLab with checkpoint resume and packaged launcher). M3's CNN path and real-MNIST acceptance are now implemented (`Conv2d`, `MaxPool2d`, TensorLab `--mnist-dir`, 0.95 held-out threshold); prefetch and the UI/accessibility gate remain open.
 
 Remaining design milestones: M4 broad dense operators and Vision Inspector, M5 transforms, M6 transformer inference/search, M7 optimized CPU, M8 LLM chat, M9 CUDA/AMP, M10 audio/Transcribe, M11 compiler/export, M12 distributed, M13 diffusion/Image Studio, M14 GC Doctor, M15 ROCm, M16 release candidate. Do not start GPU, distributed, compiler, diffusion or Python-facade work before the preceding capability gates are met (§34).
 

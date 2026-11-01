@@ -12,7 +12,7 @@ violate the project's no-false-completeness rule.
 ## Decision
 
 The repository reports exactly what is implemented and tested, and records everything else as `unsupported` in
-`compat/`. M0–M2 are complete; M3 is complete except sampler/prefetch breadth and the UI/accessibility gate. The CNN path
+`compat/`. M0–M2 are complete; M3 is complete except prefetch and the UI/accessibility gate. The CNN path
 and real-MNIST acceptance test are implemented:
 
 Implemented and oracle-tested (PyTorch 2.11.0):
