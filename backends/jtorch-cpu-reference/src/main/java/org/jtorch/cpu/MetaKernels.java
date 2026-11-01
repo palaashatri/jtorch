@@ -716,6 +716,12 @@ final class MetaKernels {
         if (pad.length != 2 && pad.length != 4) {
             throw new org.jtorch.core.ShapeException("constant_pad_nd pad must have two or four entries");
         }
+        for (long value : pad) {
+            if (value < 0) {
+                throw new org.jtorch.core.ShapeException(
+                        "constant_pad_nd in this build does not support negative padding");
+            }
+        }
         if (input.dim() < 2) {
             throw new org.jtorch.core.ShapeException("constant_pad_nd requires at least two dimensions");
         }
@@ -743,8 +749,13 @@ final class MetaKernels {
 
     private static Tensor flip(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
-        for (long dim : args[1].asLongArray()) {
-            input.shape().normalizeDim((int) dim);
+        boolean[] seen = new boolean[input.dim()];
+        for (long raw : args[1].asLongArray()) {
+            int dim = input.shape().normalizeDim((int) raw);
+            if (seen[dim]) {
+                throw new org.jtorch.core.ShapeException("flip received duplicate dimension " + dim);
+            }
+            seen[dim] = true;
         }
         return meta(input.shape(), input.dtype(), op, args);
     }
@@ -834,6 +845,11 @@ final class MetaKernels {
         }
         if (index.dim() != self.dim() || src.dim() != self.dim()) {
             throw new ShapeException("scatter expects index/src with the same rank as self");
+        }
+        for (int d = 0; d < self.dim(); d++) {
+            if (index.size(d) > self.size(d) || index.size(d) > src.size(d)) {
+                throw new ShapeException("scatter index/src exceeds self at dimension " + d);
+            }
         }
         return meta(self.shape(), self.dtype(), op, args);
     }

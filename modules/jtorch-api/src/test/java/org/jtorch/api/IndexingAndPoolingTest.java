@@ -93,6 +93,20 @@ class IndexingAndPoolingTest {
     }
 
     @Test
+    void scatterUsesSrcCoordinatesWhenSrcIsLargerThanIndex() {
+        Tensor self = Torch.zeros(Shape.of(2, 3)).requiresGrad(true);
+        Tensor index = Torch.tensor(new long[] {0, 2, 1, 0}, Shape.of(2, 2),
+                TensorOptions.defaults().dtype(DType.INT64));
+        Tensor src = Torch.tensor(new float[] {10, 11, 12, 13, 14, 15}, Shape.of(2, 3))
+                .requiresGrad(true);
+        Tensor scattered = self.scatter(1, index, src);
+        assertArrayEquals(new double[] {10, 0, 11, 14, 13, 0}, scattered.toDoubleArray(), 0);
+        scattered.sum().backward();
+        assertArrayEquals(new double[] {1, 1, 0, 1, 1, 0}, src.grad().toDoubleArray(), 0);
+        assertArrayEquals(new double[] {0, 1, 0, 0, 0, 1}, self.grad().toDoubleArray(), 0);
+    }
+
+    @Test
     void averagePoolingUsesTheDocumentedDivisor() {
         Tensor input = Torch.tensor(new double[] {1, 2, 3, 4}, Shape.of(1, 1, 2, 2));
         Tensor pooled = input.avgPool2d(new int[] {2, 2}, new int[] {2, 2}, new int[] {0, 0}, false, true);

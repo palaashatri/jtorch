@@ -1,9 +1,11 @@
 package org.jtorch.data;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Bounded prefetch wrapper around a batch source. The producer runs on a virtual thread because this is I/O and
@@ -15,7 +17,7 @@ public final class PrefetchingDataLoader implements Iterable<Sample>, AutoClosea
     private final Iterable<Sample> source;
     private final int depth;
     private volatile boolean closed;
-    private volatile Thread worker;
+    private final List<Thread> workers = new CopyOnWriteArrayList<>();
 
     public PrefetchingDataLoader(Iterable<Sample> source, int depth) {
         if (depth <= 0) {
@@ -44,7 +46,7 @@ public final class PrefetchingDataLoader implements Iterable<Sample>, AutoClosea
                 queue.offer(END);
             }
         });
-        worker = producer;
+        workers.add(producer);
         return new Iterator<>() {
             private Sample next;
             private boolean fetched;
@@ -94,8 +96,7 @@ public final class PrefetchingDataLoader implements Iterable<Sample>, AutoClosea
     @Override
     public void close() {
         closed = true;
-        Thread producer = worker;
-        if (producer != null) {
+        for (Thread producer : workers) {
             producer.interrupt();
         }
     }
