@@ -12,11 +12,14 @@ public final class Ops {
     public static final String ARANGE = "aten::arange.default";
     public static final String ARGMAX = "aten::argmax.default";
     public static final String ARGMIN = "aten::argmin.default";
+    public static final String AVG_POOL2D = "aten::avg_pool2d.default";
+    public static final String BATCH_NORM = "aten::batch_norm.default";
     public static final String BMM = "aten::bmm.default";
     public static final String CAT = "aten::cat.default";
     public static final String CEIL = "aten::ceil.default";
     public static final String CLAMP = "aten::clamp.default";
     public static final String CLONE = "aten::clone.default";
+    public static final String CONSTANT_PAD_ND = "aten::constant_pad_nd.default";
     public static final String CONTIGUOUS = "aten::contiguous.default";
     public static final String CONV2D = "aten::conv2d.default";
     public static final String COPY_ = "aten::copy_.default";
@@ -32,10 +35,13 @@ public final class Ops {
     public static final String EYE = "aten::eye.default";
     public static final String FILL__SCALAR = "aten::fill_.Scalar";
     public static final String FLATTEN = "aten::flatten.default";
+    public static final String FLIP = "aten::flip.default";
     public static final String FLOOR = "aten::floor.default";
     public static final String FULL = "aten::full.default";
+    public static final String GATHER = "aten::gather.default";
     public static final String GE_TENSOR = "aten::ge.Tensor";
     public static final String GT_TENSOR = "aten::gt.Tensor";
+    public static final String INDEX_SELECT = "aten::index_select.default";
     public static final String LE_TENSOR = "aten::le.Tensor";
     public static final String LINEAR = "aten::linear.default";
     public static final String LOG = "aten::log.default";
@@ -72,10 +78,12 @@ public final class Ops {
     public static final String RECIPROCAL = "aten::reciprocal.default";
     public static final String RELU = "aten::relu.default";
     public static final String RESHAPE = "aten::reshape.default";
+    public static final String SCATTER = "aten::scatter.default";
     public static final String SELECT = "aten::select.default";
     public static final String SIGMOID = "aten::sigmoid.default";
     public static final String SIGN = "aten::sign.default";
     public static final String SIN = "aten::sin.default";
+    public static final String SLICE_TENSOR = "aten::slice.Tensor";
     public static final String SOFTMAX = "aten::softmax.default";
     public static final String SQRT = "aten::sqrt.default";
     public static final String SQUARE = "aten::square.default";
@@ -94,7 +102,14 @@ public final class Ops {
     public static final String VIEW = "aten::view.default";
     public static final String ZERO_ = "aten::zero_.default";
     public static final String ZEROS = "aten::zeros.default";
+    public static final String AVG_POOL2D_BACKWARD = "jtorch::avg_pool2d_backward.default";
+    public static final String CONSTANT_PAD_ND_BACKWARD = "jtorch::constant_pad_nd_backward.default";
     public static final String CONV2D_BACKWARD_INPUT = "jtorch::conv2d_backward_input.default";
     public static final String CONV2D_BACKWARD_WEIGHT = "jtorch::conv2d_backward_weight.default";
+    public static final String GATHER_BACKWARD = "jtorch::gather_backward.default";
+    public static final String INDEX_SELECT_BACKWARD = "jtorch::index_select_backward.default";
     public static final String MAX_POOL2D_BACKWARD = "jtorch::max_pool2d_backward.default";
+    public static final String SCATTER_BACKWARD_SELF = "jtorch::scatter_backward_self.default";
+    public static final String SCATTER_BACKWARD_SRC = "jtorch::scatter_backward_src.default";
+    public static final String SLICE_BACKWARD = "jtorch::slice_backward.default";
 }

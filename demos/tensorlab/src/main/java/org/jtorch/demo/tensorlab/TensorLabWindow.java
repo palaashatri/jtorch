@@ -34,6 +34,9 @@ final class TensorLabWindow {
     void show() {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("TensorLab — JTorch training workbench");
+            frame.getAccessibleContext().setAccessibleName("TensorLab training workbench");
+            frame.getAccessibleContext().setAccessibleDescription(
+                    "Trains a small CNN or MLP on a ten-class digit dataset and shows live loss and accuracy.");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setLayout(new BorderLayout(12, 12));
             JPanel header = new JPanel(new GridLayout(2, 1));
@@ -45,6 +48,17 @@ final class TensorLabWindow {
             frame.add(header, BorderLayout.NORTH);
 
             chart.setPreferredSize(new Dimension(820, 420));
+            TensorLabAccessibility.configureChart(chart, "Training loss chart",
+                    "Line chart of mean training loss for each completed epoch.");
+            TensorLabAccessibility.configureButton(trainButton, "Train one epoch",
+                    "Run one training epoch and evaluate the test split.", TensorLabAccessibility.trainMnemonic());
+            TensorLabAccessibility.configureButton(saveButton, "Save checkpoint",
+                    "Write the current model state dictionary to a checkpoint file.",
+                    TensorLabAccessibility.saveMnemonic());
+            TensorLabAccessibility.configureLabel(accuracy, "Test accuracy", "Accuracy on the held-out test split.");
+            TensorLabAccessibility.configureLabel(status, "Training status", "Current epoch, loss and save state.");
+            TensorLabAccessibility.installShortcuts(frame.getRootPane(), trainButton, saveButton);
+            frame.getRootPane().setDefaultButton(trainButton);
             chart.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
             frame.add(chart, BorderLayout.CENTER);
 

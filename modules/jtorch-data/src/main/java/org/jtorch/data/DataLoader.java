@@ -66,6 +66,11 @@ public final class DataLoader implements Iterable<Sample> {
         return batchSize;
     }
 
+    /** Returns a bounded asynchronous prefetch wrapper around this loader. */
+    public PrefetchingDataLoader prefetch(int depth) {
+        return new PrefetchingDataLoader(this, depth);
+    }
+
     @Override
     public Iterator<Sample> iterator() {
         int[] order;

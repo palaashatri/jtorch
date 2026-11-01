@@ -12,14 +12,15 @@ violate the project's no-false-completeness rule.
 ## Decision
 
 The repository reports exactly what is implemented and tested, and records everything else as `unsupported` in
-`compat/`. M0–M2 are complete; M3 is complete except prefetch and the UI/accessibility gate. The CNN path
-and real-MNIST acceptance test are implemented:
+`compat/`. M0–M3 are complete for the automated reference scope; M4 is in progress. Manual screen-reader/GUI acceptance is
+still human work. The CNN path, prefetch, accessibility metadata and real-MNIST acceptance test are implemented:
 
 Implemented and oracle-tested (PyTorch 2.11.0):
 
 - dense strided CPU and meta tensors for float32/float64/int32/int64/bool;
-- 89 public operators with forward, shape/stride metadata, meta execution and (where declared) reverse-mode
-  gradients, including `conv2d` and `max_pool2d` with oracle-checked backward formulas;
+- 97 public operators with forward, shape/stride metadata, meta execution and (where declared) reverse-mode
+  gradients, including convolution/pooling, inference-mode batch normalization, gather/index_select/slice/scatter,
+  constant padding and flip with oracle-checked backward formulas;
 - views, storage aliasing, shared version counters and saved-tensor mutation detection;
 - `Linear`/`Conv2d`/`MaxPool2d`/`Sequential`/activation modules, MSE/cross-entropy, SGD/Adam/AdamW,
   StepLR/ExponentialLR;
@@ -33,8 +34,8 @@ Explicitly unsupported in this build:
 - float16, bfloat16, complex, float8 and quantized dtypes; sparse/nested layouts;
 - in-place autograd on tensors that require grad (a clear error is raised; `noGrad` is required);
 - `create_graph`/higher-order gradients, forward AD, vmap/JVP/VJP/Jacobian/Hessian/functionalization;
-- advanced indexing, gather/scatter, normalization breadth and convolution configurations beyond groups=1/NCHW;
-  `max_pool2d` supports ceil_mode=false only;
+- advanced indexing outside the implemented gather/index_select/slice/scatter subset, batch-normalization training
+  statistics, and convolution configurations beyond groups=1/NCHW; `max_pool2d` supports ceil_mode=false only;
 - reverse-mode gradients for `prod` (forward-only), and `cross_entropy` beyond 2-D logits;
 - optimizer state serialization and parameter groups;
 - real MNIST accuracy claims: the demo uses a labelled synthetic dataset unless IDX files are supplied.

@@ -186,6 +186,36 @@ class DataTest {
     }
 
     @Test
+    void prefetchPreservesOrderAndPropagatesErrors() {
+        Tensor data = Torch.arange(0, 20).reshape(10, 2);
+        DataLoader loader = new DataLoader(new TensorDataset(data), 2, new SequentialSampler(), false);
+        List<Long> expected = collectOrder(loader);
+        List<Long> prefetched = new ArrayList<>();
+        try (PrefetchingDataLoader prefetch = loader.prefetch(2)) {
+            for (Sample batch : prefetch) {
+                for (long value : batch.tensor(0).select(1, 0).toLongArray()) {
+                    prefetched.add(value);
+                }
+            }
+        }
+        assertEquals(expected, prefetched);
+
+        PrefetchingDataLoader failing = new PrefetchingDataLoader(() -> new java.util.Iterator<>() {
+            @Override
+            public boolean hasNext() {
+                return true;
+            }
+
+            @Override
+            public Sample next() {
+                throw new IllegalArgumentException("producer boom");
+            }
+        }, 1);
+        assertThrows(IllegalStateException.class, () -> failing.iterator().hasNext());
+        failing.close();
+    }
+
+    @Test
     void sampleEqualityUsesTensorIdentity() {
         Tensor tensor = Torch.zeros(Shape.of(1));
         assertEquals(new Sample(new Tensor[] {tensor}), new Sample(new Tensor[] {tensor}));

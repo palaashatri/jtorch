@@ -605,6 +605,74 @@ public class Tensor {
                 false);
     }
 
+    public Tensor avgPool2d(
+            int[] kernel, int[] stride, int[] padding, boolean ceilMode, boolean countIncludePad) {
+        return first(
+                OpRegistry.AVG_POOL2D,
+                Value.tensor(this),
+                Value.integers(toLongs(kernel)),
+                Value.integers(toLongs(stride)),
+                Value.integers(toLongs(padding)),
+                Value.bool(ceilMode),
+                Value.bool(countIncludePad));
+    }
+
+    public Tensor constantPadNd(int[] pad, Scalar value) {
+        return first(OpRegistry.CONSTANT_PAD_ND, Value.tensor(this), Value.integers(toLongs(pad)),
+                Value.scalar(value));
+    }
+
+    public Tensor constantPadNd(int[] pad, double value) {
+        return constantPadNd(pad, Scalar.of(value));
+    }
+
+    public Tensor flip(int... dims) {
+        return first(OpRegistry.FLIP, Value.tensor(this), Value.integers(toLongs(dims)));
+    }
+
+    public Tensor gather(int dim, Tensor index) {
+        return first(OpRegistry.GATHER, Value.tensor(this), Value.integer(dim), Value.tensor(index));
+    }
+
+    public Tensor indexSelect(int dim, Tensor index) {
+        return first(OpRegistry.INDEX_SELECT, Value.tensor(this), Value.integer(dim), Value.tensor(index));
+    }
+
+    public Tensor batchNorm(
+            Tensor weight,
+            Tensor bias,
+            Tensor runningMean,
+            Tensor runningVar,
+            boolean training,
+            double momentum,
+            double eps) {
+        return first(
+                OpRegistry.BATCH_NORM,
+                Value.tensor(this),
+                weight == null ? Value.none() : Value.tensor(weight),
+                bias == null ? Value.none() : Value.tensor(bias),
+                runningMean == null ? Value.none() : Value.tensor(runningMean),
+                runningVar == null ? Value.none() : Value.tensor(runningVar),
+                Value.bool(training),
+                Value.scalar(Scalar.of(momentum)),
+                Value.scalar(Scalar.of(eps)));
+    }
+
+    public Tensor slice(int dim, Integer start, Integer end, int step) {
+        return first(
+                OpRegistry.SLICE_TENSOR,
+                Value.tensor(this),
+                Value.integer(dim),
+                start == null ? Value.none() : Value.integer(start),
+                end == null ? Value.none() : Value.integer(end),
+                Value.integer(step));
+    }
+
+    public Tensor scatter(int dim, Tensor index, Tensor src) {
+        return first(OpRegistry.SCATTER, Value.tensor(this), Value.integer(dim), Value.tensor(index),
+                Value.tensor(src));
+    }
+
     public Tensor mseLoss(Tensor target, String reduction) {
         return first(OpRegistry.MSE_LOSS, Value.tensor(this), Value.tensor(target), Value.string(reduction));
     }

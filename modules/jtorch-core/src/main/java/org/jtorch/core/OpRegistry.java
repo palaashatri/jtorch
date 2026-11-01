@@ -14,11 +14,14 @@ public final class OpRegistry {
     public static final Op ARANGE = Op.of(Ops.ARANGE);
     public static final Op ARGMAX = Op.of(Ops.ARGMAX);
     public static final Op ARGMIN = Op.of(Ops.ARGMIN);
+    public static final Op AVG_POOL2D = Op.of(Ops.AVG_POOL2D);
+    public static final Op BATCH_NORM = Op.of(Ops.BATCH_NORM);
     public static final Op BMM = Op.of(Ops.BMM);
     public static final Op CAT = Op.of(Ops.CAT);
     public static final Op CEIL = Op.of(Ops.CEIL);
     public static final Op CLAMP = Op.of(Ops.CLAMP);
     public static final Op CLONE = Op.of(Ops.CLONE);
+    public static final Op CONSTANT_PAD_ND = Op.of(Ops.CONSTANT_PAD_ND);
     public static final Op CONTIGUOUS = Op.of(Ops.CONTIGUOUS);
     public static final Op CONV2D = Op.of(Ops.CONV2D);
     public static final Op COPY_ = Op.of(Ops.COPY_);
@@ -34,10 +37,13 @@ public final class OpRegistry {
     public static final Op EYE = Op.of(Ops.EYE);
     public static final Op FILL__SCALAR = Op.of(Ops.FILL__SCALAR);
     public static final Op FLATTEN = Op.of(Ops.FLATTEN);
+    public static final Op FLIP = Op.of(Ops.FLIP);
     public static final Op FLOOR = Op.of(Ops.FLOOR);
     public static final Op FULL = Op.of(Ops.FULL);
+    public static final Op GATHER = Op.of(Ops.GATHER);
     public static final Op GE_TENSOR = Op.of(Ops.GE_TENSOR);
     public static final Op GT_TENSOR = Op.of(Ops.GT_TENSOR);
+    public static final Op INDEX_SELECT = Op.of(Ops.INDEX_SELECT);
     public static final Op LE_TENSOR = Op.of(Ops.LE_TENSOR);
     public static final Op LINEAR = Op.of(Ops.LINEAR);
     public static final Op LOG = Op.of(Ops.LOG);
@@ -74,10 +80,12 @@ public final class OpRegistry {
     public static final Op RECIPROCAL = Op.of(Ops.RECIPROCAL);
     public static final Op RELU = Op.of(Ops.RELU);
     public static final Op RESHAPE = Op.of(Ops.RESHAPE);
+    public static final Op SCATTER = Op.of(Ops.SCATTER);
     public static final Op SELECT = Op.of(Ops.SELECT);
     public static final Op SIGMOID = Op.of(Ops.SIGMOID);
     public static final Op SIGN = Op.of(Ops.SIGN);
     public static final Op SIN = Op.of(Ops.SIN);
+    public static final Op SLICE_TENSOR = Op.of(Ops.SLICE_TENSOR);
     public static final Op SOFTMAX = Op.of(Ops.SOFTMAX);
     public static final Op SQRT = Op.of(Ops.SQRT);
     public static final Op SQUARE = Op.of(Ops.SQUARE);
@@ -96,7 +104,14 @@ public final class OpRegistry {
     public static final Op VIEW = Op.of(Ops.VIEW);
     public static final Op ZERO_ = Op.of(Ops.ZERO_);
     public static final Op ZEROS = Op.of(Ops.ZEROS);
+    public static final Op AVG_POOL2D_BACKWARD = Op.of(Ops.AVG_POOL2D_BACKWARD);
+    public static final Op CONSTANT_PAD_ND_BACKWARD = Op.of(Ops.CONSTANT_PAD_ND_BACKWARD);
     public static final Op CONV2D_BACKWARD_INPUT = Op.of(Ops.CONV2D_BACKWARD_INPUT);
     public static final Op CONV2D_BACKWARD_WEIGHT = Op.of(Ops.CONV2D_BACKWARD_WEIGHT);
+    public static final Op GATHER_BACKWARD = Op.of(Ops.GATHER_BACKWARD);
+    public static final Op INDEX_SELECT_BACKWARD = Op.of(Ops.INDEX_SELECT_BACKWARD);
     public static final Op MAX_POOL2D_BACKWARD = Op.of(Ops.MAX_POOL2D_BACKWARD);
+    public static final Op SCATTER_BACKWARD_SELF = Op.of(Ops.SCATTER_BACKWARD_SELF);
+    public static final Op SCATTER_BACKWARD_SRC = Op.of(Ops.SCATTER_BACKWARD_SRC);
+    public static final Op SLICE_BACKWARD = Op.of(Ops.SLICE_BACKWARD);
 }

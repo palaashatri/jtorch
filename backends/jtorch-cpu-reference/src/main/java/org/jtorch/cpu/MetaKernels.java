@@ -120,6 +120,25 @@ final class MetaKernels {
                 MetaKernels::conv2dBackwardWeight);
         dispatcher.registerTensor(OpRegistry.MAX_POOL2D_BACKWARD, DispatchKey.META,
                 MetaKernels::maxPool2dBackward);
+        dispatcher.registerTensor(OpRegistry.AVG_POOL2D, DispatchKey.META, MetaKernels::avgPool2d);
+        dispatcher.registerTensor(OpRegistry.AVG_POOL2D_BACKWARD, DispatchKey.META,
+                MetaKernels::avgPool2dBackward);
+        dispatcher.registerTensor(OpRegistry.CONSTANT_PAD_ND, DispatchKey.META, MetaKernels::constantPad);
+        dispatcher.registerTensor(OpRegistry.CONSTANT_PAD_ND_BACKWARD, DispatchKey.META,
+                MetaKernels::constantPadBackward);
+        dispatcher.registerTensor(OpRegistry.FLIP, DispatchKey.META, MetaKernels::flip);
+        dispatcher.registerTensor(OpRegistry.GATHER, DispatchKey.META, MetaKernels::gather);
+        dispatcher.registerTensor(OpRegistry.GATHER_BACKWARD, DispatchKey.META, MetaKernels::gatherBackward);
+        dispatcher.registerTensor(OpRegistry.INDEX_SELECT, DispatchKey.META, MetaKernels::indexSelect);
+        dispatcher.registerTensor(OpRegistry.INDEX_SELECT_BACKWARD, DispatchKey.META,
+                MetaKernels::indexSelectBackward);
+        dispatcher.registerTensor(OpRegistry.SLICE_TENSOR, DispatchKey.META, MetaKernels::slice);
+        dispatcher.registerTensor(OpRegistry.SLICE_BACKWARD, DispatchKey.META, MetaKernels::sliceBackward);
+        dispatcher.registerTensor(OpRegistry.SCATTER, DispatchKey.META, MetaKernels::scatter);
+        dispatcher.registerTensor(OpRegistry.SCATTER_BACKWARD_SELF, DispatchKey.META,
+                MetaKernels::scatterBackwardSelf);
+        dispatcher.registerTensor(OpRegistry.SCATTER_BACKWARD_SRC, DispatchKey.META,
+                MetaKernels::scatterBackwardSrc);
 
         // Loss
         dispatcher.registerTensor(OpRegistry.CROSS_ENTROPY, DispatchKey.META, MetaKernels::crossEntropy);
@@ -666,6 +685,165 @@ final class MetaKernels {
                 args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), false);
         Convolution.validateMaxPoolBackward(grad, input, config);
         return meta(input.shape(), grad.dtype(), op, args);
+    }
+
+    private static Tensor avgPool2d(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Convolution.AvgPoolConfig config = Convolution.avgPoolConfig(
+                args[1].asLongArray(), args[2].asLongArray(), args[3].asLongArray(), args[4].asBoolean(),
+                args[5].asBoolean());
+        Convolution.validateAvgPool(input, config);
+        return meta(Convolution.avgPoolOutputShape(input, config), input.dtype(), op, args);
+    }
+
+    private static Tensor avgPool2dBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        Tensor input = args[1].asTensor();
+        Convolution.AvgPoolConfig config = Convolution.avgPoolConfig(
+                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), false,
+                args[5].asBoolean());
+        Convolution.validateAvgPool(input, config);
+        Shape expected = Convolution.avgPoolOutputShape(input, config);
+        if (!grad.shape().equals(expected)) {
+            throw new org.jtorch.core.ShapeException("avg_pool2d backward grad shape mismatch");
+        }
+        return meta(input.shape(), grad.dtype(), op, args);
+    }
+
+    private static Tensor constantPad(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        long[] pad = args[1].asLongArray();
+        if (pad.length != 2 && pad.length != 4) {
+            throw new org.jtorch.core.ShapeException("constant_pad_nd pad must have two or four entries");
+        }
+        if (input.dim() < 2) {
+            throw new org.jtorch.core.ShapeException("constant_pad_nd requires at least two dimensions");
+        }
+        long[] shape = input.shape().toArray();
+        int left = (int) pad[0];
+        int right = (int) pad[1];
+        int top = pad.length == 4 ? (int) pad[2] : 0;
+        int bottom = pad.length == 4 ? (int) pad[3] : 0;
+        shape[shape.length - 1] += left + right;
+        shape[shape.length - 2] += top + bottom;
+        if (shape[shape.length - 1] <= 0 || shape[shape.length - 2] <= 0) {
+            throw new org.jtorch.core.ShapeException("constant_pad_nd produced a non-positive shape");
+        }
+        return meta(Shape.of(shape), input.dtype(), op, args);
+    }
+
+    private static Tensor constantPadBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        long[] pad = args[1].asLongArray();
+        long[] shape = grad.shape().toArray();
+        shape[shape.length - 1] -= (int) pad[0] + (int) pad[1];
+        shape[shape.length - 2] -= pad.length == 4 ? (int) pad[2] + (int) pad[3] : 0;
+        return meta(Shape.of(shape), grad.dtype(), op, args);
+    }
+
+    private static Tensor flip(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        for (long dim : args[1].asLongArray()) {
+            input.shape().normalizeDim((int) dim);
+        }
+        return meta(input.shape(), input.dtype(), op, args);
+    }
+
+    private static Tensor gather(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        int dim = input.shape().normalizeDim(args[1].asInt());
+        Tensor index = args[2].asTensor();
+        if (index.dtype() != org.jtorch.core.DType.INT64) {
+            throw new org.jtorch.core.DTypeException("gather index must be int64");
+        }
+        if (index.dim() != input.dim()) {
+            throw new org.jtorch.core.ShapeException("gather index rank must match input rank");
+        }
+        for (int d = 0; d < input.dim(); d++) {
+            if (d != dim && index.size(d) > input.size(d)) {
+                throw new org.jtorch.core.ShapeException("gather index size exceeds input at dimension " + d);
+            }
+        }
+        return meta(index.shape(), input.dtype(), op, args);
+    }
+
+    private static Tensor gatherBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        long[] shape = args[2].asLongArray();
+        Shape.of(shape).normalizeDim(args[3].asInt());
+        return meta(Shape.of(shape), args[0].asTensor().dtype(), op, args);
+    }
+
+    private static Tensor indexSelect(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        int dim = input.shape().normalizeDim(args[1].asInt());
+        Tensor index = args[2].asTensor();
+        if (index.dtype() != org.jtorch.core.DType.INT64 || index.dim() != 1) {
+            throw new org.jtorch.core.DTypeException("index_select index must be a 1-D int64 tensor");
+        }
+        long[] shape = input.shape().toArray();
+        shape[dim] = index.size(0);
+        return meta(Shape.of(shape), input.dtype(), op, args);
+    }
+
+    private static Tensor indexSelectBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        long[] shape = args[2].asLongArray();
+        Shape.of(shape).normalizeDim(args[3].asInt());
+        return meta(Shape.of(shape), args[0].asTensor().dtype(), op, args);
+    }
+
+    private static Tensor slice(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        int dim = input.shape().normalizeDim(args[1].asInt());
+        Integer startValue = args[2].asOptionalInt();
+        Integer endValue = args[3].asOptionalInt();
+        int step = args[4].asInt();
+        if (step <= 0) {
+            throw new ShapeException("slice step must be positive");
+        }
+        long size = input.size(dim);
+        long start = startValue == null ? 0 : startValue;
+        long end = endValue == null ? size : endValue;
+        if (start < 0) {
+            start += size;
+        }
+        if (end < 0) {
+            end += size;
+        }
+        start = Math.max(0, Math.min(size, start));
+        end = Math.max(0, Math.min(size, end));
+        long length = end > start ? (end - start + step - 1) / step : 0;
+        long[] shape = input.shape().toArray();
+        shape[dim] = length;
+        long[] strides = input.strides().toArray();
+        strides[dim] *= step;
+        return Tensor.wrap(TensorImpl.meta(Shape.of(shape), Strides.of(strides), input.dtype(),
+                outputRequiresGrad(op, args)));
+    }
+
+    private static Tensor sliceBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        return meta(Shape.of(args[1].asLongArray()), args[0].asTensor().dtype(), op, args);
+    }
+
+    private static Tensor scatter(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor self = args[0].asTensor();
+        int dim = self.shape().normalizeDim(args[1].asInt());
+        Tensor index = args[2].asTensor();
+        Tensor src = args[3].asTensor();
+        if (index.dtype() != org.jtorch.core.DType.INT64) {
+            throw new org.jtorch.core.DTypeException("scatter index must be int64");
+        }
+        if (index.dim() != self.dim() || src.dim() != self.dim()) {
+            throw new ShapeException("scatter expects index/src with the same rank as self");
+        }
+        return meta(self.shape(), self.dtype(), op, args);
+    }
+
+    private static Tensor scatterBackwardSelf(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        return meta(args[0].asTensor().shape(), args[0].asTensor().dtype(), op, args);
+    }
+
+    private static Tensor scatterBackwardSrc(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        return meta(Shape.of(args[3].asLongArray()), args[0].asTensor().dtype(), op, args);
     }
 
     private static Tensor crossEntropy(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {

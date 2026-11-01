@@ -5,7 +5,7 @@ results; differential results live in the parity suite. No percentage is claimed
 
 | Status | Operators |
 | --- | --- |
-| autograd | 58 |
+| autograd | 66 |
 | forward | 31 |
 
 ## Declared operators
@@ -17,11 +17,14 @@ results; differential results live in the parity suite. No percentage is claimed
 - `aten::arange.default` — forward
 - `aten::argmax.default` — forward
 - `aten::argmin.default` — forward
+- `aten::avg_pool2d.default` — autograd
+- `aten::batch_norm.default` — autograd (composite)
 - `aten::bmm.default` — autograd
 - `aten::cat.default` — autograd
 - `aten::ceil.default` — forward
 - `aten::clamp.default` — autograd
 - `aten::clone.default` — autograd
+- `aten::constant_pad_nd.default` — autograd
 - `aten::contiguous.default` — autograd
 - `aten::conv2d.default` — autograd
 - `aten::copy_.default` — forward
@@ -37,10 +40,13 @@ results; differential results live in the parity suite. No percentage is claimed
 - `aten::eye.default` — forward
 - `aten::fill_.Scalar` — forward
 - `aten::flatten.default` — autograd
+- `aten::flip.default` — autograd
 - `aten::floor.default` — forward
 - `aten::full.default` — forward
+- `aten::gather.default` — autograd
 - `aten::ge.Tensor` — forward
 - `aten::gt.Tensor` — forward
+- `aten::index_select.default` — autograd
 - `aten::le.Tensor` — forward
 - `aten::linear.default` — autograd (composite)
 - `aten::log.default` — autograd
@@ -77,10 +83,12 @@ results; differential results live in the parity suite. No percentage is claimed
 - `aten::reciprocal.default` — autograd
 - `aten::relu.default` — autograd
 - `aten::reshape.default` — autograd
+- `aten::scatter.default` — autograd
 - `aten::select.default` — autograd
 - `aten::sigmoid.default` — autograd
 - `aten::sign.default` — forward
 - `aten::sin.default` — autograd
+- `aten::slice.Tensor` — autograd
 - `aten::softmax.default` — autograd (composite)
 - `aten::sqrt.default` — autograd
 - `aten::square.default` — autograd

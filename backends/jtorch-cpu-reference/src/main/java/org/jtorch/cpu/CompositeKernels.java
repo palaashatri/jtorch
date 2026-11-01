@@ -1,6 +1,7 @@
 package org.jtorch.cpu;
 
 import org.jtorch.core.OpRegistry;
+import org.jtorch.core.Shape;
 import org.jtorch.core.ShapeException;
 import org.jtorch.core.Tensor;
 import org.jtorch.core.dispatch.Dispatcher;
@@ -20,6 +21,7 @@ final class CompositeKernels {
         register(dispatcher, OpRegistry.SOFTMAX, CompositeKernels::softmax);
         register(dispatcher, OpRegistry.LOG_SOFTMAX, CompositeKernels::logSoftmax);
         register(dispatcher, OpRegistry.MSE_LOSS, CompositeKernels::mseLoss);
+        register(dispatcher, OpRegistry.BATCH_NORM, CompositeKernels::batchNorm);
     }
 
     private static void register(Dispatcher dispatcher, org.jtorch.core.Op op,
@@ -91,6 +93,57 @@ final class CompositeKernels {
         Tensor shifted = input.sub(max);
         Tensor denominator = shifted.exp().sum(new int[] {dim}, true);
         return new Value[] {Value.tensor(shifted.sub(denominator.log()))};
+    }
+
+    private static Value[] batchNorm(org.jtorch.core.Op op, Value[] args, DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Tensor weight = args[1].asOptionalTensor();
+        Tensor bias = args[2].asOptionalTensor();
+        Tensor runningMean = args[3].asOptionalTensor();
+        Tensor runningVar = args[4].asOptionalTensor();
+        boolean training = args[5].asBoolean();
+        double eps = args[7].asScalar().toDouble();
+        if (training) {
+            throw new org.jtorch.core.NotSupportedException(
+                    "batch_norm training mode is not implemented; call eval()/training=false");
+        }
+        if (input.dim() < 2) {
+            throw new ShapeException("batch_norm expects input with at least two dimensions, got " + input.shape());
+        }
+        if (!input.dtype().isFloatingPoint()) {
+            throw new org.jtorch.core.DTypeException("batch_norm requires a floating point input");
+        }
+        if (runningMean == null || runningVar == null) {
+            throw new ShapeException("batch_norm inference requires running_mean and running_var");
+        }
+        int channels = (int) input.size(1);
+        long[] dimensions = new long[input.dim()];
+        dimensions[1] = channels;
+        for (int i = 0; i < dimensions.length; i++) {
+            if (i != 1) {
+                dimensions[i] = 1;
+            }
+        }
+        Shape statShape = Shape.of(dimensions);
+        for (Tensor tensor : new Tensor[] {runningMean, runningVar, weight, bias}) {
+            if (tensor != null && (tensor.dim() != 1 || tensor.size(0) != channels)) {
+                throw new ShapeException("batch_norm parameter/statistic must have shape [" + channels + "], got "
+                        + tensor.shape());
+            }
+            if (tensor != null && tensor.dtype() != input.dtype()) {
+                throw new org.jtorch.core.DTypeException("batch_norm parameters must match the input dtype");
+            }
+        }
+        Tensor mean = runningMean.reshape(statShape.toArray());
+        Tensor variance = runningVar.reshape(statShape.toArray());
+        Tensor normalized = input.sub(mean).div(variance.add(eps).sqrt());
+        if (weight != null) {
+            normalized = normalized.mul(weight.reshape(statShape.toArray()));
+        }
+        if (bias != null) {
+            normalized = normalized.add(bias.reshape(statShape.toArray()));
+        }
+        return new Value[] {Value.tensor(normalized)};
     }
 
     private static Value[] mseLoss(org.jtorch.core.Op op, Value[] args, DispatchKeySet keys) {

@@ -253,6 +253,56 @@ def build_cases():
     pool_input = leaf(ramp(50), (1, 2, 5, 5))
     case("aten::max_pool2d.default", [pool_input, [3, 3], [2, 2], [1, 1], [1, 1], False])
 
+    avg_input = leaf(ramp(32), (1, 2, 4, 4))
+    case("aten::avg_pool2d.default", [avg_input, [2, 2], [2, 2], [0, 0], False, True])
+    avg_input = leaf(ramp(18), (1, 2, 3, 3))
+    case("aten::avg_pool2d.default", [avg_input, [2, 2], [1, 1], [1, 1], False, True])
+    avg_input = leaf(ramp(18), (1, 2, 3, 3))
+    case("aten::avg_pool2d.default", [avg_input, [2, 2], [1, 1], [1, 1], False, False])
+
+    pad_input = leaf(ramp(18), (1, 2, 3, 3))
+    case("aten::constant_pad_nd.default", [pad_input, [1, 1, 0, 0], 0.5])
+    pad_input = leaf(ramp(6), (2, 3))
+    case("aten::constant_pad_nd.default", [pad_input, [0, 2, 1, 0], -1.0])
+
+    flip_input = leaf(ramp(6), (2, 3))
+    case("aten::flip.default", [flip_input, [0, 1]])
+    flip_input = leaf(ramp(6), (2, 3))
+    case("aten::flip.default", [flip_input, [1]])
+
+    gather_self = leaf(ramp(9), (3, 3))
+    gather_index = tensor([0, 2, 1, 2, 0, 1], dtype="int64").reshape(2, 3)
+    case("aten::gather.default", [gather_self, 1, gather_index])
+    gather_self = leaf(ramp(9), (3, 3))
+    gather_index = tensor([2, 0, 1], dtype="int64").reshape(3, 1)
+    case("aten::gather.default", [gather_self, 0, gather_index])
+
+    select_self = leaf(ramp(9), (3, 3))
+    select_index = tensor([2, 0], dtype="int64")
+    case("aten::index_select.default", [select_self, 0, select_index])
+    select_self = leaf(ramp(9), (3, 3))
+    case("aten::index_select.default", [select_self, 1, select_index])
+
+    batch_input = leaf(ramp(18), (1, 2, 3, 3))
+    batch_weight = leaf([1.5, 0.5])
+    batch_bias = leaf([0.1, -0.1])
+    batch_mean = tensor([0.1, -0.2], dtype="float64")
+    batch_var = tensor([1.0, 0.5], dtype="float64")
+    case("aten::batch_norm.default",
+         [batch_input, batch_weight, batch_bias, batch_mean, batch_var, False, 0.1, 1e-5])
+
+    slice_input = leaf(ramp(8), (2, 4))
+    case("aten::slice.Tensor", [slice_input, 1, 1, 4, 2])
+    slice_input = leaf(ramp(8), (2, 4))
+    case("aten::slice.Tensor", [slice_input, 1, None, None, 1])
+    slice_input = leaf(ramp(8), (2, 4))
+    case("aten::slice.Tensor", [slice_input, 0, -1, None, 1])
+
+    scatter_self = leaf(ramp(6), (2, 3))
+    scatter_index = tensor([0, 2, 1, 0], dtype="int64").reshape(2, 2)
+    scatter_src = leaf([10.0, 11.0, 12.0, 13.0], (2, 2))
+    case("aten::scatter.default", [scatter_self, 1, scatter_index, scatter_src])
+
     # ------------------------------------------------------------------ combination
     case("aten::cat.default", [[A(), Positive6()], 1])
     case("aten::stack.default", [[A(), Positive6()], 0])
@@ -444,6 +494,26 @@ def call_case(spec):
     if operator == "aten::max_pool2d.default":
         return [F.max_pool2d(args[0], kernel_size=tuple(args[1]), stride=tuple(args[2]),
                              padding=tuple(args[3]), dilation=tuple(args[4]), ceil_mode=args[5])]
+    if operator == "aten::avg_pool2d.default":
+        return [F.avg_pool2d(args[0], kernel_size=tuple(args[1]), stride=tuple(args[2]),
+                             padding=tuple(args[3]), ceil_mode=args[4], count_include_pad=args[5])]
+    if operator == "aten::constant_pad_nd.default":
+        return [F.pad(args[0], list(args[1]), mode="constant", value=args[2])]
+    if operator == "aten::flip.default":
+        return [torch.flip(args[0], tuple(args[1]))]
+    if operator == "aten::gather.default":
+        return [torch.gather(args[0], args[1], args[2])]
+    if operator == "aten::index_select.default":
+        return [torch.index_select(args[0], args[1], args[2])]
+    if operator == "aten::slice.Tensor":
+        selection = [slice(None)] * len(args[0].shape)
+        selection[args[1]] = slice(args[2], args[3], args[4])
+        return [args[0][tuple(selection)]]
+    if operator == "aten::scatter.default":
+        return [torch.scatter(args[0], args[1], args[2], args[3])]
+    if operator == "aten::batch_norm.default":
+        return [F.batch_norm(args[0], args[3], args[4], weight=args[1], bias=args[2],
+                             training=args[5], momentum=args[6], eps=args[7])]
     if operator == "aten::cat.default":
         return [torch.cat(tuple(args[0]), dim=args[1])]
     if operator == "aten::stack.default":

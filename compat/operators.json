@@ -1,8 +1,8 @@
 {
   "generatedFrom": "schema/ops",
-  "total": 89,
+  "total": 97,
   "byStatus": {
-    "autograd": 58,
+    "autograd": 66,
     "forward": 31
   },
   "operators": [
@@ -49,6 +49,18 @@
       "reverse": null
     },
     {
+      "name": "aten::avg_pool2d.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "avg_pool2d_backward"
+    },
+    {
+      "name": "aten::batch_norm.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "batch_norm_backward"
+    },
+    {
       "name": "aten::bmm.default",
       "status": "autograd",
       "differentiable": true,
@@ -77,6 +89,12 @@
       "status": "autograd",
       "differentiable": true,
       "reverse": "clone_backward"
+    },
+    {
+      "name": "aten::constant_pad_nd.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "constant_pad_nd_backward"
     },
     {
       "name": "aten::contiguous.default",
@@ -169,6 +187,12 @@
       "reverse": "flatten_backward"
     },
     {
+      "name": "aten::flip.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "flip"
+    },
+    {
       "name": "aten::floor.default",
       "status": "forward",
       "differentiable": false,
@@ -181,6 +205,12 @@
       "reverse": null
     },
     {
+      "name": "aten::gather.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "gather_backward"
+    },
+    {
       "name": "aten::ge.Tensor",
       "status": "forward",
       "differentiable": false,
@@ -191,6 +221,12 @@
       "status": "forward",
       "differentiable": false,
       "reverse": null
+    },
+    {
+      "name": "aten::index_select.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "index_select_backward"
     },
     {
       "name": "aten::le.Tensor",
@@ -409,6 +445,12 @@
       "reverse": "reshape_backward"
     },
     {
+      "name": "aten::scatter.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "scatter_backward"
+    },
+    {
       "name": "aten::select.default",
       "status": "autograd",
       "differentiable": true,
@@ -431,6 +473,12 @@
       "status": "autograd",
       "differentiable": true,
       "reverse": "sin_backward"
+    },
+    {
+      "name": "aten::slice.Tensor",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "slice_backward"
     },
     {
       "name": "aten::softmax.default",

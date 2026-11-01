@@ -600,6 +600,140 @@ final class BackwardKernels {
             }
         });
 
+        // ---------------------------------------------------------------- M4 dense operators
+        single(dispatcher, OpRegistry.AVG_POOL2D, (in, out, args) -> new Node("AvgPool2dBackward0", 1) {
+            {
+                save(in[0]);
+            }
+
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {Dispatcher.get()
+                        .call(
+                                OpRegistry.AVG_POOL2D_BACKWARD,
+                                Value.tensor(g[0]),
+                                Value.tensor(saved(0)),
+                                Value.integers(args[1].asLongArray()),
+                                Value.integers(args[2].asLongArray()),
+                                Value.integers(args[3].asLongArray()),
+                                Value.bool(args[5].asBoolean()))[0]
+                        .asTensor()};
+            }
+        });
+        single(dispatcher, OpRegistry.CONSTANT_PAD_ND, (in, out, args) -> new Node("PadBackward0", 1) {
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {Dispatcher.get()
+                        .call(
+                                OpRegistry.CONSTANT_PAD_ND_BACKWARD,
+                                Value.tensor(g[0]),
+                                Value.integers(args[1].asLongArray()))[0]
+                        .asTensor()};
+            }
+        });
+        single(dispatcher, OpRegistry.FLIP, (in, out, args) -> new Node("FlipBackward0", 1) {
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {g[0].flip(toInts(args[1].asLongArray()))};
+            }
+        });
+        single(dispatcher, OpRegistry.GATHER, (in, out, args) -> new Node("GatherBackward0", 1) {
+            {
+                save(in[0]);
+                save(in[1]);
+            }
+
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {Dispatcher.get()
+                        .call(
+                                OpRegistry.GATHER_BACKWARD,
+                                Value.tensor(g[0]),
+                                Value.tensor(saved(1)),
+                                Value.integers(saved(0).shape().toArray()),
+                                Value.integer(args[1].asInt()))[0]
+                        .asTensor()};
+            }
+        });
+        single(dispatcher, OpRegistry.INDEX_SELECT, (in, out, args) -> new Node("IndexSelectBackward0", 1) {
+            {
+                save(in[0]);
+                save(in[1]);
+            }
+
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {Dispatcher.get()
+                        .call(
+                                OpRegistry.INDEX_SELECT_BACKWARD,
+                                Value.tensor(g[0]),
+                                Value.tensor(saved(1)),
+                                Value.integers(saved(0).shape().toArray()),
+                                Value.integer(args[1].asInt()))[0]
+                        .asTensor()};
+            }
+        });
+
+        single(dispatcher, OpRegistry.SLICE_TENSOR, (in, out, args) -> {
+            int dim = in[0].shape().normalizeDim(args[1].asInt());
+            long size = in[0].size(dim);
+            long start = args[2].isNone() ? 0 : args[2].asLong();
+            long end = args[3].isNone() ? size : args[3].asLong();
+            if (start < 0) {
+                start += size;
+            }
+            if (end < 0) {
+                end += size;
+            }
+            start = Math.max(0, Math.min(size, start));
+            end = Math.max(0, Math.min(size, end));
+            int step = args[4].asInt();
+            long length = end > start ? (end - start + step - 1) / step : 0;
+            final int startFinal = (int) start;
+            final int lengthFinal = (int) length;
+            return new Node("SliceBackward0", 1) {
+                @Override
+                public Tensor[] backward(Tensor[] g) {
+                    return new Tensor[] {Dispatcher.get()
+                            .call(
+                                    OpRegistry.SLICE_BACKWARD,
+                                    Value.tensor(g[0]),
+                                    Value.integers(in[0].shape().toArray()),
+                                    Value.integer(dim),
+                                    Value.integer(startFinal),
+                                    Value.integer(lengthFinal),
+                                    Value.integer(step))[0]
+                            .asTensor()};
+                }
+            };
+        });
+        single(dispatcher, OpRegistry.SCATTER, (in, out, args) -> new Node("ScatterBackward0", 1) {
+            {
+                save(in[1]);
+            }
+
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                Tensor index = saved(0);
+                Tensor gradSelf = Dispatcher.get()
+                        .call(
+                                OpRegistry.SCATTER_BACKWARD_SELF,
+                                Value.tensor(g[0]),
+                                Value.tensor(index),
+                                Value.integer(args[1].asInt()))[0]
+                        .asTensor();
+                Tensor gradSrc = Dispatcher.get()
+                        .call(
+                                OpRegistry.SCATTER_BACKWARD_SRC,
+                                Value.tensor(g[0]),
+                                Value.tensor(index),
+                                Value.integer(args[1].asInt()),
+                                Value.integers(in[2].shape().toArray()))[0]
+                        .asTensor();
+                return new Tensor[] {gradSelf, null, gradSrc};
+            }
+        });
+
         // ---------------------------------------------------------------- losses
         single(dispatcher, OpRegistry.CROSS_ENTROPY, (in, out, args) -> {
             String reduction = args[2].asString();
@@ -735,6 +869,14 @@ final class BackwardKernels {
             }
             return raw;
         });
+    }
+
+    private static int[] toInts(long[] values) {
+        int[] result = new int[values.length];
+        for (int i = 0; i < values.length; i++) {
+            result[i] = Math.toIntExact(values[i]);
+        }
+        return result;
     }
 
     private static Tensor[] extractInputs(Value[] args) {

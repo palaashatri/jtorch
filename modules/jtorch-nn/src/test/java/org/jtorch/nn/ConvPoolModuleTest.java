@@ -53,6 +53,30 @@ class ConvPoolModuleTest {
     }
 
     @Test
+    void avgPool2dProducesExpectedShapeAndGradients() {
+        AvgPool2d pool = new AvgPool2d(2, 2, 0);
+        Tensor input = Torch.ones(Shape.of(2, 3, 6, 6)).requiresGrad(true);
+        Tensor output = pool.call(input);
+        assertEquals(Shape.of(2, 3, 3, 3), output.shape());
+        output.sum().backward();
+        assertEquals(Shape.of(2, 3, 6, 6), input.grad().shape());
+        assertEquals(0.25, input.grad().get(0, 0, 0, 0), 1e-7);
+    }
+
+    @Test
+    void batchNorm2dIsInferenceOnlyAndExposesRunningBuffers() {
+        BatchNorm2d norm = new BatchNorm2d(3);
+        assertEquals(List.of("weight", "bias", "running_mean", "running_var"),
+                List.copyOf(norm.stateDict().keySet()));
+        assertEquals(Shape.of(3), norm.runningVar().shape());
+        assertThrows(org.jtorch.core.JTorchException.class,
+                () -> norm.call(Torch.ones(Shape.of(2, 3, 4, 4))));
+        norm.eval();
+        Tensor output = norm.call(Torch.ones(Shape.of(2, 3, 4, 4)));
+        assertEquals(Shape.of(2, 3, 4, 4), output.shape());
+    }
+
+    @Test
     void convAndPoolGradientsFlowToParameters() {
         Conv2d conv = new Conv2d(1, 2, 2);
         MaxPool2d pool = new MaxPool2d(2, 2, 0);

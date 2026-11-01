@@ -15,6 +15,8 @@ final class Convolution {
 
     record PoolConfig(int[] kernel, int[] stride, int[] padding, int[] dilation, boolean ceilMode) {}
 
+    record AvgPoolConfig(int[] kernel, int[] stride, int[] padding, boolean countIncludePad) {}
+
     static ConvConfig convConfig(long[] stride, long[] padding, long[] dilation, int groups) {
         if (groups != 1) {
             throw new JTorchException("conv2d in this build supports groups=1 only, got " + groups);
@@ -28,6 +30,35 @@ final class Convolution {
         }
         return new PoolConfig(pair(kernel, "kernel_size"), pair(stride, "stride"), pair(padding, "padding"),
                 pair(dilation, "dilation"), false);
+    }
+
+    static AvgPoolConfig avgPoolConfig(
+            long[] kernel, long[] stride, long[] padding, boolean ceilMode, boolean countIncludePad) {
+        if (ceilMode) {
+            throw new JTorchException("avg_pool2d in this build does not support ceil_mode=true");
+        }
+        return new AvgPoolConfig(pair(kernel, "kernel_size"), pair(stride, "stride"), pair(padding, "padding"),
+                countIncludePad);
+    }
+
+    static void validateAvgPool(Tensor input, AvgPoolConfig config) {
+        if (input.dim() != 4 || !input.dtype().isFloatingPoint()) {
+            throw new ShapeException("avg_pool2d expects a floating 4-D NCHW tensor, got " + input.shape());
+        }
+        for (int i = 0; i < 2; i++) {
+            if (config.kernel()[i] <= 0 || config.stride()[i] <= 0 || config.padding()[i] < 0) {
+                throw new ShapeException("avg_pool2d kernel/stride must be positive and padding non-negative");
+            }
+            if (config.padding()[i] > config.kernel()[i] / 2) {
+                throw new ShapeException("avg_pool2d padding must not exceed half the kernel size");
+            }
+        }
+    }
+
+    static Shape avgPoolOutputShape(Tensor input, AvgPoolConfig config) {
+        long height = outputSize(input.size(2), config.padding()[0], 1, config.kernel()[0], config.stride()[0]);
+        long width = outputSize(input.size(3), config.padding()[1], 1, config.kernel()[1], config.stride()[1]);
+        return Shape.of(input.size(0), input.size(1), height, width);
     }
 
     static int[] pair(long[] values, String name) {
