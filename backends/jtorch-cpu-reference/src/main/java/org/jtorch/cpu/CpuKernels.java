@@ -1369,7 +1369,7 @@ final class CpuKernels {
             for (int o = 0; o < outChannels; o++) {
                 for (int y = 0; y < outH; y++) {
                     for (int x = 0; x < outW; x++) {
-                        double sum = bias == null ? 0 : TensorAccess.getDouble(bias.impl(), o);
+                        double sum = bias == null ? 0 : TensorAccess.getDouble(bias.impl(), offset(bias, o));
                         for (int c = 0; c < inChannels; c++) {
                             for (int ky = 0; ky < kernelH; ky++) {
                                 int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
@@ -1416,6 +1416,8 @@ final class CpuKernels {
                 for (int y = 0; y < outH; y++) {
                     for (int x = 0; x < outW; x++) {
                         double best = Double.NEGATIVE_INFINITY;
+                        boolean selected = false;
+                        boolean selectedNaN = false;
                         for (int ky = 0; ky < config.kernel()[0]; ky++) {
                             int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
                             if (iy < 0 || iy >= input.size(2)) {
@@ -1429,8 +1431,13 @@ final class CpuKernels {
                                 }
                                 double value = TensorAccess.getDouble(input.impl(),
                                         offset(input,n, c, iy, ix));
-                                if (value > best || (Double.isNaN(value) && !Double.isNaN(best))) {
+                                if (Double.isNaN(value)) {
                                     best = value;
+                                    selected = true;
+                                    selectedNaN = true;
+                                } else if (!selectedNaN && (!selected || value > best)) {
+                                    best = value;
+                                    selected = true;
                                 }
                             }
                         }
@@ -1449,6 +1456,7 @@ final class CpuKernels {
         long[] inputShape = args[2].asLongArray();
         Convolution.ConvConfig config = Convolution.convConfig(
                 args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+        Convolution.validateConvBackwardInput(grad, weight, inputShape, config);
         Tensor output = fresh(Shape.of(inputShape), grad.dtype(), false);
         fillLongDouble(output, 0);
         int batch = (int) inputShape[0];
@@ -1501,6 +1509,7 @@ final class CpuKernels {
         long[] weightShape = args[2].asLongArray();
         Convolution.ConvConfig config = Convolution.convConfig(
                 args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+        Convolution.validateConvBackwardWeight(input, grad, weightShape, config);
         Tensor output = fresh(Shape.of(weightShape), grad.dtype(), false);
         fillLongDouble(output, 0);
         int batch = (int) input.size(0);
@@ -1552,6 +1561,7 @@ final class CpuKernels {
         Tensor input = args[1].asTensor();
         Convolution.PoolConfig config = Convolution.poolConfig(
                 args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), false);
+        Convolution.validateMaxPoolBackward(grad, input, config);
         Tensor output = fresh(input.shape(), grad.dtype(), false);
         fillLongDouble(output, 0);
         int batch = (int) input.size(0);
@@ -1565,6 +1575,7 @@ final class CpuKernels {
                         double best = Double.NEGATIVE_INFINITY;
                         int bestY = -1;
                         int bestX = -1;
+                        boolean selectedNaN = false;
                         for (int ky = 0; ky < config.kernel()[0]; ky++) {
                             int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
                             if (iy < 0 || iy >= input.size(2)) {
@@ -1577,7 +1588,12 @@ final class CpuKernels {
                                     continue;
                                 }
                                 double value = TensorAccess.getDouble(input.impl(), offset(input,n, c, iy, ix));
-                                if (value > best || (Double.isNaN(value) && !Double.isNaN(best))) {
+                                if (Double.isNaN(value)) {
+                                    best = value;
+                                    bestY = iy;
+                                    bestX = ix;
+                                    selectedNaN = true;
+                                } else if (!selectedNaN && (bestY < 0 || value > best)) {
                                     best = value;
                                     bestY = iy;
                                     bestX = ix;

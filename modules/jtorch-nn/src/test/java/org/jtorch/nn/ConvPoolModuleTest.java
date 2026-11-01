@@ -40,6 +40,19 @@ class ConvPoolModuleTest {
     }
 
     @Test
+    void invalidConvAndPoolModulesFailAtConstruction() {
+        assertThrows(IllegalArgumentException.class, () -> new Conv2d(2, 4, new int[] {3, 3},
+                new int[] {1, 1}, new int[] {0, 0}, new int[] {1, 1}, 2, true));
+        assertThrows(IllegalArgumentException.class, () -> new Conv2d(1, 1, new int[] {0, 0},
+                new int[] {1, 1}, new int[] {0, 0}, new int[] {1, 1}, 1, true));
+        assertThrows(IllegalArgumentException.class, () -> new Conv2d(1, 1, new int[] {3, 3},
+                new int[] {0, 0}, new int[] {0, 0}, new int[] {1, 1}, 1, true));
+        assertThrows(IllegalArgumentException.class, () -> new MaxPool2d(0, 2, 0));
+        assertThrows(IllegalArgumentException.class, () -> new MaxPool2d(new int[] {2, 2}, new int[] {2, 2},
+                new int[] {0, 0}, new int[] {1, 1}, true));
+    }
+
+    @Test
     void convAndPoolGradientsFlowToParameters() {
         Conv2d conv = new Conv2d(1, 2, 2);
         MaxPool2d pool = new MaxPool2d(2, 2, 0);

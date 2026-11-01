@@ -19,6 +19,15 @@ public final class MaxPool2d extends Module {
         if (kernel.length != 2 || stride.length != 2 || padding.length != 2 || dilation.length != 2) {
             throw new IllegalArgumentException("MaxPool2d arguments need two entries");
         }
+        for (int i = 0; i < 2; i++) {
+            if (kernel[i] <= 0 || stride[i] <= 0 || dilation[i] <= 0 || padding[i] < 0) {
+                throw new IllegalArgumentException(
+                        "MaxPool2d kernel and stride/dilation must be positive and padding non-negative");
+            }
+        }
+        if (ceilMode) {
+            throw new IllegalArgumentException("MaxPool2d in this build does not support ceilMode=true");
+        }
         this.kernel = kernel.clone();
         this.stride = stride.clone();
         this.padding = padding.clone();

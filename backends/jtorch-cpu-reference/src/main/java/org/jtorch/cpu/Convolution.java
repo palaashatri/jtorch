@@ -66,6 +66,9 @@ final class Convolution {
             throw new ShapeException("conv2d input channels " + input.size(1) + " do not match weight channels "
                     + weight.size(1));
         }
+        if (weight.size(2) <= 0 || weight.size(3) <= 0) {
+            throw new ShapeException("conv2d kernel dimensions must be positive, got " + weight.shape());
+        }
         for (int i = 0; i < 2; i++) {
             if (config.stride()[i] <= 0 || config.dilation()[i] <= 0 || config.padding()[i] < 0) {
                 throw new ShapeException("conv2d stride and dilation must be positive and padding non-negative");
@@ -108,14 +111,89 @@ final class Convolution {
     }
 
     static long outputSize(long input, int padding, int dilation, int kernel, int stride) {
+        if (kernel <= 0 || stride <= 0 || dilation <= 0 || padding < 0) {
+            throw new ShapeException("kernel, stride and dilation must be positive and padding non-negative");
+        }
         long effective = (long) dilation * (kernel - 1) + 1;
-        long output = (input + 2L * padding - effective) / stride + 1;
+        long output = Math.floorDiv(input + 2L * padding - effective, stride) + 1;
         if (output <= 0) {
             throw new ShapeException("convolution/pooling produces an empty output dimension from input size "
                     + input + ", padding " + padding + ", dilation " + dilation + ", kernel " + kernel
                     + ", stride " + stride);
         }
         return output;
+    }
+
+    static void validateConvBackwardInput(Tensor grad, Tensor weight, long[] inputShape, ConvConfig config) {
+        if (inputShape.length != 4) {
+            throw new ShapeException("conv2d input_shape must have four entries");
+        }
+        if (grad.dim() != 4 || weight.dim() != 4) {
+            throw new ShapeException("conv2d backward expects 4-D grad and weight, got " + grad.shape() + " and "
+                    + weight.shape());
+        }
+        if (!grad.dtype().isFloatingPoint() || grad.dtype() != weight.dtype()) {
+            throw new DTypeException("conv2d backward grad and weight must share a floating dtype");
+        }
+        if (grad.size(1) != weight.size(0)) {
+            throw new ShapeException("conv2d backward grad channels " + grad.size(1)
+                    + " do not match weight output channels " + weight.size(0));
+        }
+        if (inputShape[1] != weight.size(1)) {
+            throw new ShapeException("conv2d backward input channels " + inputShape[1]
+                    + " do not match weight channels " + weight.size(1));
+        }
+        if (inputShape[2] <= 0 || inputShape[3] <= 0) {
+            throw new ShapeException("conv2d backward input spatial dimensions must be positive");
+        }
+        long outputH = outputSize(inputShape[2], config.padding()[0], config.dilation()[0],
+                (int) weight.size(2), config.stride()[0]);
+        long outputW = outputSize(inputShape[3], config.padding()[1], config.dilation()[1],
+                (int) weight.size(3), config.stride()[1]);
+        if (grad.size(2) != outputH || grad.size(3) != outputW) {
+            throw new ShapeException("conv2d backward grad spatial shape " + grad.shape()
+                    + " does not match computed output [" + outputH + ", " + outputW + "]");
+        }
+    }
+
+    static void validateConvBackwardWeight(Tensor input, Tensor grad, long[] weightShape, ConvConfig config) {
+        if (weightShape.length != 4) {
+            throw new ShapeException("conv2d weight_shape must have four entries");
+        }
+        if (input.dim() != 4 || grad.dim() != 4) {
+            throw new ShapeException("conv2d backward expects 4-D input and grad");
+        }
+        if (!input.dtype().isFloatingPoint() || input.dtype() != grad.dtype()) {
+            throw new DTypeException("conv2d backward input and grad must share a floating dtype");
+        }
+        if (input.size(1) != weightShape[1] || grad.size(1) != weightShape[0]) {
+            throw new ShapeException("conv2d backward shapes do not match the declared weight shape");
+        }
+        if (weightShape[2] <= 0 || weightShape[3] <= 0) {
+            throw new ShapeException("conv2d backward weight kernel dimensions must be positive");
+        }
+        long outputH = outputSize(input.size(2), config.padding()[0], config.dilation()[0],
+                (int) weightShape[2], config.stride()[0]);
+        long outputW = outputSize(input.size(3), config.padding()[1], config.dilation()[1],
+                (int) weightShape[3], config.stride()[1]);
+        if (grad.size(2) != outputH || grad.size(3) != outputW) {
+            throw new ShapeException("conv2d backward grad spatial shape does not match the input/weight geometry");
+        }
+    }
+
+    static void validateMaxPoolBackward(Tensor grad, Tensor input, PoolConfig config) {
+        if (input.dim() != 4 || grad.dim() != 4) {
+            throw new ShapeException("max_pool2d backward expects 4-D tensors");
+        }
+        validatePool(input, config);
+        Shape expected = poolOutputShape(input, config);
+        if (!grad.shape().equals(expected)) {
+            throw new ShapeException("max_pool2d backward grad shape " + grad.shape()
+                    + " does not match pooled output " + expected);
+        }
+        if (grad.dtype() != input.dtype() || !grad.dtype().isFloatingPoint()) {
+            throw new DTypeException("max_pool2d backward grad dtype must match a floating input dtype");
+        }
     }
 
     static DType requireFloatingSame(Tensor left, Tensor right) {

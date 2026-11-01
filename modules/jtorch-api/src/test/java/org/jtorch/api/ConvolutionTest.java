@@ -81,6 +81,62 @@ class ConvolutionTest {
     }
 
     @Test
+    void conv2dBiasViewsAndExpandedBiasUseTheirOwnStrides() {
+        Tensor input = Torch.zeros(Shape.of(1, 1, 2, 2));
+        Tensor weight = Torch.zeros(Shape.of(2, 1, 2, 2));
+        Tensor slicedBias = Torch.tensor(new float[] {-555, -555, 0.1f, 0.2f}, Shape.of(4)).narrow(0, 2, 2);
+        Tensor output = input.conv2d(weight, slicedBias, new int[] {1, 1}, new int[] {0, 0});
+        assertArrayEquals(new double[] {0.1, 0.2}, output.reshape(2).toDoubleArray(), 1e-7);
+
+        Tensor expandedBias = Torch.tensor(new float[] {0.3f}, Shape.of(1)).expand(2);
+        Tensor expandedOutput = input.conv2d(weight, expandedBias, new int[] {1, 1}, new int[] {0, 0});
+        assertArrayEquals(new double[] {0.3, 0.3}, expandedOutput.reshape(2).toDoubleArray(), 1e-7);
+    }
+
+    @Test
+    void maxPoolBackwardHandlesNegativeInfinityAndNaN() {
+        Tensor negativeInfinity = Torch.full(Shape.of(1, 1, 2, 2), org.jtorch.core.Scalar.of(
+                Double.NEGATIVE_INFINITY)).requiresGrad(true);
+        negativeInfinity.maxPool2d(2, 2, 0).sum().backward();
+        assertArrayEquals(new double[] {1, 0, 0, 0}, negativeInfinity.grad().toDoubleArray(), 0);
+
+        Tensor nans = Torch.tensor(new double[] {Double.NaN, Double.NaN, 1, 2}, Shape.of(1, 1, 2, 2))
+                .requiresGrad(true);
+        nans.maxPool2d(2, 1, 0).sum().backward();
+        assertArrayEquals(new double[] {0, 1, 0, 0}, nans.grad().toDoubleArray(), 0);
+    }
+
+    @Test
+    void impossibleConvolutionAndPoolingWindowsAreRejected() {
+        Tensor input = Torch.ones(Shape.of(1, 1, 4, 4));
+        assertThrows(ShapeException.class,
+                () -> input.conv2d(Torch.ones(Shape.of(1, 1, 5, 5)), null, new int[] {2, 2}, new int[] {0, 0}));
+        assertThrows(ShapeException.class, () -> Torch.ones(Shape.of(1, 1, 2, 2)).maxPool2d(3, 2, 0));
+    }
+
+    @Test
+    void internalBackwardOperatorsValidateTheirArguments() {
+        Tensor input = Torch.ones(Shape.of(1, 1, 3, 3));
+        Tensor wrongGrad = Torch.ones(Shape.of(1, 1, 1, 4));
+        assertThrows(ShapeException.class, () -> org.jtorch.core.dispatch.Dispatcher.get().call(
+                org.jtorch.core.OpRegistry.MAX_POOL2D_BACKWARD,
+                org.jtorch.core.value.Value.tensor(wrongGrad),
+                org.jtorch.core.value.Value.tensor(input),
+                org.jtorch.core.value.Value.integers(2, 2),
+                org.jtorch.core.value.Value.integers(2, 2),
+                org.jtorch.core.value.Value.integers(0, 0),
+                org.jtorch.core.value.Value.integers(1, 1)));
+        assertThrows(ShapeException.class, () -> org.jtorch.core.dispatch.Dispatcher.get().call(
+                org.jtorch.core.OpRegistry.CONV2D_BACKWARD_INPUT,
+                org.jtorch.core.value.Value.tensor(Torch.ones(Shape.of(1, 1, 1, 1))),
+                org.jtorch.core.value.Value.tensor(Torch.ones(Shape.of(1, 1, 1, 1))),
+                org.jtorch.core.value.Value.integers(1, 1, 3, 3, 3),
+                org.jtorch.core.value.Value.integers(1, 1),
+                org.jtorch.core.value.Value.integers(0, 0),
+                org.jtorch.core.value.Value.integers(1, 1)));
+    }
+
+    @Test
     void metaConvAndPoolAgreeWithCpuMetadata() {
         Tensor cpuInput = Torch.ones(Shape.of(1, 2, 5, 5));
         Tensor cpuWeight = Torch.ones(Shape.of(4, 2, 3, 3));

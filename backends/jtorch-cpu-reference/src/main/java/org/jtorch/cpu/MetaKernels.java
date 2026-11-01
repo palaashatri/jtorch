@@ -640,16 +640,32 @@ final class MetaKernels {
     }
 
     private static Tensor conv2dBackwardInput(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
-        return meta(Shape.of(args[2].asLongArray()), args[0].asTensor().dtype(), op, args);
+        Tensor grad = args[0].asTensor();
+        Tensor weight = args[1].asTensor();
+        long[] inputShape = args[2].asLongArray();
+        Convolution.ConvConfig config = Convolution.convConfig(
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+        Convolution.validateConvBackwardInput(grad, weight, inputShape, config);
+        return meta(Shape.of(inputShape), grad.dtype(), op, args);
     }
 
     private static Tensor conv2dBackwardWeight(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
-        return meta(Shape.of(args[2].asLongArray()), args[1].asTensor().dtype(), op, args);
+        Tensor input = args[0].asTensor();
+        Tensor grad = args[1].asTensor();
+        long[] weightShape = args[2].asLongArray();
+        Convolution.ConvConfig config = Convolution.convConfig(
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+        Convolution.validateConvBackwardWeight(input, grad, weightShape, config);
+        return meta(Shape.of(weightShape), grad.dtype(), op, args);
     }
 
     private static Tensor maxPool2dBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
         Tensor input = args[1].asTensor();
-        return meta(input.shape(), args[0].asTensor().dtype(), op, args);
+        Convolution.PoolConfig config = Convolution.poolConfig(
+                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), false);
+        Convolution.validateMaxPoolBackward(grad, input, config);
+        return meta(input.shape(), grad.dtype(), op, args);
     }
 
     private static Tensor crossEntropy(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
