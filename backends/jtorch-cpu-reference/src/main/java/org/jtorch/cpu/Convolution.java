@@ -17,6 +17,8 @@ final class Convolution {
 
     record AvgPoolConfig(int[] kernel, int[] stride, int[] padding, boolean countIncludePad) {}
 
+    record PadConfig(int pairs, int[] pads) {}
+
     static ConvConfig convConfig(long[] stride, long[] padding, long[] dilation, int groups) {
         if (groups != 1) {
             throw new JTorchException("conv2d in this build supports groups=1 only, got " + groups);
@@ -42,8 +44,11 @@ final class Convolution {
     }
 
     static void validateAvgPool(Tensor input, AvgPoolConfig config) {
-        if (input.dim() != 4 || !input.dtype().isFloatingPoint()) {
-            throw new ShapeException("avg_pool2d expects a floating 4-D NCHW tensor, got " + input.shape());
+        if ((input.dim() != 3 && input.dim() != 4)
+                || (!input.dtype().isFloatingPoint() && !input.dtype().isIntegral())) {
+            throw new ShapeException(
+                    "avg_pool2d expects a 3-D CHW or 4-D NCHW tensor with a numeric dtype, got " + input.shape()
+                            + " " + input.dtype());
         }
         for (int i = 0; i < 2; i++) {
             if (config.kernel()[i] <= 0 || config.stride()[i] <= 0 || config.padding()[i] < 0) {
@@ -56,9 +61,51 @@ final class Convolution {
     }
 
     static Shape avgPoolOutputShape(Tensor input, AvgPoolConfig config) {
-        long height = outputSize(input.size(2), config.padding()[0], 1, config.kernel()[0], config.stride()[0]);
-        long width = outputSize(input.size(3), config.padding()[1], 1, config.kernel()[1], config.stride()[1]);
+        int heightDim = input.dim() - 2;
+        int widthDim = input.dim() - 1;
+        long height = outputSize(input.size(heightDim), config.padding()[0], 1, config.kernel()[0],
+                config.stride()[0]);
+        long width = outputSize(input.size(widthDim), config.padding()[1], 1, config.kernel()[1],
+                config.stride()[1]);
+        if (input.dim() == 3) {
+            return Shape.of(input.size(0), height, width);
+        }
         return Shape.of(input.size(0), input.size(1), height, width);
+    }
+
+    static PadConfig padConfig(long[] pad, int rank) {
+        if (pad.length % 2 != 0) {
+            throw new ShapeException("constant_pad_nd pad must have an even number of entries");
+        }
+        int pairs = pad.length / 2;
+        if (pairs > rank) {
+            throw new ShapeException("constant_pad_nd pad length " + pad.length + " exceeds input rank " + rank);
+        }
+        int[] values = new int[pad.length];
+        for (int i = 0; i < pad.length; i++) {
+            values[i] = Math.toIntExact(pad[i]);
+        }
+        return new PadConfig(pairs, values);
+    }
+
+    static Shape padShape(Shape input, PadConfig config) {
+        long[] shape = input.toArray();
+        for (int i = 0; i < config.pairs(); i++) {
+            int dim = shape.length - 1 - i;
+            shape[dim] += (long) config.pads()[2 * i] + config.pads()[2 * i + 1];
+            if (shape[dim] <= 0) {
+                throw new ShapeException("constant_pad_nd produced a non-positive dimension " + dim);
+            }
+        }
+        return Shape.of(shape);
+    }
+
+    static int padStart(PadConfig config, int dim, int rank) {
+        int pair = rank - 1 - dim;
+        if (pair < 0 || pair >= config.pairs()) {
+            return 0;
+        }
+        return config.pads()[2 * pair];
     }
 
     static int[] pair(long[] values, String name) {

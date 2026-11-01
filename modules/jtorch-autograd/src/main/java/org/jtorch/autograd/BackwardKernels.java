@@ -715,6 +715,10 @@ final class BackwardKernels {
             @Override
             public Tensor[] backward(Tensor[] g) {
                 Tensor index = saved(0);
+                if (!in[2].shape().equals(index.shape())) {
+                    throw new org.jtorch.core.AutogradException(
+                            "scatter backward requires src and index to have the same shape");
+                }
                 Tensor gradSelf = Dispatcher.get()
                         .call(
                                 OpRegistry.SCATTER_BACKWARD_SELF,

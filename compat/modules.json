@@ -2,8 +2,8 @@
   "generatedFrom": "jtorch-nn parity and unit tests",
   "modules": [
     { "name": "Conv2d", "status": "autograd", "notes": "NCHW, groups=1; forward and gradients covered by PyTorch fixtures and a real-MNIST acceptance run." },
-    { "name": "BatchNorm2d", "status": "autograd", "notes": "Inference mode with running statistics only; training-mode batch statistics are explicitly unsupported." },
-    { "name": "AvgPool2d", "status": "autograd", "notes": "NCHW, ceil_mode=false; forward and gradients covered by PyTorch fixtures." },
+    { "name": "BatchNorm2d", "status": "autograd", "notes": "Inference mode with running statistics only; state dict includes num_batches_tracked; training-mode batch statistics are explicitly unsupported." },
+    { "name": "AvgPool2d", "status": "autograd", "notes": "CHW/NCHW, ceil_mode=false; forward and gradients covered by PyTorch fixtures and regression tests." },
     { "name": "MaxPool2d", "status": "autograd", "notes": "NCHW; ceil_mode=false only; gradients covered by PyTorch fixtures." },
     { "name": "Linear", "status": "autograd", "notes": "Forward and gradients covered by PyTorch fixtures for 2-D inputs; 1-D and 3-D ranks are covered by regression tests; state dict round-trip tested." },
     { "name": "ReLU", "status": "autograd", "notes": "Delegates to the relu operator; gradient masked at zero." },

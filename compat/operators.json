@@ -58,7 +58,7 @@
       "name": "aten::batch_norm.default",
       "status": "autograd",
       "differentiable": true,
-      "reverse": "batch_norm_backward"
+      "reverse": null
     },
     {
       "name": "aten::bmm.default",
@@ -448,7 +448,7 @@
       "name": "aten::scatter.default",
       "status": "autograd",
       "differentiable": true,
-      "reverse": "scatter_backward"
+      "reverse": "scatter_backward_self,scatter_backward_src"
     },
     {
       "name": "aten::select.default",

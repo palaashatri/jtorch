@@ -10,6 +10,14 @@ public final class AvgPool2d extends Module {
     private final boolean ceilMode;
     private final boolean countIncludePad;
 
+    public AvgPool2d(int kernel) {
+        this(kernel, kernel, 0);
+    }
+
+    public AvgPool2d(int kernel, int stride) {
+        this(kernel, stride, 0);
+    }
+
     public AvgPool2d(int kernel, int stride, int padding) {
         this(new int[] {kernel, kernel}, new int[] {stride, stride}, new int[] {padding, padding}, false, true);
     }

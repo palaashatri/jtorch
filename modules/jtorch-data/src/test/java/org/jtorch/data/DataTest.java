@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.time.Duration;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import org.jtorch.api.Torch;
 import org.jtorch.core.DType;
 import org.jtorch.core.Shape;
@@ -213,6 +215,60 @@ class DataTest {
         }, 1);
         assertThrows(IllegalStateException.class, () -> failing.iterator().hasNext());
         failing.close();
+    }
+
+    @Test
+    void prefetchPropagatesFailureWhenTheQueueIsFull() {
+        java.util.Iterator<Sample> failing = new java.util.Iterator<>() {
+            private int calls;
+
+            @Override
+            public boolean hasNext() {
+                return true;
+            }
+
+            @Override
+            public Sample next() {
+                calls++;
+                if (calls <= 2) {
+                    return new Sample(new Tensor[0]);
+                }
+                throw new IllegalStateException("producer boom");
+            }
+        };
+        PrefetchingDataLoader loader = new PrefetchingDataLoader(() -> failing, 1);
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+            java.util.Iterator<Sample> iterator = loader.iterator();
+            Thread.sleep(200);
+            iterator.next();
+            Thread.sleep(300);
+            iterator.next();
+            assertThrows(IllegalStateException.class, iterator::hasNext);
+            loader.close();
+        });
+    }
+
+    @Test
+    void prefetchCloseWakesAConsumerWhenTheQueueIsFull() {
+        PrefetchingDataLoader loader = new PrefetchingDataLoader(() -> new java.util.Iterator<>() {
+            @Override
+            public boolean hasNext() {
+                return true;
+            }
+
+            @Override
+            public Sample next() {
+                return new Sample(new Tensor[0]);
+            }
+        }, 1);
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+            java.util.Iterator<Sample> iterator = loader.iterator();
+            Thread.sleep(200);
+            loader.close();
+            while (iterator.hasNext()) {
+                iterator.next();
+            }
+        });
     }
 
     @Test

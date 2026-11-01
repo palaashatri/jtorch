@@ -28,7 +28,7 @@ class DispatchTest {
         assertEquals(Schemas.ALL.size(), Ops.class.getDeclaredFields().length);
         for (Schemas.Schema schema : Schemas.ALL) {
             assertTrue(schema.differentiable() || schema.status().equals("forward"));
-            if (schema.differentiable()) {
+            if (schema.differentiable() && !schema.composite()) {
                 assertTrue(schema.reverse() != null, "missing reverse for " + schema.fullName());
             }
         }

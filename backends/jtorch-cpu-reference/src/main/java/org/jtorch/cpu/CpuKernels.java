@@ -1643,10 +1643,13 @@ final class CpuKernels {
         Convolution.validateAvgPool(input, config);
         Shape shape = Convolution.avgPoolOutputShape(input, config);
         Tensor output = fresh(shape, input.dtype(), outputRequiresGrad(op, args));
-        int batch = (int) input.size(0);
-        int channels = (int) input.size(1);
-        int outH = (int) shape.dim(2);
-        int outW = (int) shape.dim(3);
+        boolean batched = input.dim() == 4;
+        int batch = batched ? (int) input.size(0) : 1;
+        int channels = batched ? (int) input.size(1) : (int) input.size(0);
+        int height = batched ? (int) input.size(2) : (int) input.size(1);
+        int width = batched ? (int) input.size(3) : (int) input.size(2);
+        int outH = (int) shape.dim(shape.rank() - 2);
+        int outW = (int) shape.dim(shape.rank() - 1);
         int kernelArea = config.kernel()[0] * config.kernel()[1];
         for (int n = 0; n < batch; n++) {
             for (int c = 0; c < channels; c++) {
@@ -1656,21 +1659,27 @@ final class CpuKernels {
                         int valid = 0;
                         for (int ky = 0; ky < config.kernel()[0]; ky++) {
                             int iy = y * config.stride()[0] - config.padding()[0] + ky;
-                            if (iy < 0 || iy >= input.size(2)) {
+                            if (iy < 0 || iy >= height) {
                                 continue;
                             }
                             for (int kx = 0; kx < config.kernel()[1]; kx++) {
                                 int ix = x * config.stride()[1] - config.padding()[1] + kx;
-                                if (ix < 0 || ix >= input.size(3)) {
+                                if (ix < 0 || ix >= width) {
                                     continue;
                                 }
-                                sum += TensorAccess.getDouble(input.impl(), offset(input, n, c, iy, ix));
+                                long source = batched ? offset(input, n, c, iy, ix) : offset(input, c, iy, ix);
+                                sum += TensorAccess.getDouble(input.impl(), source);
                                 valid++;
                             }
                         }
                         int divisor = config.countIncludePad() ? kernelArea : valid;
-                        TensorAccess.setDouble(output.impl(), offset(output, n, c, y, x),
-                                divisor == 0 ? Double.NaN : sum / divisor);
+                        double average = divisor == 0 ? Double.NaN : sum / divisor;
+                        long target = batched ? offset(output, n, c, y, x) : offset(output, c, y, x);
+                        if (input.dtype().isIntegral()) {
+                            TensorAccess.setLong(output.impl(), target, (long) average);
+                        } else {
+                            TensorAccess.setDouble(output.impl(), target, average);
+                        }
                     }
                 }
             }
@@ -1692,28 +1701,32 @@ final class CpuKernels {
         }
         Tensor output = fresh(input.shape(), grad.dtype(), false);
         fillLongDouble(output, 0);
-        int batch = (int) input.size(0);
-        int channels = (int) input.size(1);
-        int outH = (int) expected.dim(2);
-        int outW = (int) expected.dim(3);
+        boolean batched = input.dim() == 4;
+        int batch = batched ? (int) input.size(0) : 1;
+        int channels = batched ? (int) input.size(1) : (int) input.size(0);
+        int height = batched ? (int) input.size(2) : (int) input.size(1);
+        int width = batched ? (int) input.size(3) : (int) input.size(2);
+        int outH = (int) expected.dim(expected.rank() - 2);
+        int outW = (int) expected.dim(expected.rank() - 1);
         int kernelArea = config.kernel()[0] * config.kernel()[1];
         for (int n = 0; n < batch; n++) {
             for (int c = 0; c < channels; c++) {
                 for (int y = 0; y < outH; y++) {
                     for (int x = 0; x < outW; x++) {
-                        double g = TensorAccess.getDouble(grad.impl(), offset(grad, n, c, y, x));
+                        long gradPosition = batched ? offset(grad, n, c, y, x) : offset(grad, c, y, x);
+                        double g = TensorAccess.getDouble(grad.impl(), gradPosition);
                         if (g == 0) {
                             continue;
                         }
                         int valid = 0;
                         for (int ky = 0; ky < config.kernel()[0]; ky++) {
                             int iy = y * config.stride()[0] - config.padding()[0] + ky;
-                            if (iy < 0 || iy >= input.size(2)) {
+                            if (iy < 0 || iy >= height) {
                                 continue;
                             }
                             for (int kx = 0; kx < config.kernel()[1]; kx++) {
                                 int ix = x * config.stride()[1] - config.padding()[1] + kx;
-                                if (ix < 0 || ix >= input.size(3)) {
+                                if (ix < 0 || ix >= width) {
                                     continue;
                                 }
                                 valid++;
@@ -1726,15 +1739,15 @@ final class CpuKernels {
                         double share = g / divisor;
                         for (int ky = 0; ky < config.kernel()[0]; ky++) {
                             int iy = y * config.stride()[0] - config.padding()[0] + ky;
-                            if (iy < 0 || iy >= input.size(2)) {
+                            if (iy < 0 || iy >= height) {
                                 continue;
                             }
                             for (int kx = 0; kx < config.kernel()[1]; kx++) {
                                 int ix = x * config.stride()[1] - config.padding()[1] + kx;
-                                if (ix < 0 || ix >= input.size(3)) {
+                                if (ix < 0 || ix >= width) {
                                     continue;
                                 }
-                                long position = offset(output, n, c, iy, ix);
+                                long position = batched ? offset(output, n, c, iy, ix) : offset(output, c, iy, ix);
                                 TensorAccess.setDouble(output.impl(), position,
                                         TensorAccess.getDouble(output.impl(), position) + share);
                             }
@@ -1746,37 +1759,37 @@ final class CpuKernels {
         return new Value[] {Value.tensor(output)};
     }
 
-    private static int[] padPair(long[] pad) {
-        if (pad.length == 2) {
-            return new int[] {0, 0, Math.toIntExact(pad[0]), Math.toIntExact(pad[1])};
+    private static long integralPadValue(Scalar value, DType dtype) {
+        if (value.isFloatingPoint()) {
+            double number = value.toDouble();
+            if (!Double.isFinite(number)) {
+                throw new org.jtorch.core.JTorchException(
+                        "value cannot be converted to an integral dtype without overflow");
+            }
+            if (number > Long.MAX_VALUE || number < Long.MIN_VALUE) {
+                throw new org.jtorch.core.JTorchException(
+                        "value cannot be converted to an integral dtype without overflow");
+            }
         }
-        if (pad.length == 4) {
-            return new int[] {Math.toIntExact(pad[0]), Math.toIntExact(pad[1]), Math.toIntExact(pad[2]),
-                Math.toIntExact(pad[3])};
+        long result = value.toLong();
+        if (dtype == DType.INT32 && (result < Integer.MIN_VALUE || result > Integer.MAX_VALUE)) {
+            throw new org.jtorch.core.JTorchException(
+                    "value cannot be converted to int32 without overflow");
         }
-        throw new ShapeException("constant_pad_nd pad must have two or four entries, got " + pad.length);
+        return result;
     }
 
     private static Value[] constantPad(Op op, Value[] args, DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
-        int[] pad = padPair(args[1].asLongArray());
-        if (input.dim() < 2) {
-            throw new ShapeException("constant_pad_nd requires at least two dimensions");
-        }
-        for (int value : pad) {
-            if (value < 0) {
-                throw new ShapeException("constant_pad_nd in this build does not support negative padding");
-            }
-        }
-        long[] shape = input.shape().toArray();
-        shape[shape.length - 1] += pad[0] + pad[1];
-        shape[shape.length - 2] += pad[2] + pad[3];
-        Tensor output = fresh(Shape.of(shape), input.dtype(), outputRequiresGrad(op, args));
+        Convolution.PadConfig config = Convolution.padConfig(args[1].asLongArray(), input.dim());
+        Shape outputShape = Convolution.padShape(input.shape(), config);
+        Tensor output = fresh(outputShape, input.dtype(), outputRequiresGrad(op, args));
         Scalar value = args[2].asScalar();
         boolean integral = input.dtype().isIntegral() || input.dtype().isBoolean();
+        long integralValue = integral ? integralPadValue(value, input.dtype()) : 0;
         for (long i = 0; i < output.numel(); i++) {
             if (integral) {
-                TensorAccess.setLong(output.impl(), output.elementOffset(i), value.toLong(input.dtype()));
+                TensorAccess.setLong(output.impl(), output.elementOffset(i), integralValue);
             } else {
                 TensorAccess.setDouble(output.impl(), output.elementOffset(i), value.toDouble(input.dtype()));
             }
@@ -1786,48 +1799,61 @@ final class CpuKernels {
         for (long i = 0; i < input.numel(); i++) {
             decompose(i, input.shape(), index);
             long outOffset = output.storageOffset();
+            boolean inside = true;
             for (int d = 0; d < rank; d++) {
                 long coordinate = index[d];
-                if (d == rank - 1) {
-                    coordinate += pad[0];
-                } else if (d == rank - 2) {
-                    coordinate += pad[2];
+                int pair = rank - 1 - d;
+                if (pair < config.pairs()) {
+                    coordinate += config.pads()[2 * pair];
+                }
+                if (coordinate < 0 || coordinate >= outputShape.dim(d)) {
+                    inside = false;
+                    break;
                 }
                 outOffset += coordinate * output.stride(d);
             }
-            copyValue(output, outOffset, input, input.elementOffset(i));
+            if (inside) {
+                copyValue(output, outOffset, input, input.elementOffset(i));
+            }
         }
         return new Value[] {Value.tensor(output)};
     }
 
     private static Value[] constantPadBackward(Op op, Value[] args, DispatchKeySet keys) {
         Tensor grad = args[0].asTensor();
-        int[] pad = padPair(args[1].asLongArray());
-        if (grad.dim() < 2) {
-            throw new ShapeException("constant_pad_nd backward requires at least two dimensions");
+        Convolution.PadConfig config = Convolution.padConfig(args[1].asLongArray(), grad.dim());
+        long[] inputShapeArray = grad.shape().toArray();
+        for (int i = 0; i < config.pairs(); i++) {
+            int dim = inputShapeArray.length - 1 - i;
+            inputShapeArray[dim] -= (long) config.pads()[2 * i] + config.pads()[2 * i + 1];
+            if (inputShapeArray[dim] <= 0) {
+                throw new ShapeException("constant_pad_nd backward produced a non-positive shape");
+            }
         }
-        long[] shape = grad.shape().toArray();
-        shape[shape.length - 1] -= pad[0] + pad[1];
-        shape[shape.length - 2] -= pad[2] + pad[3];
-        if (shape[shape.length - 1] <= 0 || shape[shape.length - 2] <= 0) {
-            throw new ShapeException("constant_pad_nd backward produced a non-positive shape");
-        }
-        Tensor output = fresh(Shape.of(shape), grad.dtype(), false);
-        int rank = output.dim();
+        Shape inputShape = Shape.of(inputShapeArray);
+        Tensor output = fresh(inputShape, grad.dtype(), false);
+        fillLongDouble(output, 0);
+        int rank = inputShape.rank();
         long[] index = new long[rank];
-        for (long i = 0; i < output.numel(); i++) {
-            decompose(i, output.shape(), index);
+        for (long i = 0; i < inputShape.numel(); i++) {
+            decompose(i, inputShape, index);
             long gradOffset = grad.storageOffset();
+            boolean inside = true;
             for (int d = 0; d < rank; d++) {
                 long coordinate = index[d];
-                if (d == rank - 1) {
-                    coordinate += pad[0];
-                } else if (d == rank - 2) {
-                    coordinate += pad[2];
+                int pair = rank - 1 - d;
+                if (pair < config.pairs()) {
+                    coordinate += config.pads()[2 * pair];
+                }
+                if (coordinate < 0 || coordinate >= grad.size(d)) {
+                    inside = false;
+                    break;
                 }
                 gradOffset += coordinate * grad.stride(d);
             }
-            copyValue(output, output.elementOffset(i), grad, gradOffset);
+            if (inside) {
+                copyValue(output, output.elementOffset(i), grad, gradOffset);
+            }
         }
         return new Value[] {Value.tensor(output)};
     }
@@ -1862,16 +1888,28 @@ final class CpuKernels {
     }
 
     private static void validateIndexTensor(Tensor index, String op) {
-        if (index.dtype() != DType.INT64) {
-            throw new DTypeException(op + " index must be int64, got " + index.dtype());
+        if (index.dtype() != DType.INT64 && index.dtype() != DType.INT32) {
+            throw new DTypeException(op + " index must be int32 or int64, got " + index.dtype());
         }
     }
 
     private static Value[] gather(Op op, Value[] args, DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
-        int dim = input.shape().normalizeDim(args[1].asInt());
         Tensor index = args[2].asTensor();
         validateIndexTensor(index, "gather");
+        if (input.dim() == 0) {
+            if (index.dim() != 0 || args[1].asInt() != 0 && args[1].asInt() != -1) {
+                throw new ShapeException("gather on a 0-D tensor requires a 0-D index and dimension 0");
+            }
+            long selected = TensorAccess.getLong(index.impl(), index.elementOffset(0));
+            if (selected != 0) {
+                throw new IndexOutOfBoundsException("gather index out of range for a 0-D tensor");
+            }
+            Tensor output = fresh(Shape.scalar(), input.dtype(), outputRequiresGrad(op, args));
+            copyValue(output, 0, input, input.storageOffset());
+            return new Value[] {Value.tensor(output)};
+        }
+        int dim = input.shape().normalizeDim(args[1].asInt());
         if (index.dim() != input.dim()) {
             throw new ShapeException("gather index rank must match input rank");
         }
@@ -1904,10 +1942,15 @@ final class CpuKernels {
         validateIndexTensor(index, "gather_backward");
         long[] selfShape = args[2].asLongArray();
         int rank = selfShape.length;
-        if (grad.dim() != rank || index.dim() != rank) {
-            throw new ShapeException("gather backward expects rank-matching grad/index");
+        if (grad.dim() != rank || index.dim() != rank || !grad.shape().equals(index.shape())) {
+            throw new ShapeException("gather backward requires grad and index to share the self rank and shape");
         }
         int dim = Shape.of(selfShape).normalizeDim(args[3].asInt());
+        for (int d = 0; d < rank; d++) {
+            if (d != dim && index.size(d) > selfShape[d]) {
+                throw new ShapeException("gather backward index exceeds self at dimension " + d);
+            }
+        }
         Tensor output = fresh(Shape.of(selfShape), grad.dtype(), false);
         fillLongDouble(output, 0);
         long[] indexPosition = new long[rank];
@@ -1934,17 +1977,17 @@ final class CpuKernels {
         int dim = input.shape().normalizeDim(args[1].asInt());
         Tensor index = args[2].asTensor();
         validateIndexTensor(index, "index_select");
-        if (index.dim() != 1) {
-            throw new ShapeException("index_select index must be 1-D");
+        if (index.dim() != 1 && index.dim() != 0) {
+            throw new ShapeException("index_select index must be 0-D or 1-D");
         }
         long[] shape = input.shape().toArray();
-        shape[dim] = index.size(0);
+        shape[dim] = index.numel();
         Tensor output = fresh(Shape.of(shape), input.dtype(), outputRequiresGrad(op, args));
         long[] source = new long[input.dim()];
         long[] target = new long[input.dim()];
         for (long position = 0; position < output.numel(); position++) {
             decompose(position, output.shape(), target);
-            long selected = TensorAccess.getLong(index.impl(), index.elementOffset(target[dim]));
+            long selected = TensorAccess.getLong(index.impl(), index.elementOffset(index.dim() == 0 ? 0 : target[dim]));
             if (selected < 0 || selected >= input.size(dim)) {
                 throw new IndexOutOfBoundsException("index_select index " + selected + " is out of range");
             }
@@ -1962,13 +2005,17 @@ final class CpuKernels {
         validateIndexTensor(index, "index_select_backward");
         long[] selfShape = args[2].asLongArray();
         int dim = Shape.of(selfShape).normalizeDim(args[3].asInt());
+        if (grad.dim() != selfShape.length
+                || (index.dim() != 0 && (index.dim() != 1 || grad.size(dim) != index.numel()))) {
+            throw new ShapeException("index_select backward grad/index shapes do not match self");
+        }
         Tensor output = fresh(Shape.of(selfShape), grad.dtype(), false);
         fillLongDouble(output, 0);
         long[] source = new long[selfShape.length];
         long[] target = new long[selfShape.length];
         for (long position = 0; position < grad.numel(); position++) {
             decompose(position, grad.shape(), target);
-            long selected = TensorAccess.getLong(index.impl(), index.elementOffset(target[dim]));
+            long selected = TensorAccess.getLong(index.impl(), index.elementOffset(index.dim() == 0 ? 0 : target[dim]));
             if (selected < 0 || selected >= selfShape[dim]) {
                 throw new IndexOutOfBoundsException("index_select index out of range");
             }
@@ -2026,8 +2073,15 @@ final class CpuKernels {
         int start = args[3].asInt();
         int length = args[4].asInt();
         int step = args[5].asInt();
-        if (step <= 0 || length < 0 || start < 0 || start + (long) (length - 1) * step >= selfShape[dim]) {
+        if (step <= 0 || length < 0 || start < 0 || start > selfShape[dim]
+                || (length > 0 && start + (long) (length - 1) * step >= selfShape[dim])) {
             throw new ShapeException("invalid slice backward geometry");
+        }
+        long[] expectedShape = selfShape.clone();
+        expectedShape[dim] = length;
+        if (grad.dim() != selfShape.length || !grad.shape().equals(Shape.of(expectedShape))) {
+            throw new ShapeException("slice backward grad shape " + grad.shape() + " does not match "
+                    + Shape.of(expectedShape));
         }
         Tensor output = fresh(Shape.of(selfShape), grad.dtype(), false);
         fillLongDouble(output, 0);
@@ -2054,7 +2108,7 @@ final class CpuKernels {
             throw new DTypeException("scatter src dtype must match self");
         }
         for (int d = 0; d < self.dim(); d++) {
-            if (index.size(d) > self.size(d) || index.size(d) > src.size(d)) {
+            if ((d != dim && index.size(d) > self.size(d)) || index.size(d) > src.size(d)) {
                 throw new ShapeException("scatter index/src exceeds self at dimension " + d);
             }
         }
@@ -2081,6 +2135,14 @@ final class CpuKernels {
         Tensor index = args[1].asTensor();
         int dim = grad.shape().normalizeDim(args[2].asInt());
         validateIndexTensor(index, "scatter_backward_self");
+        if (index.dim() != grad.dim()) {
+            throw new ShapeException("scatter backward index rank must match grad rank");
+        }
+        for (int d = 0; d < grad.dim(); d++) {
+            if (d != dim && index.size(d) > grad.size(d)) {
+                throw new ShapeException("scatter backward index exceeds grad at dimension " + d);
+            }
+        }
         Tensor output = fresh(grad.shape(), grad.dtype(), false);
         Copy.copy(grad, output);
         long[] indexPosition = new long[grad.dim()];
@@ -2105,6 +2167,14 @@ final class CpuKernels {
         int dim = grad.shape().normalizeDim(args[2].asInt());
         long[] srcShape = args[3].asLongArray();
         validateIndexTensor(index, "scatter_backward_src");
+        if (srcShape.length != grad.dim() || index.dim() != grad.dim()) {
+            throw new ShapeException("scatter backward src/index rank mismatch");
+        }
+        for (int d = 0; d < grad.dim(); d++) {
+            if ((d != dim && index.size(d) > grad.size(d)) || index.size(d) > srcShape[d]) {
+                throw new ShapeException("scatter backward src/index exceeds output geometry");
+            }
+        }
         Tensor output = fresh(Shape.of(srcShape), grad.dtype(), false);
         fillLongDouble(output, 0);
         long[] indexPosition = new long[grad.dim()];

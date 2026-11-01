@@ -2229,7 +2229,7 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "Average pooling over NCHW tensors; ceil_mode is not supported.",
+      "summary": "Average pooling over CHW/NCHW tensors; ceil_mode is not supported.",
       "variants": [
         "function",
         "method"
@@ -2259,7 +2259,7 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "Constant padding of the last two dimensions of a tensor.",
+      "summary": "Constant padding of trailing dimensions (positive or negative) with a scalar fill value.",
       "variants": [
         "function",
         "method"
@@ -2315,7 +2315,7 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "Gathers values along one dimension using int64 indices.",
+      "summary": "Gathers values along one dimension using int32 or int64 indices.",
       "variants": [
         "function",
         "method"
@@ -2345,7 +2345,7 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "Selects positions along one dimension using int64 indices.",
+      "summary": "Selects positions along one dimension using int32 or int64 indices.",
       "variants": [
         "function",
         "method"
@@ -2400,8 +2400,7 @@
         "function",
         "method"
       ],
-      "composite": true,
-      "reverse": "batch_norm_backward"
+      "composite": true
     },
     {
       "name": "slice",
@@ -2467,13 +2466,13 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "Writes src values into self at int64 index positions along one dimension.",
+      "summary": "Writes src values into self at int32/int64 index positions along one dimension.",
       "variants": [
         "function",
         "method"
       ],
       "composite": false,
-      "reverse": "scatter_backward"
+      "reverse": "scatter_backward_self,scatter_backward_src"
     },
     {
       "name": "add_",

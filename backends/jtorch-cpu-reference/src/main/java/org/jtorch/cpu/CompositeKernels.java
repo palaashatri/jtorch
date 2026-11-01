@@ -116,6 +116,10 @@ final class CompositeKernels {
         if (runningMean == null || runningVar == null) {
             throw new ShapeException("batch_norm inference requires running_mean and running_var");
         }
+        if (runningMean.requiresGrad() || runningVar.requiresGrad()) {
+            throw new org.jtorch.core.AutogradException(
+                    "batch_norm is not differentiable with respect to running_mean/running_var");
+        }
         int channels = (int) input.size(1);
         long[] dimensions = new long[input.dim()];
         dimensions[1] = channels;

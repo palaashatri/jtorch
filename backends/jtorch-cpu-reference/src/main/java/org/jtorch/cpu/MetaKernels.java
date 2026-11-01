@@ -712,38 +712,23 @@ final class MetaKernels {
 
     private static Tensor constantPad(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
-        long[] pad = args[1].asLongArray();
-        if (pad.length != 2 && pad.length != 4) {
-            throw new org.jtorch.core.ShapeException("constant_pad_nd pad must have two or four entries");
-        }
-        for (long value : pad) {
-            if (value < 0) {
-                throw new org.jtorch.core.ShapeException(
-                        "constant_pad_nd in this build does not support negative padding");
-            }
-        }
-        if (input.dim() < 2) {
-            throw new org.jtorch.core.ShapeException("constant_pad_nd requires at least two dimensions");
-        }
-        long[] shape = input.shape().toArray();
-        int left = (int) pad[0];
-        int right = (int) pad[1];
-        int top = pad.length == 4 ? (int) pad[2] : 0;
-        int bottom = pad.length == 4 ? (int) pad[3] : 0;
-        shape[shape.length - 1] += left + right;
-        shape[shape.length - 2] += top + bottom;
-        if (shape[shape.length - 1] <= 0 || shape[shape.length - 2] <= 0) {
-            throw new org.jtorch.core.ShapeException("constant_pad_nd produced a non-positive shape");
-        }
-        return meta(Shape.of(shape), input.dtype(), op, args);
+        Convolution.PadConfig config = Convolution.padConfig(args[1].asLongArray(), input.dim());
+        Shape shape = Convolution.padShape(input.shape(), config);
+        return meta(shape, input.dtype(), op, args);
     }
 
     private static Tensor constantPadBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
         Tensor grad = args[0].asTensor();
-        long[] pad = args[1].asLongArray();
+        Convolution.PadConfig config = Convolution.padConfig(args[1].asLongArray(), grad.dim());
         long[] shape = grad.shape().toArray();
-        shape[shape.length - 1] -= (int) pad[0] + (int) pad[1];
-        shape[shape.length - 2] -= pad.length == 4 ? (int) pad[2] + (int) pad[3] : 0;
+        for (int i = 0; i < config.pairs(); i++) {
+            int dim = shape.length - 1 - i;
+            shape[dim] -= (long) config.pads()[2 * i] + config.pads()[2 * i + 1];
+            if (shape[dim] <= 0) {
+                throw new org.jtorch.core.ShapeException(
+                        "constant_pad_nd backward produced a non-positive shape");
+            }
+        }
         return meta(Shape.of(shape), grad.dtype(), op, args);
     }
 
@@ -762,11 +747,17 @@ final class MetaKernels {
 
     private static Tensor gather(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
-        int dim = input.shape().normalizeDim(args[1].asInt());
         Tensor index = args[2].asTensor();
-        if (index.dtype() != org.jtorch.core.DType.INT64) {
-            throw new org.jtorch.core.DTypeException("gather index must be int64");
+        if (index.dtype() != org.jtorch.core.DType.INT64 && index.dtype() != org.jtorch.core.DType.INT32) {
+            throw new org.jtorch.core.DTypeException("gather index must be int32 or int64");
         }
+        if (input.dim() == 0) {
+            if (index.dim() != 0 || (args[1].asInt() != 0 && args[1].asInt() != -1)) {
+                throw new org.jtorch.core.ShapeException("gather on a 0-D tensor requires a 0-D index and dimension 0");
+            }
+            return meta(Shape.scalar(), input.dtype(), op, args);
+        }
+        int dim = input.shape().normalizeDim(args[1].asInt());
         if (index.dim() != input.dim()) {
             throw new org.jtorch.core.ShapeException("gather index rank must match input rank");
         }
@@ -779,27 +770,45 @@ final class MetaKernels {
     }
 
     private static Tensor gatherBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        Tensor index = args[1].asTensor();
         long[] shape = args[2].asLongArray();
-        Shape.of(shape).normalizeDim(args[3].asInt());
-        return meta(Shape.of(shape), args[0].asTensor().dtype(), op, args);
+        int dim = Shape.of(shape).normalizeDim(args[3].asInt());
+        if (grad.dim() != shape.length || index.dim() != shape.length
+                || !grad.shape().equals(index.shape())) {
+            throw new org.jtorch.core.ShapeException("gather backward shape mismatch");
+        }
+        for (int d = 0; d < shape.length; d++) {
+            if (d != dim && index.size(d) > shape[d]) {
+                throw new org.jtorch.core.ShapeException("gather backward index exceeds self");
+            }
+        }
+        return meta(Shape.of(shape), grad.dtype(), op, args);
     }
 
     private static Tensor indexSelect(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
         int dim = input.shape().normalizeDim(args[1].asInt());
         Tensor index = args[2].asTensor();
-        if (index.dtype() != org.jtorch.core.DType.INT64 || index.dim() != 1) {
-            throw new org.jtorch.core.DTypeException("index_select index must be a 1-D int64 tensor");
+        if ((index.dtype() != org.jtorch.core.DType.INT64 && index.dtype() != org.jtorch.core.DType.INT32)
+                || (index.dim() != 0 && index.dim() != 1)) {
+            throw new org.jtorch.core.DTypeException("index_select index must be an int32/int64 scalar or vector");
         }
         long[] shape = input.shape().toArray();
-        shape[dim] = index.size(0);
+        shape[dim] = index.numel();
         return meta(Shape.of(shape), input.dtype(), op, args);
     }
 
     private static Tensor indexSelectBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        Tensor index = args[1].asTensor();
         long[] shape = args[2].asLongArray();
-        Shape.of(shape).normalizeDim(args[3].asInt());
-        return meta(Shape.of(shape), args[0].asTensor().dtype(), op, args);
+        int dim = Shape.of(shape).normalizeDim(args[3].asInt());
+        if (grad.dim() != shape.length
+                || (index.dim() != 0 && (index.dim() != 1 || grad.size(dim) != index.numel()))) {
+            throw new org.jtorch.core.ShapeException("index_select backward shape mismatch");
+        }
+        return meta(Shape.of(shape), grad.dtype(), op, args);
     }
 
     private static Tensor slice(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
@@ -832,7 +841,22 @@ final class MetaKernels {
     }
 
     private static Tensor sliceBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
-        return meta(Shape.of(args[1].asLongArray()), args[0].asTensor().dtype(), op, args);
+        Tensor grad = args[0].asTensor();
+        long[] selfShape = args[1].asLongArray();
+        int dim = Shape.of(selfShape).normalizeDim(args[2].asInt());
+        int start = args[3].asInt();
+        int length = args[4].asInt();
+        int step = args[5].asInt();
+        if (step <= 0 || length < 0 || start < 0 || start > selfShape[dim]
+                || (length > 0 && start + (long) (length - 1) * step >= selfShape[dim])) {
+            throw new ShapeException("invalid slice backward geometry");
+        }
+        long[] expected = selfShape.clone();
+        expected[dim] = length;
+        if (grad.dim() != selfShape.length || !grad.shape().equals(Shape.of(expected))) {
+            throw new ShapeException("slice backward grad shape mismatch");
+        }
+        return meta(Shape.of(selfShape), grad.dtype(), op, args);
     }
 
     private static Tensor scatter(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
@@ -840,14 +864,14 @@ final class MetaKernels {
         int dim = self.shape().normalizeDim(args[1].asInt());
         Tensor index = args[2].asTensor();
         Tensor src = args[3].asTensor();
-        if (index.dtype() != org.jtorch.core.DType.INT64) {
-            throw new org.jtorch.core.DTypeException("scatter index must be int64");
+        if (index.dtype() != org.jtorch.core.DType.INT64 && index.dtype() != org.jtorch.core.DType.INT32) {
+            throw new org.jtorch.core.DTypeException("scatter index must be int32 or int64");
         }
         if (index.dim() != self.dim() || src.dim() != self.dim()) {
             throw new ShapeException("scatter expects index/src with the same rank as self");
         }
         for (int d = 0; d < self.dim(); d++) {
-            if (index.size(d) > self.size(d) || index.size(d) > src.size(d)) {
+            if ((d != dim && index.size(d) > self.size(d)) || index.size(d) > src.size(d)) {
                 throw new ShapeException("scatter index/src exceeds self at dimension " + d);
             }
         }
@@ -855,11 +879,34 @@ final class MetaKernels {
     }
 
     private static Tensor scatterBackwardSelf(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
-        return meta(args[0].asTensor().shape(), args[0].asTensor().dtype(), op, args);
+        Tensor grad = args[0].asTensor();
+        Tensor index = args[1].asTensor();
+        int dim = grad.shape().normalizeDim(args[2].asInt());
+        if (index.dim() != grad.dim()) {
+            throw new ShapeException("scatter backward index rank must match grad rank");
+        }
+        for (int d = 0; d < grad.dim(); d++) {
+            if (d != dim && index.size(d) > grad.size(d)) {
+                throw new ShapeException("scatter backward index exceeds grad");
+            }
+        }
+        return meta(grad.shape(), grad.dtype(), op, args);
     }
 
     private static Tensor scatterBackwardSrc(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
-        return meta(Shape.of(args[3].asLongArray()), args[0].asTensor().dtype(), op, args);
+        Tensor grad = args[0].asTensor();
+        Tensor index = args[1].asTensor();
+        int dim = grad.shape().normalizeDim(args[2].asInt());
+        long[] srcShape = args[3].asLongArray();
+        if (srcShape.length != grad.dim() || index.dim() != grad.dim()) {
+            throw new ShapeException("scatter backward src/index rank mismatch");
+        }
+        for (int d = 0; d < grad.dim(); d++) {
+            if ((d != dim && index.size(d) > grad.size(d)) || index.size(d) > srcShape[d]) {
+                throw new ShapeException("scatter backward src/index geometry mismatch");
+            }
+        }
+        return meta(Shape.of(srcShape), grad.dtype(), op, args);
     }
 
     private static Tensor crossEntropy(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {

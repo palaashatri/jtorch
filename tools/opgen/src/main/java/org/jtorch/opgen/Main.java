@@ -124,7 +124,7 @@ public final class Main {
             throw new IllegalArgumentException("Composite operator must be differentiable: " + name + " in " + file);
         }
         String reverse = raw.containsKey("reverse") ? Json.string(Json.require(raw, "reverse")) : null;
-        if (differentiable && reverse == null) {
+        if (differentiable && reverse == null && !composite) {
             throw new IllegalArgumentException("Differentiable operator needs a reverse formula: " + name + " in " + file);
         }
         String status = Json.string(Json.require(raw, "status"));

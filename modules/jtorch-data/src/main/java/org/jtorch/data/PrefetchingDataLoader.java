@@ -6,6 +6,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Bounded prefetch wrapper around a batch source. The producer runs on a virtual thread because this is I/O and
@@ -38,12 +39,16 @@ public final class PrefetchingDataLoader implements Iterable<Sample>, AutoClosea
                     }
                     queue.put(sample);
                 }
+                // A blocking sentinel is required: the queue may be full when the source ends.
+                queue.put(END);
             } catch (InterruptedException error) {
                 Thread.currentThread().interrupt();
             } catch (Throwable error) {
-                queue.offer(new Failure(error));
-            } finally {
-                queue.offer(END);
+                try {
+                    queue.put(new Failure(error));
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                }
             }
         });
         workers.add(producer);
@@ -56,21 +61,32 @@ public final class PrefetchingDataLoader implements Iterable<Sample>, AutoClosea
                 if (fetched || done) {
                     return;
                 }
-                try {
-                    Object value = queue.take();
-                    if (value == END) {
+                while (true) {
+                    if (closed) {
                         done = true;
-                    } else if (value instanceof Failure failure) {
-                        done = true;
-                        throw new IllegalStateException("prefetch producer failed", failure.error());
-                    } else {
+                        return;
+                    }
+                    try {
+                        Object value = queue.poll(25, TimeUnit.MILLISECONDS);
+                        if (value == null) {
+                            continue;
+                        }
+                        if (value == END) {
+                            done = true;
+                            return;
+                        }
+                        if (value instanceof Failure failure) {
+                            done = true;
+                            throw new IllegalStateException("prefetch producer failed", failure.error());
+                        }
                         next = (Sample) value;
                         fetched = true;
+                        return;
+                    } catch (InterruptedException error) {
+                        Thread.currentThread().interrupt();
+                        done = true;
+                        throw new IllegalStateException("prefetch interrupted", error);
                     }
-                } catch (InterruptedException error) {
-                    Thread.currentThread().interrupt();
-                    done = true;
-                    throw new IllegalStateException("prefetch interrupted", error);
                 }
             }
 

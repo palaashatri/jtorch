@@ -20,7 +20,7 @@ Implemented and oracle-tested (PyTorch 2.11.0):
 - dense strided CPU and meta tensors for float32/float64/int32/int64/bool;
 - 97 public operators with forward, shape/stride metadata, meta execution and (where declared) reverse-mode
   gradients, including convolution/pooling, inference-mode batch normalization, gather/index_select/slice/scatter,
-  constant padding and flip with oracle-checked backward formulas;
+  constant padding (including negative/trailing padding) and flip with oracle-checked backward formulas;
 - views, storage aliasing, shared version counters and saved-tensor mutation detection;
 - `Linear`/`Conv2d`/`MaxPool2d`/`Sequential`/activation modules, MSE/cross-entropy, SGD/Adam/AdamW,
   StepLR/ExponentialLR;

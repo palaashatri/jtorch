@@ -66,7 +66,7 @@ class ConvPoolModuleTest {
     @Test
     void batchNorm2dIsInferenceOnlyAndExposesRunningBuffers() {
         BatchNorm2d norm = new BatchNorm2d(3);
-        assertEquals(List.of("weight", "bias", "running_mean", "running_var"),
+        assertEquals(List.of("weight", "bias", "running_mean", "running_var", "num_batches_tracked"),
                 List.copyOf(norm.stateDict().keySet()));
         assertEquals(Shape.of(3), norm.runningVar().shape());
         assertThrows(org.jtorch.core.JTorchException.class,
@@ -74,6 +74,21 @@ class ConvPoolModuleTest {
         norm.eval();
         Tensor output = norm.call(Torch.ones(Shape.of(2, 3, 4, 4)));
         assertEquals(Shape.of(2, 3, 4, 4), output.shape());
+    }
+
+    @Test
+    void avgPoolDefaultConstructorsUseKernelStrideAndNoPadding() {
+        assertEquals(Shape.of(1, 1, 2, 2), new AvgPool2d(2).call(Torch.ones(Shape.of(1, 1, 4, 4))).shape());
+        assertEquals(Shape.of(1, 1, 2, 2), new AvgPool2d(2, 2).call(Torch.ones(Shape.of(1, 1, 4, 4))).shape());
+    }
+
+    @Test
+    void batchNormRejectsGradientsOnRunningStatistics() {
+        Tensor input = Torch.ones(Shape.of(1, 2, 2, 2));
+        Tensor mean = Torch.zeros(Shape.of(2)).requiresGrad(true);
+        Tensor var = Torch.ones(Shape.of(2)).requiresGrad(true);
+        assertThrows(org.jtorch.core.AutogradException.class,
+                () -> input.batchNorm(null, null, mean, var, false, 0.1, 1e-5));
     }
 
     @Test
