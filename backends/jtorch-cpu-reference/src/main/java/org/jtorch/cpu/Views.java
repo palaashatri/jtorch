@@ -43,11 +43,61 @@ final class Views {
         if (input.isContiguous() || input.numel() <= 1) {
             return new ViewSpec(shape, Strides.contiguous(shape), input.storageOffset(), false);
         }
+        long[] computed = computeStride(input.shape(), input.strides(), shape);
+        if (computed != null) {
+            return new ViewSpec(shape, Strides.of(computed), input.storageOffset(), false);
+        }
         if (strict) {
             throw new ShapeException("view size is not compatible with input tensor's size and stride; call reshape "
                     + "to copy instead");
         }
         return new ViewSpec(shape, Strides.contiguous(shape), 0, true);
+    }
+
+    /**
+     * PyTorch's {@code computeStride} viewability test: coalesces contiguous chunks of the old geometry and checks
+     * that they partition exactly into the requested shape. Returns {@code null} when a copy is required.
+     */
+    private static long[] computeStride(Shape oldShape, Strides oldStrides, Shape newShape) {
+        if (oldShape.numel() == 0 || newShape.numel() == 0) {
+            return Strides.contiguous(newShape).toArray();
+        }
+        if (oldShape.rank() == 0) {
+            return Strides.contiguous(newShape).toArray();
+        }
+        for (int i = 0; i < oldShape.rank(); i++) {
+            if (oldShape.dim(i) > 1 && oldStrides.stride(i) == 0) {
+                return null;
+            }
+        }
+        long[] newStrides = new long[newShape.rank()];
+        int viewDim = newShape.rank() - 1;
+        long chunkBaseStride = oldStrides.stride(oldShape.rank() - 1);
+        long tensorNumel = 1;
+        long viewNumel = 1;
+        for (int tensorDim = oldShape.rank() - 1; tensorDim >= 0; tensorDim--) {
+            tensorNumel *= oldShape.dim(tensorDim);
+            boolean endChunk = tensorDim == 0
+                    || (oldShape.dim(tensorDim - 1) != 1
+                            && oldStrides.stride(tensorDim - 1) != tensorNumel * chunkBaseStride);
+            if (!endChunk) {
+                continue;
+            }
+            while (viewDim >= 0 && (viewNumel < tensorNumel || newShape.dim(viewDim) == 1)) {
+                newStrides[viewDim] = viewNumel * chunkBaseStride;
+                viewNumel *= newShape.dim(viewDim);
+                viewDim--;
+            }
+            if (viewNumel != tensorNumel) {
+                return null;
+            }
+            if (tensorDim > 0) {
+                chunkBaseStride = oldStrides.stride(tensorDim - 1);
+                tensorNumel = 1;
+                viewNumel = 1;
+            }
+        }
+        return viewDim == -1 ? newStrides : null;
     }
 
     /** Resolves PyTorch's single inferred {@code -1} dimension. */

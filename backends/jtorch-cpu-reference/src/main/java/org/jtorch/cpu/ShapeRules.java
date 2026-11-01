@@ -165,6 +165,17 @@ final class ShapeRules {
         return Shape.of(dims);
     }
 
+    static boolean isDense(Shape shape, org.jtorch.core.Strides strides) {
+        if (shape.numel() == 0) {
+            return false;
+        }
+        long span = 1;
+        for (int i = 0; i < shape.rank(); i++) {
+            span += (shape.dim(i) - 1) * strides.stride(i);
+        }
+        return span == shape.numel();
+    }
+
     static void requireFloating(Tensor tensor, String op) {
         if (!tensor.dtype().isFloatingPoint()) {
             throw new org.jtorch.core.DTypeException(op + " expects a floating point tensor, got " + tensor.dtype());

@@ -434,7 +434,12 @@ final class CpuKernels {
                     requiresGrad,
                     true)))};
         }
-        Tensor output = Views.empty(dtype, input.shape(), input.strides(), requiresGrad);
+        boolean preserveStrides = input.isContiguous() || ShapeRules.isDense(input.shape(), input.strides());
+        Tensor output = Views.empty(
+                dtype,
+                input.shape(),
+                preserveStrides ? input.strides() : Strides.contiguous(input.shape()),
+                requiresGrad);
         Copy.copy(input, output);
         return new Value[] {Value.tensor(output)};
     }

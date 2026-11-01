@@ -313,14 +313,21 @@ final class MetaKernels {
 
     private static Tensor contiguous(Op op, Value[] args) {
         Tensor input = args[0].asTensor();
+        if (input.isContiguous()) {
+            return Tensor.wrap(TensorImpl.meta(input.shape(), input.strides(), input.dtype(),
+                    outputRequiresGrad(op, args)));
+        }
         return Tensor.wrap(TensorImpl.meta(
                 input.shape(), Strides.contiguous(input.shape()), input.dtype(), outputRequiresGrad(op, args)));
     }
 
     private static Tensor cloneKernel(Op op, Value[] args) {
         Tensor input = args[0].asTensor();
+        Strides strides = input.isContiguous() || ShapeRules.isDense(input.shape(), input.strides())
+                ? input.strides()
+                : Strides.contiguous(input.shape());
         return Tensor.wrap(TensorImpl.meta(
-                input.shape(), input.strides(), input.dtype(), outputRequiresGrad(op, args)));
+                input.shape(), strides, input.dtype(), outputRequiresGrad(op, args)));
     }
 
     private static Tensor detach(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
@@ -332,7 +339,16 @@ final class MetaKernels {
         Tensor input = args[0].asTensor();
         DType target = args[1].asDType();
         boolean requires = outputRequiresGrad(op, args) && target.isFloatingPoint();
-        return Tensor.wrap(TensorImpl.meta(input.shape(), input.strides(), target, requires));
+        if (target == input.dtype()) {
+            if (requires == input.requiresGrad()) {
+                return input;
+            }
+            return Tensor.wrap(TensorImpl.meta(input.shape(), input.strides(), target, requires));
+        }
+        Strides strides = input.isContiguous() || ShapeRules.isDense(input.shape(), input.strides())
+                ? input.strides()
+                : Strides.contiguous(input.shape());
+        return Tensor.wrap(TensorImpl.meta(input.shape(), strides, target, requires));
     }
 
     private static Tensor metaView(Tensor input, Views.ViewSpec spec, Op op, Value[] args) {

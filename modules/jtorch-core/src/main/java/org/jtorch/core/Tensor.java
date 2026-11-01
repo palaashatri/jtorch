@@ -104,6 +104,10 @@ public class Tensor {
     }
 
     public Tensor registerPostAccumulateHook(Consumer<Tensor> hook) {
+        if (!impl.isLeaf()) {
+            throw new AutogradException(
+                    "post accumulate grad hooks cannot be registered on non-leaf tensors");
+        }
         impl.addPostAccumulateHook(hook);
         return this;
     }

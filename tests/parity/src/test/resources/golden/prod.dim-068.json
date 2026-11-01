@@ -18,7 +18,7 @@
         1
       ],
       "storageOffset": 0,
-      "requiresGrad": true,
+      "requiresGrad": false,
       "data": [
         1.0,
         2.0,
@@ -48,7 +48,7 @@
         1
       ],
       "storageOffset": 0,
-      "requiresGrad": true,
+      "requiresGrad": false,
       "data": [
         6.0,
         120.0

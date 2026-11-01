@@ -207,8 +207,9 @@ def build_cases():
     case("aten::sum.dim_IntList", [A(), [1], True])
     case("aten::mean.default", [A()])
     case("aten::mean.dim", [A(), [1], False])
-    case("aten::prod.default", [A()], grads=False)
-    case("aten::prod.dim", [A(), 1, False], grads=False)
+    case("aten::prod.default", [make_tensor_arg([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).reshape(2, 3)], grads=False)
+    case("aten::prod.dim", [make_tensor_arg([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).reshape(2, 3), 1, False],
+         grads=False)
     case("aten::max.default", [A()])
     case("aten::min.default", [A()])
     case("aten::max.dim", [A(), 1, False])

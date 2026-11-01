@@ -131,6 +131,59 @@ class HostileQaRegressionTest {
     }
 
     @Test
+    void viewCoalescesCompatibleStridedChunks() {
+        Tensor base = Torch.arange(0, 24).reshape(2, 3, 4);
+        Tensor stepped = Tensor.wrap(new org.jtorch.core.TensorImpl(
+                base.impl().storage(),
+                0,
+                Shape.of(2, 3, 2),
+                org.jtorch.core.Strides.of(12, 4, 2),
+                base.versionCounter(),
+                false,
+                true));
+        Tensor viewed = stepped.view(2, 6);
+        assertArrayEquals(new long[] {2, 6}, viewed.shape().toArray());
+        assertArrayEquals(new long[] {12, 2}, viewed.strides().toArray());
+        assertArrayEquals(new double[] {0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22},
+                viewed.toDoubleArray(), 0);
+    }
+
+    @Test
+    void castsCanonicaliseOverlappingStrides() {
+        Tensor expanded = Torch.ones(Shape.of(1, 3)).expand(2, 3);
+        Tensor cast = expanded.to(DType.FLOAT64);
+        assertArrayEquals(new long[] {3, 1}, cast.strides().toArray());
+        assertTrue(cast.isContiguous());
+        Torch.noGrad(() -> cast.fill_(2));
+        assertArrayEquals(new double[] {2, 2, 2, 2, 2, 2}, cast.toDoubleArray(), 0);
+    }
+
+    @Test
+    void metaCloneAndContiguousAgreeWithCpuGeometry() {
+        Tensor cpuBase = Torch.tensor(new double[] {0, 1, 2, 3, 4, 5}, Shape.of(2, 3));
+        Tensor cpuNarrow = cpuBase.narrow(1, 0, 2);
+        Tensor metaNarrow = Tensor.wrap(org.jtorch.core.TensorImpl.meta(
+                Shape.of(2, 2), org.jtorch.core.Strides.of(3, 1), DType.FLOAT64, false));
+        assertArrayEquals(cpuNarrow.clone().strides().toArray(), metaNarrow.clone().strides().toArray());
+
+        Tensor cpuContiguous = Tensor.wrap(new org.jtorch.core.TensorImpl(
+                cpuBase.impl().storage(), 0, Shape.of(2, 1), org.jtorch.core.Strides.of(1, 100),
+                cpuBase.versionCounter(), false, true));
+        Tensor metaContiguous = Tensor.wrap(org.jtorch.core.TensorImpl.meta(
+                Shape.of(2, 1), org.jtorch.core.Strides.of(1, 100), DType.FLOAT64, false));
+        assertTrue(cpuContiguous.isContiguous());
+        assertArrayEquals(cpuContiguous.contiguous().strides().toArray(),
+                metaContiguous.contiguous().strides().toArray());
+    }
+
+    @Test
+    void nonLeafHooksAreRejected() {
+        Tensor x = doubles(1, 2).requiresGrad(true);
+        Tensor y = x.mul(2);
+        assertThrows(AutogradException.class, () -> y.registerPostAccumulateHook(tensor -> { }));
+    }
+
+    @Test
     void castsUseNonZeroSemantics() {
         Tensor values = Torch.tensor(new double[] {0.5, -0.5, 2.0, Double.NaN}, Shape.of(4));
         assertArrayEquals(new boolean[] {true, true, true, true}, values.toBool().toBooleanArray());
@@ -288,8 +341,8 @@ class HostileQaRegressionTest {
         Tensor narrowed = base.narrow(1, 0, 2);
         assertTrue(narrowed.clone().isContiguous());
         assertArrayEquals(new long[] {2, 1}, narrowed.clone().strides().toArray());
-        // PyTorch's to(dtype) preserves strides for non-dense views.
-        assertArrayEquals(new long[] {3, 1}, narrowed.to(DType.FLOAT32).strides().toArray());
+        // A dtype-changing to(dtype) canonicalises a non-dense view, like PyTorch's empty_like preset.
+        assertArrayEquals(new long[] {2, 1}, narrowed.to(DType.FLOAT32).strides().toArray());
     }
 
     @Test
