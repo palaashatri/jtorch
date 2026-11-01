@@ -1,0 +1,83 @@
+{
+  "operator": "aten::sigmoid.default",
+  "torch": "2.11.0",
+  "python": "3.13.9",
+  "nondeterministic": false,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        2,
+        3
+      ],
+      "strides": [
+        3,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        0.5,
+        1.5,
+        2.5,
+        3.5,
+        4.5,
+        5.5
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        2,
+        3
+      ],
+      "strides": [
+        3,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        0.6224593312018546,
+        0.8175744761936437,
+        0.9241418199787566,
+        0.9706877692486436,
+        0.9890130573694068,
+        0.995929862284104
+      ]
+    }
+  ],
+  "grads": [
+    {
+      "argIndex": 0,
+      "grad": {
+        "kind": "tensor",
+        "dtype": "float64",
+        "shape": [
+          2,
+          3
+        ],
+        "strides": [
+          3,
+          1
+        ],
+        "storageOffset": 0,
+        "requiresGrad": false,
+        "data": [
+          0.2350037122015945,
+          0.14914645207033286,
+          0.07010371654510807,
+          0.028453023879735598,
+          0.010866229722225243,
+          0.004053571694869679
+        ]
+      }
+    }
+  ]
+}

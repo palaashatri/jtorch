@@ -1,0 +1,19 @@
+name: Setup JTorch build
+description: Install JDK 25 and configure the Gradle build cache.
+
+inputs:
+  java-version:
+    description: JDK feature version
+    required: false
+    default: "25"
+
+runs:
+  using: composite
+  steps:
+    - name: Set up JDK ${{ inputs.java-version }}
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: ${{ inputs.java-version }}
+    - name: Set up Gradle
+      uses: gradle/actions/setup-gradle@v4

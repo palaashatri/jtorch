@@ -1,0 +1,23 @@
+# Pinned compatibility oracle. Updating any value here is a dedicated compatibility change and must regenerate every
+# fixture under tests/parity/src/test/resources/golden plus the optimizer and Safetensors fixtures.
+
+[oracle]
+pytorch = "2.11.0"
+python = "3.13.9"
+platform = "macOS 27.0.1 arm64 (development host); fixtures regenerated on macos-14 in CI"
+extraction = "tools/oracle/generate.py"
+optimizer_extraction = "tools/oracle/optimizers.py"
+safetensors_extraction = "tools/oracle/safetensors_fixture.py"
+
+[runtime]
+jdk = "25"
+gradle = "9.8.2"
+default_dtype = "float32"
+deterministic = true
+
+[scope]
+# The reference build implements these dtypes. Everything else is recorded as unsupported rather than exposed with
+# partial semantics.
+dtypes = ["float64", "float32", "int64", "int32", "bool"]
+devices = ["cpu", "meta"]
+layouts = ["strided"]

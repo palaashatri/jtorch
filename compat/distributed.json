@@ -1,0 +1,10 @@
+{
+  "distributed": [
+    { "name": "process-group", "status": "unsupported" },
+    { "name": "all-reduce", "status": "unsupported" },
+    { "name": "DDP", "status": "unsupported" },
+    { "name": "FSDP", "status": "unsupported" },
+    { "name": "device-mesh", "status": "unsupported" },
+    { "name": "distributed-checkpoint", "status": "unsupported" }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "transforms": [
+    { "name": "grad", "status": "autograd", "notes": "Reverse-mode backward with saved-tensor version validation, hooks and retainGraph. create_graph is rejected explicitly." },
+    { "name": "vjp", "status": "unsupported" },
+    { "name": "jvp", "status": "unsupported" },
+    { "name": "jacrev", "status": "unsupported" },
+    { "name": "jacfwd", "status": "unsupported" },
+    { "name": "hessian", "status": "unsupported" },
+    { "name": "vmap", "status": "unsupported" },
+    { "name": "functionalize", "status": "unsupported" }
+  ]
+}

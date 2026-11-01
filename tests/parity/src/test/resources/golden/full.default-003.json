@@ -1,0 +1,52 @@
+{
+  "operator": "aten::full.default",
+  "torch": "2.11.0",
+  "python": "3.13.9",
+  "nondeterministic": false,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "list",
+      "value": [
+        2,
+        2
+      ]
+    },
+    {
+      "kind": "float",
+      "value": 3.5
+    },
+    {
+      "kind": "dtype",
+      "value": "float64"
+    },
+    {
+      "kind": "device",
+      "value": "cpu"
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        2,
+        2
+      ],
+      "strides": [
+        2,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": false,
+      "data": [
+        3.5,
+        3.5,
+        3.5,
+        3.5
+      ]
+    }
+  ],
+  "grads": []
+}

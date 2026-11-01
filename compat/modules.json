@@ -1,0 +1,20 @@
+{
+  "generatedFrom": "jtorch-nn parity and unit tests",
+  "modules": [
+    { "name": "Linear", "status": "autograd", "notes": "Forward and gradients covered by PyTorch fixtures for 2-D inputs; 1-D and 3-D ranks are covered by regression tests; state dict round-trip tested." },
+    { "name": "ReLU", "status": "autograd", "notes": "Delegates to the relu operator; gradient masked at zero." },
+    { "name": "Sigmoid", "status": "autograd", "notes": "Delegates to the sigmoid operator." },
+    { "name": "Tanh", "status": "autograd", "notes": "Delegates to the tanh operator." },
+    { "name": "Flatten", "status": "autograd", "notes": "PyTorch default start_dim=1." },
+    { "name": "Sequential", "status": "autograd", "notes": "Positional child names match PyTorch state dict keys." },
+    { "name": "MSELoss", "status": "autograd", "notes": "mean/sum/none reductions; parameterless criterion." },
+    { "name": "CrossEntropyLoss", "status": "autograd", "notes": "2-D logits and int64 class targets only." }
+  ],
+  "unsupported": [
+    "Module.to(device)",
+    "Module backward hooks",
+    "Dropout and BatchNorm",
+    "Module state-dict version metadata",
+    "Optimizer state serialization"
+  ]
+}

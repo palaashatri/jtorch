@@ -1,0 +1,88 @@
+{
+  "operator": "aten::sum.dim_IntList",
+  "torch": "2.11.0",
+  "python": "3.13.9",
+  "nondeterministic": false,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        2,
+        3
+      ],
+      "strides": [
+        3,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        1.0,
+        2.0,
+        3.0,
+        4.0,
+        5.0,
+        6.0
+      ]
+    },
+    {
+      "kind": "list",
+      "value": [
+        0
+      ]
+    },
+    {
+      "kind": "bool",
+      "value": false
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        3
+      ],
+      "strides": [
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        5.0,
+        7.0,
+        9.0
+      ]
+    }
+  ],
+  "grads": [
+    {
+      "argIndex": 0,
+      "grad": {
+        "kind": "tensor",
+        "dtype": "float64",
+        "shape": [
+          2,
+          3
+        ],
+        "strides": [
+          3,
+          1
+        ],
+        "storageOffset": 0,
+        "requiresGrad": false,
+        "data": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    }
+  ]
+}

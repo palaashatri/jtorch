@@ -1,0 +1,51 @@
+{
+  "operator": "aten::randint.default",
+  "torch": "2.11.0",
+  "python": "3.13.9",
+  "nondeterministic": true,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "int",
+      "value": 2
+    },
+    {
+      "kind": "int",
+      "value": 10
+    },
+    {
+      "kind": "list",
+      "value": [
+        2,
+        3
+      ]
+    },
+    {
+      "kind": "dtype",
+      "value": "int64"
+    },
+    {
+      "kind": "device",
+      "value": "cpu"
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "int64",
+      "shape": [
+        2,
+        3
+      ],
+      "strides": [
+        3,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": false,
+      "data": []
+    }
+  ],
+  "grads": []
+}

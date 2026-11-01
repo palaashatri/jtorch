@@ -1,0 +1,46 @@
+name: Demo packages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "demos/**"
+      - "modules/**"
+      - "backends/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - ".github/actions/**"
+      - ".github/workflows/demos.yml"
+      - "gradle/**"
+  pull_request:
+    paths:
+      - "demos/**"
+      - "modules/**"
+      - "backends/**"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - ".github/actions/**"
+      - ".github/workflows/demos.yml"
+      - "gradle/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: TensorLab ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-14]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-jtorch-build
+      - name: Package and smoke-test (Unix)
+        if: runner.os != 'Windows'
+        run: ./gradlew --no-daemon :demos:tensorlab:demoPackage
+      - name: Package and smoke-test (Windows)
+        if: runner.os == 'Windows'
+        run: .\gradlew.bat --no-daemon :demos:tensorlab:demoPackage

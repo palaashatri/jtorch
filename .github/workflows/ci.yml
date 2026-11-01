@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-14, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-jtorch-build
+      - name: Build and test (Unix)
+        if: runner.os != 'Windows'
+        run: ./gradlew --no-daemon --stacktrace check demoCheck verifyGeneratedClean
+      - name: Build and test (Windows)
+        if: runner.os == 'Windows'
+        run: .\gradlew.bat --no-daemon --stacktrace check demoCheck verifyGeneratedClean
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ matrix.os }}
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+          if-no-files-found: ignore
+
+  example:
+    name: Vertical slice example (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022, macos-14]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-jtorch-build
+      - name: Run the §0.2 vertical slice (Unix)
+        if: runner.os != 'Windows'
+        run: ./gradlew --no-daemon :examples:vertical-slice:run
+      - name: Run the §0.2 vertical slice (Windows)
+        if: runner.os == 'Windows'
+        run: .\gradlew.bat --no-daemon :examples:vertical-slice:run
