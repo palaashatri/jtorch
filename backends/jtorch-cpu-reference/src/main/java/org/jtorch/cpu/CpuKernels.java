@@ -685,6 +685,10 @@ final class CpuKernels {
 
     private static Value[] reduce(Op op, Value[] args, boolean dims, boolean mean) {
         Tensor input = args[0].asTensor();
+        if (op.name().startsWith("aten::prod") && input.requiresGrad() && GradMode.isEnabled()) {
+            throw new org.jtorch.core.NotSupportedException(
+                    "prod is forward-only in this build; run it under GradMode.noGrad or use a supported reduction");
+        }
         boolean keepdim;
         int[] normalized;
         if (input.dim() == 0 && dims) {

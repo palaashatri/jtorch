@@ -331,6 +331,13 @@ class HostileQaRegressionTest {
     }
 
     @Test
+    void forwardOnlyProdFailsLoudlyUnderGrad() {
+        Tensor values = doubles(1, 2, 3).requiresGrad(true);
+        assertThrows(org.jtorch.core.NotSupportedException.class, values::prod);
+        assertEquals(6.0, Torch.noGrad((java.util.function.Supplier<Tensor>) values::prod).item(), 1e-7);
+    }
+
+    @Test
     void constructorRejectsArrayLengthMismatch() {
         assertThrows(IllegalArgumentException.class, () -> Torch.tensor(new float[] {1, 2, 3}, Shape.of(2)));
         assertThrows(IllegalArgumentException.class, () -> Torch.tensor(new float[] {1}, Shape.of(2)));
