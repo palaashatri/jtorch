@@ -49,6 +49,8 @@ public final class Main {
             String expected = entry.getValue();
             if (check) {
                 String actual = Files.exists(target) ? Files.readString(target, StandardCharsets.UTF_8) : "";
+                // Normalize CRLF so a Windows checkout without .gitattributes cannot cause false drift.
+                actual = actual.replace("\r\n", "\n");
                 if (!actual.equals(expected)) {
                     System.err.println("Generated file is stale: " + root.relativize(target));
                     changed = true;

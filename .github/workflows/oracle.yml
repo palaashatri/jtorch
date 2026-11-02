@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   regenerate:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-jtorch-build
@@ -21,12 +21,18 @@ jobs:
       - name: Install the pinned oracle runtime
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install torch==2.11.0 safetensors==0.7.0
-      - name: Regenerate parity fixtures
+          python3 -m pip install -r tools/oracle/requirements.txt
+          python3 -m pip check
+      - name: Record the oracle environment
         run: |
-          python3 tools/oracle/generate.py
-          python3 tools/oracle/optimizers.py
-          python3 tools/oracle/safetensors_fixture.py
+          python3 --version
+          python3 -c "import torch, safetensors, packaging; print('torch', torch.__version__); print('safetensors', safetensors.__version__); print('packaging', packaging.__version__)"
+      - name: Regenerate parity fixtures
+        run: python3 tools/oracle/generate.py
+      - name: Regenerate optimizer fixtures
+        run: python3 tools/oracle/optimizers.py
+      - name: Regenerate Safetensors fixture
+        run: python3 tools/oracle/safetensors_fixture.py
       - name: Regenerate schema outputs
         run: ./gradlew --no-daemon regenerateSchemas
       - name: Fail on drift
