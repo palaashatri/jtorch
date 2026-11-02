@@ -29,7 +29,7 @@ public final class MultiheadAttention extends Module {
         this.heads = heads;
         this.headDim = embedDim / heads;
         this.inProjWeight = registerParameter("in_proj_weight",
-                new Parameter(Init.uniform(Shape.of(3 * embedDim, embedDim), embedDim)));
+                new Parameter(Init.xavier(Shape.of(3 * embedDim, embedDim))));
         this.inProjBias = bias
                 ? registerParameter("in_proj_bias", new Parameter(Torch.zeros(Shape.of(3 * embedDim))))
                 : null;
