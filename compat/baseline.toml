@@ -6,7 +6,7 @@ pytorch = "2.11.0"
 python = "3.13.9"
 platform = "macOS 27.0.1 arm64 (development host); fixtures regenerated on macos-15 in CI"
 extraction = "tools/oracle/generate.py"
-python_packages = ["torch==2.11.0", "safetensors==0.7.0", "packaging==25.0"]
+python_packages = ["torch==2.11.0", "safetensors==0.7.0", "packaging==25.0", "numpy==2.3.5"]
 optimizer_extraction = "tools/oracle/optimizers.py"
 safetensors_extraction = "tools/oracle/safetensors_fixture.py"
 

@@ -28,9 +28,11 @@ class StorageTest {
     @Test
     void nativeAllocationsAreReleasedAfterCollection() throws InterruptedException {
         long baseline = CpuAllocator.liveBytes();
+        long baselineTotal = CpuAllocator.totalAllocatedBytes();
         Tensor large = Torch.zeros(Shape.of(1024, 1024));
-        assertTrue(CpuAllocator.liveBytes() >= baseline + 1024 * 1024 * 4,
-                "live bytes did not include the new tensor");
+        // totalAllocatedBytes is monotonic, so an unrelated cleaner release cannot offset this allocation.
+        assertTrue(CpuAllocator.totalAllocatedBytes() >= baselineTotal + 1024L * 1024 * 4,
+                "total allocated bytes did not include the new tensor");
         large = null;
         long deadline = System.nanoTime() + 5_000_000_000L;
         while (CpuAllocator.liveBytes() > baseline && System.nanoTime() < deadline) {
@@ -74,17 +76,34 @@ class StorageTest {
     void mappedStorageReadsAndFlushesFileBytes() throws IOException {
         Path file = temporary.resolve("mapped.bin");
         Files.write(file, new byte[2 * 3 * 4]);
-        MappedStorage storage = MappedStorage.map(file, DType.FLOAT32, 6, true);
-        Tensor tensor = Tensor.wrap(TensorImpl.fresh(storage, Shape.of(2, 3), Strides.contiguous(Shape.of(2, 3)),
-                false));
-        tensor.set(1.5, 0, 1);
-        tensor.set(-2.0, 1, 2);
-        storage.flush();
-        byte[] bytes = Files.readAllBytes(file);
-        ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
-        assertEquals(0f, buffer.getFloat(0));
-        assertEquals(1.5f, buffer.getFloat(4));
-        assertEquals(-2.0f, buffer.getFloat(20));
+        try (MappedStorage storage = MappedStorage.map(file, DType.FLOAT32, 6, true)) {
+            Tensor tensor = Tensor.wrap(TensorImpl.fresh(storage, Shape.of(2, 3),
+                    Strides.contiguous(Shape.of(2, 3)), false));
+            tensor.set(1.5, 0, 1);
+            tensor.set(-2.0, 1, 2);
+            storage.flush();
+            byte[] bytes = Files.readAllBytes(file);
+            ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder());
+            assertEquals(0f, buffer.getFloat(0));
+            assertEquals(1.5f, buffer.getFloat(4));
+            assertEquals(-2.0f, buffer.getFloat(20));
+        }
+    }
+
+    @Test
+    void closingMappedStorageUnmapsTheFileSoItCanBeDeleted() throws IOException {
+        Path file = temporary.resolve("release.bin");
+        Files.write(file, new byte[4]);
+        MappedStorage storage = MappedStorage.map(file, DType.FLOAT32, 1, true);
+        Tensor tensor = Tensor.wrap(TensorImpl.fresh(storage, Shape.of(1), Strides.contiguous(Shape.of(1)), false));
+        tensor.set(3.5, 0);
+        storage.close();
+        assertTrue(storage.isClosed());
+        assertThrows(IllegalStateException.class, storage::segment);
+        assertThrows(IllegalStateException.class, () -> tensor.item());
+        Files.delete(file);
+        // Idempotent close must not throw.
+        storage.close();
     }
 
     @Test
