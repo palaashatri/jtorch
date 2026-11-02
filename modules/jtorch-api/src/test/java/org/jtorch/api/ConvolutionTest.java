@@ -115,6 +115,20 @@ class ConvolutionTest {
     }
 
     @Test
+    void groupedConvolutionBackwardWorksOnMetaTensors() {
+        org.jtorch.core.TensorOptions meta = org.jtorch.core.TensorOptions.defaults()
+                .device(org.jtorch.core.Device.meta());
+        Tensor input = Torch.empty(Shape.of(1, 2, 3, 3), meta).requiresGrad(true);
+        Tensor weight = Torch.empty(Shape.of(4, 1, 1, 1), meta).requiresGrad(true);
+        Tensor output = input.conv2d(weight, null, new int[] {1, 1}, new int[] {0, 0},
+                new int[] {1, 1}, 2);
+        assertEquals(Shape.of(1, 4, 3, 3), output.shape());
+        output.sum().backward();
+        assertEquals(Shape.of(1, 2, 3, 3), input.grad().shape());
+        assertEquals(Shape.of(4, 1, 1, 1), weight.grad().shape());
+    }
+
+    @Test
     void internalBackwardOperatorsValidateTheirArguments() {
         Tensor input = Torch.ones(Shape.of(1, 1, 3, 3));
         Tensor wrongGrad = Torch.ones(Shape.of(1, 1, 1, 4));

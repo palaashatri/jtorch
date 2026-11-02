@@ -2145,7 +2145,7 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "2-D convolution over NCHW tensors with groups=1.",
+      "summary": "2-D convolution over NCHW tensors with configurable groups.",
       "variants": [
         "function",
         "method"
@@ -2753,7 +2753,7 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "Adaptive average pooling over CHW/NCHW tensors to the requested output size.",
+      "summary": "Adaptive average pooling over CHW/NCHW tensors; zero output entries produce empty dimensions.",
       "variants": [
         "function",
         "method"
@@ -2787,7 +2787,7 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "Resizes a 4-D NCHW tensor with nearest or bilinear interpolation.",
+      "summary": "Resizes a 4-D NCHW tensor with nearest or bilinear interpolation; align_corners is accepted only for bilinear.",
       "variants": [
         "function",
         "method"

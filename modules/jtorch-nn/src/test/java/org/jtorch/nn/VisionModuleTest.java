@@ -39,5 +39,12 @@ class VisionModuleTest {
         Tensor output = embedding.call(indices);
         assertEquals(Shape.of(3, 4), output.shape());
         assertEquals(0.0, output.select(0, 1).sum().item(), 0);
+
+        Embedding negative = new Embedding(5, 4, -1);
+        Tensor negativeIndices = Torch.tensor(new long[] {0, 4}, Shape.of(2),
+                TensorOptions.defaults().dtype(DType.INT64));
+        negative.call(negativeIndices).sum().backward();
+        assertEquals(4.0, negative.weight().grad().select(0, 0).sum().item(), 0);
+        assertEquals(0.0, negative.weight().grad().select(0, 4).sum().item(), 0);
     }
 }

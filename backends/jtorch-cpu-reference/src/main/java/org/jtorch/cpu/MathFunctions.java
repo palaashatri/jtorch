@@ -3,7 +3,7 @@ package org.jtorch.cpu;
 /**
  * Scalar math helpers that are not present in {@link java.lang.Math}. The error function uses a Maclaurin series on
  * {@code |x| < 2} and a continued fraction for the complementary error function above that threshold; the maximum
- * observed absolute error against the C library {@code erf} is about one double-precision epsilon.
+ * observed absolute error against the C library {@code erf} is a few double-precision ulps (about 1.3e-15).
  */
 final class MathFunctions {
     private static final double SQRT_PI = Math.sqrt(Math.PI);

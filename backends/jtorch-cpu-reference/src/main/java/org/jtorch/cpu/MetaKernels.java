@@ -686,7 +686,7 @@ final class MetaKernels {
         Tensor weight = args[1].asTensor();
         long[] inputShape = args[2].asLongArray();
         Convolution.ConvConfig config = Convolution.convConfig(
-                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), args[6].asInt());
         Convolution.validateConvBackwardInput(grad, weight, inputShape, config);
         return meta(Shape.of(inputShape), grad.dtype(), op, args);
     }
@@ -696,7 +696,7 @@ final class MetaKernels {
         Tensor grad = args[1].asTensor();
         long[] weightShape = args[2].asLongArray();
         Convolution.ConvConfig config = Convolution.convConfig(
-                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), args[6].asInt());
         Convolution.validateConvBackwardWeight(input, grad, weightShape, config);
         return meta(Shape.of(weightShape), grad.dtype(), op, args);
     }
@@ -970,7 +970,7 @@ final class MetaKernels {
         Tensor input = args[0].asTensor();
         ImageOps.validateImageInput(input);
         int[] size = ImageOps.interpolateSize(args[1].asLongArray(), input);
-        ImageOps.validateMode(args[2].asString());
+        ImageOps.validateMode(args[2].asString(), args[3].asBoolean());
         return meta(ImageOps.interpolateShape(input, size), input.dtype(), op, args);
     }
 
@@ -982,7 +982,7 @@ final class MetaKernels {
             throw new ShapeException("interpolate input_shape must have four entries");
         }
         int[] size = ImageOps.interpolateSize(args[2].asLongArray(), grad);
-        ImageOps.validateMode(args[3].asString());
+        ImageOps.validateMode(args[3].asString(), args[4].asBoolean());
         Shape expected = Shape.of(inputShape[0], inputShape[1], size[0], size[1]);
         if (!grad.shape().equals(expected)) {
             throw new ShapeException("interpolate backward grad shape mismatch");

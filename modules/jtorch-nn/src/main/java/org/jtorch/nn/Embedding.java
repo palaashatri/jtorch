@@ -20,13 +20,13 @@ public final class Embedding extends Module {
         if (paddingIdx != null && (paddingIdx < -numEmbeddings || paddingIdx >= numEmbeddings)) {
             throw new IllegalArgumentException("Embedding padding_idx is out of range");
         }
+        int normalizedPadding = paddingIdx == null ? -1 : (paddingIdx < 0 ? paddingIdx + numEmbeddings : paddingIdx);
         Tensor initial = Torch.randn(Shape.of(numEmbeddings, embeddingDim));
         if (paddingIdx != null) {
-            int normalized = paddingIdx < 0 ? paddingIdx + numEmbeddings : paddingIdx;
-            Torch.noGrad(() -> initial.select(0, normalized).fill_(0));
+            Torch.noGrad(() -> initial.select(0, normalizedPadding).fill_(0));
         }
         this.weight = registerParameter("weight", new Parameter(initial));
-        this.paddingIdx = paddingIdx;
+        this.paddingIdx = paddingIdx == null ? null : normalizedPadding;
     }
 
     @Override

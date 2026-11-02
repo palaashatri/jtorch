@@ -62,7 +62,7 @@ public final class Schemas {
                     false,
                     false,
                     "autograd",
-                    "Adaptive average pooling over CHW/NCHW tensors to the requested output size."),
+                    "Adaptive average pooling over CHW/NCHW tensors; zero output entries produce empty dimensions."),
             new Schema(
                     "aten",
                     "add",
@@ -359,7 +359,7 @@ public final class Schemas {
                     false,
                     false,
                     "autograd",
-                    "2-D convolution over NCHW tensors with groups=1."),
+                    "2-D convolution over NCHW tensors with configurable groups."),
             new Schema(
                     "aten",
                     "copy_",
@@ -779,7 +779,7 @@ public final class Schemas {
                     false,
                     false,
                     "autograd",
-                    "Resizes a 4-D NCHW tensor with nearest or bilinear interpolation."),
+                    "Resizes a 4-D NCHW tensor with nearest or bilinear interpolation; align_corners is accepted only for bilinear."),
             new Schema(
                     "aten",
                     "layer_norm",

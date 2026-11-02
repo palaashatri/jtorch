@@ -15,8 +15,8 @@ public final class AdaptiveAvgPool2d extends Module {
             throw new IllegalArgumentException("AdaptiveAvgPool2d output size needs one or two entries");
         }
         for (int value : outputSize) {
-            if (value <= 0) {
-                throw new IllegalArgumentException("AdaptiveAvgPool2d output size must be positive");
+            if (value < 0) {
+                throw new IllegalArgumentException("AdaptiveAvgPool2d output size must be non-negative");
             }
         }
         this.outputSize = outputSize.clone();

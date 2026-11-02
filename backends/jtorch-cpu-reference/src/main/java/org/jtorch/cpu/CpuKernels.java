@@ -2395,8 +2395,8 @@ final class CpuKernels {
         ImageOps.validateImageInput(input);
         int[] size = ImageOps.interpolateSize(args[1].asLongArray(), input);
         String mode = args[2].asString().toLowerCase(java.util.Locale.ROOT);
-        ImageOps.validateMode(mode);
         boolean alignCorners = args[3].asBoolean();
+        ImageOps.validateMode(mode, alignCorners);
         Shape shape = ImageOps.interpolateShape(input, size);
         Tensor output = fresh(shape, input.dtype(), outputRequiresGrad(op, args));
         int batch = (int) input.size(0);
@@ -2421,8 +2421,8 @@ final class CpuKernels {
         }
         int[] size = ImageOps.interpolateSize(args[2].asLongArray(), grad);
         String mode = args[3].asString().toLowerCase(java.util.Locale.ROOT);
-        ImageOps.validateMode(mode);
         boolean alignCorners = args[4].asBoolean();
+        ImageOps.validateMode(mode, alignCorners);
         int batch = (int) inputShape[0];
         int channels = (int) inputShape[1];
         int height = (int) inputShape[2];

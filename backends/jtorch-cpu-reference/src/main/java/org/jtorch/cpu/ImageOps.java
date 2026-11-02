@@ -16,8 +16,8 @@ final class ImageOps {
         }
         long first = raw[0];
         long second = raw.length == 1 ? first : raw[1];
-        if (first <= 0 || second <= 0) {
-            throw new ShapeException("adaptive_avg_pool2d output_size entries must be positive");
+        if (first < 0 || second < 0) {
+            throw new ShapeException("adaptive_avg_pool2d output_size entries must be non-negative");
         }
         return new int[] {Math.toIntExact(first), Math.toIntExact(second)};
     }
@@ -49,6 +49,14 @@ final class ImageOps {
         String normalized = mode.toLowerCase(Locale.ROOT);
         if (!normalized.equals("nearest") && !normalized.equals("bilinear")) {
             throw new ShapeException("interpolate supports mode 'nearest' or 'bilinear', got '" + mode + "'");
+        }
+    }
+
+    static void validateMode(String mode, boolean alignCorners) {
+        validateMode(mode);
+        if (alignCorners && mode.equalsIgnoreCase("nearest")) {
+            throw new ShapeException(
+                    "interpolate align_corners is only supported for bilinear mode, not nearest");
         }
     }
 

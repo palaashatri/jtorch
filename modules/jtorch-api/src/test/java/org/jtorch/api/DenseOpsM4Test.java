@@ -33,7 +33,7 @@ class DenseOpsM4Test {
         assertArrayEquals(new double[] {0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
                 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25},
                 input.grad().toDoubleArray(), 1e-12);
-        assertThrows(ShapeException.class, () -> input.adaptiveAvgPool2d(new int[] {0, 2}));
+        assertEquals(Shape.of(1, 1, 0, 2), input.adaptiveAvgPool2d(new int[] {0, 2}).shape());
         assertThrows(DTypeException.class,
                 () -> Torch.arange(0, 4).reshape(1, 2, 2).to(DType.INT64).adaptiveAvgPool2d(new int[] {1, 1}));
     }
@@ -48,6 +48,7 @@ class DenseOpsM4Test {
         bilinear.sum().backward();
         assertArrayEquals(new double[] {2.25, 2.25, 2.25, 2.25}, input.grad().toDoubleArray(), 1e-12);
         assertThrows(ShapeException.class, () -> input.interpolate(new int[] {3, 3}, "bicubic", false));
+        assertThrows(ShapeException.class, () -> input.interpolate(new int[] {3, 3}, "nearest", true));
         assertThrows(ShapeException.class, () -> input.interpolate(new int[] {0, 3}, "nearest", false));
     }
 

@@ -22,23 +22,35 @@ public final class VisionInspectorApp {
     private VisionInspectorApp() {}
 
     public static void main(String[] args) throws Exception {
-        Options options = Options.parse(args);
-        if (options.smokeTest) {
-            runSmoke(options.output);
-            return;
-        }
-        FixtureClassifier classifier = new FixtureClassifier();
-        if (options.headless) {
-            if (options.image != null) {
-                classifyImage(classifier, options.image, options);
-            } else if (options.folder != null) {
-                classifyFolder(classifier, options.folder, options);
-            } else {
-                throw new IllegalArgumentException("Headless mode needs --image or --folder");
+        Options options;
+        try {
+            options = Options.parse(args);
+            if (options.smokeTest) {
+                runSmoke(options.output);
+                return;
             }
-            return;
+            FixtureClassifier classifier = new FixtureClassifier();
+            if (options.headless) {
+                if (options.image != null) {
+                    classifyImage(classifier, options.image, options);
+                } else if (options.folder != null) {
+                    classifyFolder(classifier, options.folder, options);
+                } else {
+                    throw new IllegalArgumentException("Headless mode needs --image or --folder");
+                }
+                return;
+            }
+            SwingUtilities.invokeLater(() -> new VisionInspectorWindow(classifier).show());
+        } catch (IllegalArgumentException error) {
+            System.err.println("error: " + error.getMessage());
+            System.err.println(usage());
+            System.exit(2);
         }
-        SwingUtilities.invokeLater(() -> new VisionInspectorWindow(classifier).show());
+    }
+
+    private static String usage() {
+        return "usage: VisionInspectorApp [--headless] [--image <path>] [--folder <dir>] "
+                + "[--output <path>] [--saliency <png>] [--top-k <n>] [--smoke-test]";
     }
 
     private static void runSmoke(Path output) throws IOException {
@@ -200,15 +212,40 @@ public final class VisionInspectorApp {
                 switch (args[i]) {
                     case "--smoke-test" -> smokeTest = true;
                     case "--headless" -> headless = true;
-                    case "--image" -> image = Path.of(args[++i]);
-                    case "--folder" -> folder = Path.of(args[++i]);
-                    case "--output" -> output = Path.of(args[++i]);
-                    case "--saliency" -> saliency = Path.of(args[++i]);
-                    case "--top-k" -> topK = Integer.parseInt(args[++i]);
+                    case "--image" -> {
+                        image = Path.of(requireValue(args, i, "--image"));
+                        i++;
+                    }
+                    case "--folder" -> {
+                        folder = Path.of(requireValue(args, i, "--folder"));
+                        i++;
+                    }
+                    case "--output" -> {
+                        output = Path.of(requireValue(args, i, "--output"));
+                        i++;
+                    }
+                    case "--saliency" -> {
+                        saliency = Path.of(requireValue(args, i, "--saliency"));
+                        i++;
+                    }
+                    case "--top-k" -> {
+                        topK = Integer.parseInt(requireValue(args, i, "--top-k"));
+                        if (topK <= 0) {
+                            throw new IllegalArgumentException("--top-k must be positive");
+                        }
+                        i++;
+                    }
                     default -> throw new IllegalArgumentException("Unknown argument: " + args[i]);
                 }
             }
             return new Options(smokeTest, headless, image, folder, output, saliency, topK);
+        }
+
+        private static String requireValue(String[] args, int index, String option) {
+            if (index + 1 >= args.length) {
+                throw new IllegalArgumentException(option + " requires a value");
+            }
+            return args[index + 1];
         }
     }
 }
