@@ -238,15 +238,21 @@ def build_cases():
     def ramp(n):
         return [i / 10.0 for i in range(n)]
 
-    conv_input = leaf(ramp(32), (1, 2, 4, 4))
-    conv_weight = leaf(ramp(54), (3, 2, 3, 3))
-    conv_bias = leaf([0.1, -0.2, 0.3])
+    # Convolution accumulation order differs across CPU implementations (oneDNN/BLAS). Use dyadic inputs and
+    # weights so every product and partial sum is exactly representable in float64; otherwise the committed
+    # fixture can drift by one ULP between the development host and CI.
+    def dyadic_ramp(n):
+        return [i / 8.0 for i in range(n)]
+
+    conv_input = leaf(dyadic_ramp(32), (1, 2, 4, 4))
+    conv_weight = leaf(dyadic_ramp(54), (3, 2, 3, 3))
+    conv_bias = leaf([0.125, -0.25, 0.375])
     case("aten::conv2d.default", [conv_input, conv_weight, conv_bias, [1, 1], [0, 0], [1, 1], 1])
-    conv_input = leaf(ramp(50), (1, 2, 5, 5))
-    conv_weight = leaf(ramp(36), (2, 2, 3, 3))
+    conv_input = leaf(dyadic_ramp(50), (1, 2, 5, 5))
+    conv_weight = leaf(dyadic_ramp(36), (2, 2, 3, 3))
     case("aten::conv2d.default", [conv_input, conv_weight, None, [2, 2], [1, 1], [1, 1], 1])
-    conv_input = leaf(ramp(9), (1, 1, 3, 3))
-    conv_weight = leaf(ramp(8), (2, 1, 2, 2))
+    conv_input = leaf(dyadic_ramp(9), (1, 1, 3, 3))
+    conv_weight = leaf(dyadic_ramp(8), (2, 1, 2, 2))
     case("aten::conv2d.default", [conv_input, conv_weight, None, [1, 1], [1, 1], [2, 2], 1])
     pool_input = leaf(ramp(32), (1, 2, 4, 4))
     case("aten::max_pool2d.default", [pool_input, [2, 2], [2, 2], [0, 0], [1, 1], False])
