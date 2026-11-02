@@ -9,6 +9,7 @@ extraction = "tools/oracle/generate.py"
 python_packages = ["torch==2.11.0", "safetensors==0.7.0", "packaging==25.0", "numpy==2.3.5"]
 optimizer_extraction = "tools/oracle/optimizers.py"
 safetensors_extraction = "tools/oracle/safetensors_fixture.py"
+vision_extraction = "tools/oracle/vision_fixture.py"
 
 [runtime]
 jdk = "25"

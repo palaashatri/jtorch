@@ -12,6 +12,7 @@ public final class GeneratedCases {
 
     public static final List<Case> ALL = List.of(
             new Case("aten::abs.default", "autograd", true, "abs.default"),
+            new Case("aten::adaptive_avg_pool2d.default", "autograd", true, "adaptive_avg_pool2d.default"),
             new Case("aten::add.Tensor", "autograd", true, "add.Tensor"),
             new Case("aten::add_.Tensor", "forward", false, "add_.Tensor"),
             new Case("aten::addmm.default", "autograd", true, "addmm.default"),
@@ -34,6 +35,7 @@ public final class GeneratedCases {
             new Case("aten::detach.default", "forward", false, "detach.default"),
             new Case("aten::div.Tensor", "autograd", true, "div.Tensor"),
             new Case("aten::div_.Tensor", "forward", false, "div_.Tensor"),
+            new Case("aten::embedding.default", "autograd", true, "embedding.default"),
             new Case("aten::empty.default", "forward", false, "empty.default"),
             new Case("aten::eq.Tensor", "forward", false, "eq.Tensor"),
             new Case("aten::exp.default", "autograd", true, "exp.default"),
@@ -46,9 +48,11 @@ public final class GeneratedCases {
             new Case("aten::full.default", "forward", false, "full.default"),
             new Case("aten::gather.default", "autograd", true, "gather.default"),
             new Case("aten::ge.Tensor", "forward", false, "ge.Tensor"),
+            new Case("aten::gelu.default", "autograd", true, "gelu.default"),
             new Case("aten::group_norm.default", "autograd", true, "group_norm.default"),
             new Case("aten::gt.Tensor", "forward", false, "gt.Tensor"),
             new Case("aten::index_select.default", "autograd", true, "index_select.default"),
+            new Case("aten::interpolate.default", "autograd", true, "interpolate.default"),
             new Case("aten::layer_norm.default", "autograd", true, "layer_norm.default"),
             new Case("aten::le.Tensor", "forward", false, "le.Tensor"),
             new Case("aten::linear.default", "autograd", true, "linear.default"),

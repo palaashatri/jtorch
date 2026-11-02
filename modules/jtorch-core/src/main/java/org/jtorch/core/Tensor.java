@@ -607,6 +607,12 @@ public class Tensor {
 
     public Tensor avgPool2d(
             int[] kernel, int[] stride, int[] padding, boolean ceilMode, boolean countIncludePad) {
+        return avgPool2d(kernel, stride, padding, ceilMode, countIncludePad, null);
+    }
+
+    public Tensor avgPool2d(
+            int[] kernel, int[] stride, int[] padding, boolean ceilMode, boolean countIncludePad,
+            Integer divisorOverride) {
         return first(
                 OpRegistry.AVG_POOL2D,
                 Value.tensor(this),
@@ -614,7 +620,43 @@ public class Tensor {
                 Value.integers(toLongs(stride)),
                 Value.integers(toLongs(padding)),
                 Value.bool(ceilMode),
-                Value.bool(countIncludePad));
+                Value.bool(countIncludePad),
+                divisorOverride == null ? Value.none() : Value.integer(divisorOverride));
+    }
+
+    public Tensor adaptiveAvgPool2d(int[] outputSize) {
+        return first(OpRegistry.ADAPTIVE_AVG_POOL2D, Value.tensor(this), Value.integers(toLongs(outputSize)));
+    }
+
+    public Tensor interpolate(int[] size, String mode, boolean alignCorners) {
+        return first(
+                OpRegistry.INTERPOLATE,
+                Value.tensor(this),
+                Value.integers(toLongs(size)),
+                Value.string(mode),
+                Value.bool(alignCorners));
+    }
+
+    public Tensor gelu() {
+        return gelu("none");
+    }
+
+    public Tensor gelu(String approximate) {
+        return first(OpRegistry.GELU, Value.tensor(this), Value.string(approximate));
+    }
+
+    public Tensor embedding(Tensor indices, Integer paddingIdx, boolean scaleGradByFreq, boolean sparse) {
+        return first(
+                OpRegistry.EMBEDDING,
+                Value.tensor(this),
+                Value.tensor(indices),
+                paddingIdx == null ? Value.none() : Value.integer(paddingIdx),
+                Value.bool(scaleGradByFreq),
+                Value.bool(sparse));
+    }
+
+    public Tensor embedding(Tensor indices) {
+        return embedding(indices, null, false, false);
     }
 
     public Tensor constantPadNd(int[] pad, Scalar value) {

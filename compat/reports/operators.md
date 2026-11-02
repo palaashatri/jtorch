@@ -5,12 +5,13 @@ results; differential results live in the parity suite. No percentage is claimed
 
 | Status | Operators |
 | --- | --- |
-| autograd | 68 |
+| autograd | 72 |
 | forward | 31 |
 
 ## Declared operators
 
 - `aten::abs.default` — autograd
+- `aten::adaptive_avg_pool2d.default` — autograd
 - `aten::add.Tensor` — autograd
 - `aten::add_.Tensor` — forward
 - `aten::addmm.default` — autograd
@@ -33,6 +34,7 @@ results; differential results live in the parity suite. No percentage is claimed
 - `aten::detach.default` — forward
 - `aten::div.Tensor` — autograd
 - `aten::div_.Tensor` — forward
+- `aten::embedding.default` — autograd
 - `aten::empty.default` — forward
 - `aten::eq.Tensor` — forward
 - `aten::exp.default` — autograd
@@ -45,9 +47,11 @@ results; differential results live in the parity suite. No percentage is claimed
 - `aten::full.default` — forward
 - `aten::gather.default` — autograd
 - `aten::ge.Tensor` — forward
+- `aten::gelu.default` — autograd
 - `aten::group_norm.default` — autograd (composite)
 - `aten::gt.Tensor` — forward
 - `aten::index_select.default` — autograd
+- `aten::interpolate.default` — autograd
 - `aten::layer_norm.default` — autograd (composite)
 - `aten::le.Tensor` — forward
 - `aten::linear.default` — autograd (composite)

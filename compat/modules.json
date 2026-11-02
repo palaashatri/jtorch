@@ -1,26 +1,117 @@
 {
   "generatedFrom": "jtorch-nn parity and unit tests",
   "modules": [
-    { "name": "Conv2d", "status": "autograd", "notes": "NCHW, groups=1; forward and gradients covered by PyTorch fixtures and a real-MNIST acceptance run." },
-    { "name": "LayerNorm", "status": "autograd", "notes": "Trailing-dimension normalization with affine parameters; PyTorch fixtures cover forward and gradients." },
-    { "name": "GroupNorm", "status": "autograd", "notes": "NCHW group normalization with affine parameters; PyTorch fixtures cover forward and gradients." },
-    { "name": "BatchNorm2d", "status": "autograd", "notes": "NCHW training/eval with running statistics, num_batches_tracked and PyTorch parity fixtures." },
-    { "name": "AvgPool2d", "status": "autograd", "notes": "CHW/NCHW, ceil_mode=false; forward and gradients covered by PyTorch fixtures and regression tests." },
-    { "name": "MaxPool2d", "status": "autograd", "notes": "NCHW; ceil_mode=false only; gradients covered by PyTorch fixtures." },
-    { "name": "Linear", "status": "autograd", "notes": "Forward and gradients covered by PyTorch fixtures for 2-D inputs; 1-D and 3-D ranks are covered by regression tests; state dict round-trip tested." },
-    { "name": "ReLU", "status": "autograd", "notes": "Delegates to the relu operator; gradient masked at zero." },
-    { "name": "Sigmoid", "status": "autograd", "notes": "Delegates to the sigmoid operator." },
-    { "name": "Tanh", "status": "autograd", "notes": "Delegates to the tanh operator." },
-    { "name": "Flatten", "status": "autograd", "notes": "PyTorch default start_dim=1." },
-    { "name": "Sequential", "status": "autograd", "notes": "Positional child names match PyTorch state dict keys." },
-    { "name": "MSELoss", "status": "autograd", "notes": "mean/sum/none reductions; parameterless criterion." },
-    { "name": "CrossEntropyLoss", "status": "autograd", "notes": "2-D logits and int64 class targets only." }
+    {
+      "name": "Conv2d",
+      "status": "autograd",
+      "notes": "NCHW with groups; forward and gradients covered by PyTorch fixtures and a real-MNIST acceptance run."
+    },
+    {
+      "name": "LayerNorm",
+      "status": "autograd",
+      "notes": "Trailing-dimension normalization with affine parameters; PyTorch fixtures cover forward and gradients."
+    },
+    {
+      "name": "GroupNorm",
+      "status": "autograd",
+      "notes": "NCHW group normalization with affine parameters; PyTorch fixtures cover forward and gradients."
+    },
+    {
+      "name": "BatchNorm2d",
+      "status": "autograd",
+      "notes": "NCHW training/eval with running statistics, num_batches_tracked and PyTorch parity fixtures."
+    },
+    {
+      "name": "AvgPool2d",
+      "status": "autograd",
+      "notes": "CHW/NCHW with ceil mode, count_include_pad and divisor_override; forward and gradients covered by PyTorch fixtures."
+    },
+    {
+      "name": "MaxPool2d",
+      "status": "autograd",
+      "notes": "NCHW with ceil mode, dilation and padding; gradients covered by PyTorch fixtures."
+    },
+    {
+      "name": "AdaptiveAvgPool2d",
+      "status": "autograd",
+      "notes": "CHW/NCHW adaptive average pooling; forward and gradients covered by oracle fixtures."
+    },
+    {
+      "name": "GELU",
+      "status": "autograd",
+      "notes": "Exact erf form and tanh approximation; oracle fixtures cover forward and gradients."
+    },
+    {
+      "name": "Embedding",
+      "status": "autograd",
+      "notes": "Integer-index lookup with padding_idx; sparse gradients are rejected."
+    },
+    {
+      "name": "Linear",
+      "status": "autograd",
+      "notes": "Forward and gradients covered by PyTorch fixtures for 2-D inputs; 1-D and 3-D ranks are covered by regression tests; state dict round-trip tested."
+    },
+    {
+      "name": "ReLU",
+      "status": "autograd",
+      "notes": "Delegates to the relu operator; gradient masked at zero."
+    },
+    {
+      "name": "Sigmoid",
+      "status": "autograd",
+      "notes": "Delegates to the sigmoid operator."
+    },
+    {
+      "name": "Tanh",
+      "status": "autograd",
+      "notes": "Delegates to the tanh operator."
+    },
+    {
+      "name": "Flatten",
+      "status": "autograd",
+      "notes": "PyTorch default start_dim=1."
+    },
+    {
+      "name": "Sequential",
+      "status": "autograd",
+      "notes": "Positional child names match PyTorch state dict keys."
+    },
+    {
+      "name": "MSELoss",
+      "status": "autograd",
+      "notes": "mean/sum/none reductions; parameterless criterion."
+    },
+    {
+      "name": "CrossEntropyLoss",
+      "status": "autograd",
+      "notes": "2-D logits and int64 class targets only."
+    },
+    {
+      "name": "MultiheadAttention",
+      "status": "autograd",
+      "notes": "Unmasked scaled dot-product attention, batch-first; PyTorch in_proj/out_proj state-dict layout; verified by the ViT fixture model."
+    },
+    {
+      "name": "TransformerEncoderLayer",
+      "status": "autograd",
+      "notes": "Post-norm self-attention + feed-forward block with ReLU or GELU; verified by the ViT fixture model."
+    },
+    {
+      "name": "ResNet9",
+      "status": "autograd",
+      "notes": "Compact ResNet-class fixture in jtorch-vision; loads PyTorch Safetensors weights and matches reference logits."
+    },
+    {
+      "name": "ViT",
+      "status": "autograd",
+      "notes": "Compact ViT-class fixture in jtorch-vision; patch embedding, class/position tokens, one encoder layer and a linear head; matches reference logits."
+    }
   ],
   "unsupported": [
     "Module.to(device)",
     "Module backward hooks",
-    "Dropout and BatchNorm",
     "Module state-dict version metadata",
-    "Optimizer state serialization"
+    "Optimizer state serialization",
+    "Dropout training masks"
   ]
 }

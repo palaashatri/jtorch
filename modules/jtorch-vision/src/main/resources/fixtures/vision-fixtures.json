@@ -1,0 +1,49 @@
+{
+  "labels": [
+    "red",
+    "green",
+    "blue",
+    "checker"
+  ],
+  "models": [
+    {
+      "name": "resnet9",
+      "inputShape": [
+        2,
+        3,
+        32,
+        32
+      ],
+      "logitsShape": [
+        2,
+        4
+      ],
+      "top1": [
+        0,
+        2
+      ],
+      "weights": "resnet9-weights.safetensors",
+      "io": "resnet9-io.safetensors",
+      "fixtureAccuracy": 1.0
+    },
+    {
+      "name": "vit",
+      "inputShape": [
+        2,
+        3,
+        16,
+        16
+      ],
+      "logitsShape": [
+        2,
+        10
+      ],
+      "top1": [
+        3,
+        4
+      ],
+      "weights": "vit-weights.safetensors",
+      "io": "vit-io.safetensors"
+    }
+  ]
+}

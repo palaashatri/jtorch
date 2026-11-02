@@ -209,7 +209,9 @@ class IndexingAndPoolingTest {
         assertEquals(Shape.of(1, 1, 3, 3), paddedInclude.shape());
         assertEquals(0.25, paddedInclude.get(0, 0, 0, 0), 1e-12);
         assertEquals(1.0, paddedExclude.get(0, 0, 0, 0), 1e-12);
-        assertThrows(org.jtorch.core.JTorchException.class, () -> input.avgPool2d(
-                new int[] {2, 2}, new int[] {2, 2}, new int[] {0, 0}, true, true));
+        assertThrows(org.jtorch.core.ShapeException.class, () -> input.avgPool2d(
+                new int[] {2, 2}, new int[] {2, 2}, new int[] {0, 0}, false, true, 0));
+        assertEquals(Shape.of(1, 1, 3, 3), Torch.ones(Shape.of(1, 1, 4, 4)).avgPool2d(
+                new int[] {3, 3}, new int[] {2, 2}, new int[] {1, 1}, true, true).shape());
     }
 }

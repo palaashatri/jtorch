@@ -29,6 +29,10 @@
         {
           "name": "dilation",
           "type": "int[]"
+        },
+        {
+          "name": "groups",
+          "type": "int"
         }
       ],
       "returns": [
@@ -70,6 +74,10 @@
         {
           "name": "dilation",
           "type": "int[]"
+        },
+        {
+          "name": "groups",
+          "type": "int"
         }
       ],
       "returns": [
@@ -111,6 +119,10 @@
         {
           "name": "dilation",
           "type": "int[]"
+        },
+        {
+          "name": "ceil_mode",
+          "type": "bool"
         }
       ],
       "returns": [
@@ -152,6 +164,14 @@
         {
           "name": "count_include_pad",
           "type": "bool"
+        },
+        {
+          "name": "ceil_mode",
+          "type": "bool"
+        },
+        {
+          "name": "divisor_override",
+          "type": "int?"
         }
       ],
       "returns": [
@@ -354,6 +374,138 @@
       "differentiable": false,
       "status": "forward",
       "summary": "Internal scatter backward for src.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "adaptive_avg_pool2d_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "output_size",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal adaptive_avg_pool2d backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "interpolate_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "size",
+          "type": "int[]"
+        },
+        {
+          "name": "mode",
+          "type": "str"
+        },
+        {
+          "name": "align_corners",
+          "type": "bool"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal interpolate backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "gelu_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "approximate",
+          "type": "str"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal gelu backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "embedding_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "indices",
+          "type": "Tensor"
+        },
+        {
+          "name": "weight_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "padding_idx",
+          "type": "int"
+        },
+        {
+          "name": "scale_grad_by_freq",
+          "type": "bool"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal embedding backward helper.",
       "variants": [
         "function"
       ],

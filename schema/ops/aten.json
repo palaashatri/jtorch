@@ -2222,6 +2222,10 @@
         {
           "name": "count_include_pad",
           "type": "bool"
+        },
+        {
+          "name": "divisor_override",
+          "type": "int?"
         }
       ],
       "returns": [
@@ -2229,7 +2233,7 @@
       ],
       "differentiable": true,
       "status": "autograd",
-      "summary": "Average pooling over CHW/NCHW tensors; ceil_mode is not supported.",
+      "summary": "Average pooling over CHW/NCHW tensors with optional ceil mode and divisor override.",
       "variants": [
         "function",
         "method"
@@ -2730,6 +2734,133 @@
         "method"
       ],
       "composite": false
+    },
+    {
+      "name": "adaptive_avg_pool2d",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "output_size",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Adaptive average pooling over CHW/NCHW tensors to the requested output size.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "adaptive_avg_pool2d_backward"
+    },
+    {
+      "name": "interpolate",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "size",
+          "type": "int[]"
+        },
+        {
+          "name": "mode",
+          "type": "str"
+        },
+        {
+          "name": "align_corners",
+          "type": "bool"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Resizes a 4-D NCHW tensor with nearest or bilinear interpolation.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "interpolate_backward"
+    },
+    {
+      "name": "gelu",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "approximate",
+          "type": "str",
+          "default": "none"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Gaussian error linear unit using the exact erf form or the tanh approximation.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "gelu_backward"
+    },
+    {
+      "name": "embedding",
+      "overload": "default",
+      "args": [
+        {
+          "name": "weight",
+          "type": "Tensor"
+        },
+        {
+          "name": "indices",
+          "type": "Tensor"
+        },
+        {
+          "name": "padding_idx",
+          "type": "int?"
+        },
+        {
+          "name": "scale_grad_by_freq",
+          "type": "bool",
+          "default": "False"
+        },
+        {
+          "name": "sparse",
+          "type": "bool",
+          "default": "False"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Looks up rows of an embedding matrix with int32/int64 indices.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "embedding_backward"
     }
   ]
 }

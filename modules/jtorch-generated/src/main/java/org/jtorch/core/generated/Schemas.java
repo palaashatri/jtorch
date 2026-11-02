@@ -48,6 +48,23 @@ public final class Schemas {
                     "Absolute value."),
             new Schema(
                     "aten",
+                    "adaptive_avg_pool2d",
+                    "default",
+                    "aten::adaptive_avg_pool2d.default",
+                    List.of(
+                            new Arg("input", "Tensor", null, false),
+                            new Arg("output_size", "int[]", null, false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    "adaptive_avg_pool2d_backward",
+                    List.of("function", "method"),
+                    false,
+                    false,
+                    "autograd",
+                    "Adaptive average pooling over CHW/NCHW tensors to the requested output size."),
+            new Schema(
+                    "aten",
                     "add",
                     "Tensor",
                     "aten::add.Tensor",
@@ -169,7 +186,8 @@ public final class Schemas {
                             new Arg("stride", "int[]", null, false),
                             new Arg("padding", "int[]", null, false),
                             new Arg("ceil_mode", "bool", null, false),
-                            new Arg("count_include_pad", "bool", null, false)
+                            new Arg("count_include_pad", "bool", null, false),
+                            new Arg("divisor_override", "int?", null, false)
                     ),
                     List.of("Tensor"),
                     true,
@@ -178,7 +196,7 @@ public final class Schemas {
                     false,
                     false,
                     "autograd",
-                    "Average pooling over CHW/NCHW tensors; ceil_mode is not supported."),
+                    "Average pooling over CHW/NCHW tensors with optional ceil mode and divisor override."),
             new Schema(
                     "aten",
                     "batch_norm",
@@ -445,6 +463,26 @@ public final class Schemas {
                     "In-place elementwise division."),
             new Schema(
                     "aten",
+                    "embedding",
+                    "default",
+                    "aten::embedding.default",
+                    List.of(
+                            new Arg("weight", "Tensor", null, false),
+                            new Arg("indices", "Tensor", null, false),
+                            new Arg("padding_idx", "int?", null, false),
+                            new Arg("scale_grad_by_freq", "bool", "False", false),
+                            new Arg("sparse", "bool", "False", false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    "embedding_backward",
+                    List.of("function", "method"),
+                    false,
+                    false,
+                    "autograd",
+                    "Looks up rows of an embedding matrix with int32/int64 indices."),
+            new Schema(
+                    "aten",
                     "empty",
                     "default",
                     "aten::empty.default",
@@ -653,6 +691,23 @@ public final class Schemas {
                     "Elementwise ge comparison producing a bool tensor."),
             new Schema(
                     "aten",
+                    "gelu",
+                    "default",
+                    "aten::gelu.default",
+                    List.of(
+                            new Arg("input", "Tensor", null, false),
+                            new Arg("approximate", "str", "none", false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    "gelu_backward",
+                    List.of("function", "method"),
+                    false,
+                    false,
+                    "autograd",
+                    "Gaussian error linear unit using the exact erf form or the tanh approximation."),
+            new Schema(
+                    "aten",
                     "group_norm",
                     "default",
                     "aten::group_norm.default",
@@ -706,6 +761,25 @@ public final class Schemas {
                     false,
                     "autograd",
                     "Selects positions along one dimension using int32 or int64 indices."),
+            new Schema(
+                    "aten",
+                    "interpolate",
+                    "default",
+                    "aten::interpolate.default",
+                    List.of(
+                            new Arg("input", "Tensor", null, false),
+                            new Arg("size", "int[]", null, false),
+                            new Arg("mode", "str", null, false),
+                            new Arg("align_corners", "bool", null, false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    "interpolate_backward",
+                    List.of("function", "method"),
+                    false,
+                    false,
+                    "autograd",
+                    "Resizes a 4-D NCHW tensor with nearest or bilinear interpolation."),
             new Schema(
                     "aten",
                     "layer_norm",
@@ -1757,6 +1831,24 @@ public final class Schemas {
                     "Creates a tensor filled with zeros."),
             new Schema(
                     "jtorch",
+                    "adaptive_avg_pool2d_backward",
+                    "default",
+                    "jtorch::adaptive_avg_pool2d_backward.default",
+                    List.of(
+                            new Arg("grad", "Tensor", null, false),
+                            new Arg("input_shape", "int[]", null, false),
+                            new Arg("output_size", "int[]", null, false)
+                    ),
+                    List.of("Tensor"),
+                    false,
+                    null,
+                    List.of("function"),
+                    false,
+                    true,
+                    "forward",
+                    "Internal adaptive_avg_pool2d backward helper."),
+            new Schema(
+                    "jtorch",
                     "avg_pool2d_backward",
                     "default",
                     "jtorch::avg_pool2d_backward.default",
@@ -1766,7 +1858,9 @@ public final class Schemas {
                             new Arg("kernel_size", "int[]", null, false),
                             new Arg("stride", "int[]", null, false),
                             new Arg("padding", "int[]", null, false),
-                            new Arg("count_include_pad", "bool", null, false)
+                            new Arg("count_include_pad", "bool", null, false),
+                            new Arg("ceil_mode", "bool", null, false),
+                            new Arg("divisor_override", "int?", null, false)
                     ),
                     List.of("Tensor"),
                     false,
@@ -1804,7 +1898,8 @@ public final class Schemas {
                             new Arg("input_shape", "int[]", null, false),
                             new Arg("stride", "int[]", null, false),
                             new Arg("padding", "int[]", null, false),
-                            new Arg("dilation", "int[]", null, false)
+                            new Arg("dilation", "int[]", null, false),
+                            new Arg("groups", "int", null, false)
                     ),
                     List.of("Tensor"),
                     false,
@@ -1825,7 +1920,8 @@ public final class Schemas {
                             new Arg("weight_shape", "int[]", null, false),
                             new Arg("stride", "int[]", null, false),
                             new Arg("padding", "int[]", null, false),
-                            new Arg("dilation", "int[]", null, false)
+                            new Arg("dilation", "int[]", null, false),
+                            new Arg("groups", "int", null, false)
                     ),
                     List.of("Tensor"),
                     false,
@@ -1835,6 +1931,26 @@ public final class Schemas {
                     true,
                     "forward",
                     "Internal conv2d backward helper for the weight gradient."),
+            new Schema(
+                    "jtorch",
+                    "embedding_backward",
+                    "default",
+                    "jtorch::embedding_backward.default",
+                    List.of(
+                            new Arg("grad", "Tensor", null, false),
+                            new Arg("indices", "Tensor", null, false),
+                            new Arg("weight_shape", "int[]", null, false),
+                            new Arg("padding_idx", "int", null, false),
+                            new Arg("scale_grad_by_freq", "bool", null, false)
+                    ),
+                    List.of("Tensor"),
+                    false,
+                    null,
+                    List.of("function"),
+                    false,
+                    true,
+                    "forward",
+                    "Internal embedding backward helper."),
             new Schema(
                     "jtorch",
                     "gather_backward",
@@ -1856,6 +1972,24 @@ public final class Schemas {
                     "Internal gather backward helper."),
             new Schema(
                     "jtorch",
+                    "gelu_backward",
+                    "default",
+                    "jtorch::gelu_backward.default",
+                    List.of(
+                            new Arg("grad", "Tensor", null, false),
+                            new Arg("input", "Tensor", null, false),
+                            new Arg("approximate", "str", null, false)
+                    ),
+                    List.of("Tensor"),
+                    false,
+                    null,
+                    List.of("function"),
+                    false,
+                    true,
+                    "forward",
+                    "Internal gelu backward helper."),
+            new Schema(
+                    "jtorch",
                     "index_select_backward",
                     "default",
                     "jtorch::index_select_backward.default",
@@ -1875,6 +2009,26 @@ public final class Schemas {
                     "Internal index_select backward helper."),
             new Schema(
                     "jtorch",
+                    "interpolate_backward",
+                    "default",
+                    "jtorch::interpolate_backward.default",
+                    List.of(
+                            new Arg("grad", "Tensor", null, false),
+                            new Arg("input_shape", "int[]", null, false),
+                            new Arg("size", "int[]", null, false),
+                            new Arg("mode", "str", null, false),
+                            new Arg("align_corners", "bool", null, false)
+                    ),
+                    List.of("Tensor"),
+                    false,
+                    null,
+                    List.of("function"),
+                    false,
+                    true,
+                    "forward",
+                    "Internal interpolate backward helper."),
+            new Schema(
+                    "jtorch",
                     "max_pool2d_backward",
                     "default",
                     "jtorch::max_pool2d_backward.default",
@@ -1884,7 +2038,8 @@ public final class Schemas {
                             new Arg("kernel_size", "int[]", null, false),
                             new Arg("stride", "int[]", null, false),
                             new Arg("padding", "int[]", null, false),
-                            new Arg("dilation", "int[]", null, false)
+                            new Arg("dilation", "int[]", null, false),
+                            new Arg("ceil_mode", "bool", null, false)
                     ),
                     List.of("Tensor"),
                     false,

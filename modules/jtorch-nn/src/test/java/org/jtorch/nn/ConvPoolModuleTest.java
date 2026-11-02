@@ -42,15 +42,13 @@ class ConvPoolModuleTest {
 
     @Test
     void invalidConvAndPoolModulesFailAtConstruction() {
-        assertThrows(IllegalArgumentException.class, () -> new Conv2d(2, 4, new int[] {3, 3},
+        assertThrows(IllegalArgumentException.class, () -> new Conv2d(3, 4, new int[] {3, 3},
                 new int[] {1, 1}, new int[] {0, 0}, new int[] {1, 1}, 2, true));
         assertThrows(IllegalArgumentException.class, () -> new Conv2d(1, 1, new int[] {0, 0},
                 new int[] {1, 1}, new int[] {0, 0}, new int[] {1, 1}, 1, true));
         assertThrows(IllegalArgumentException.class, () -> new Conv2d(1, 1, new int[] {3, 3},
                 new int[] {0, 0}, new int[] {0, 0}, new int[] {1, 1}, 1, true));
         assertThrows(IllegalArgumentException.class, () -> new MaxPool2d(0, 2, 0));
-        assertThrows(IllegalArgumentException.class, () -> new MaxPool2d(new int[] {2, 2}, new int[] {2, 2},
-                new int[] {0, 0}, new int[] {1, 1}, true));
     }
 
     @Test
@@ -92,6 +90,22 @@ class ConvPoolModuleTest {
         Tensor var = Torch.ones(Shape.of(2)).requiresGrad(true);
         assertThrows(org.jtorch.core.AutogradException.class,
                 () -> input.batchNorm(null, null, mean, var, false, 0.1, 1e-5));
+    }
+
+    @Test
+    void groupedConvolutionAndCeilModePoolingRun() {
+        Conv2d grouped = new Conv2d(4, 4, new int[] {1, 1}, new int[] {1, 1}, new int[] {0, 0},
+                new int[] {1, 1}, 2, true);
+        assertEquals(Shape.of(4, 2, 1, 1), grouped.weight().shape());
+        Tensor output = grouped.call(Torch.ones(Shape.of(1, 4, 2, 2)));
+        assertEquals(Shape.of(1, 4, 2, 2), output.shape());
+
+        MaxPool2d ceiled = new MaxPool2d(new int[] {3, 3}, new int[] {2, 2}, new int[] {1, 1},
+                new int[] {1, 1}, true);
+        assertEquals(Shape.of(1, 1, 3, 3), ceiled.call(Torch.ones(Shape.of(1, 1, 4, 4))).shape());
+        AvgPool2d averaged = new AvgPool2d(new int[] {3, 3}, new int[] {2, 2}, new int[] {1, 1},
+                true, true, 3);
+        assertEquals(Shape.of(1, 1, 3, 3), averaged.call(Torch.ones(Shape.of(1, 1, 4, 4))).shape());
     }
 
     @Test

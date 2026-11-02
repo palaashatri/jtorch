@@ -15,32 +15,31 @@ final class Convolution {
 
     record PoolConfig(int[] kernel, int[] stride, int[] padding, int[] dilation, boolean ceilMode) {}
 
-    record AvgPoolConfig(int[] kernel, int[] stride, int[] padding, boolean countIncludePad) {}
+    record AvgPoolConfig(int[] kernel, int[] stride, int[] padding, boolean ceilMode, boolean countIncludePad,
+                         Integer divisorOverride) {}
 
     record PadConfig(int pairs, int[] pads) {}
 
     static ConvConfig convConfig(long[] stride, long[] padding, long[] dilation, int groups) {
-        if (groups != 1) {
-            throw new JTorchException("conv2d in this build supports groups=1 only, got " + groups);
+        if (groups <= 0) {
+            throw new ShapeException("conv2d groups must be positive, got " + groups);
         }
         return new ConvConfig(pair(stride, "stride"), pair(padding, "padding"), pair(dilation, "dilation"), groups);
     }
 
     static PoolConfig poolConfig(long[] kernel, long[] stride, long[] padding, long[] dilation, boolean ceilMode) {
-        if (ceilMode) {
-            throw new JTorchException("max_pool2d in this build does not support ceil_mode=true");
-        }
         return new PoolConfig(pair(kernel, "kernel_size"), pair(stride, "stride"), pair(padding, "padding"),
-                pair(dilation, "dilation"), false);
+                pair(dilation, "dilation"), ceilMode);
     }
 
     static AvgPoolConfig avgPoolConfig(
-            long[] kernel, long[] stride, long[] padding, boolean ceilMode, boolean countIncludePad) {
-        if (ceilMode) {
-            throw new JTorchException("avg_pool2d in this build does not support ceil_mode=true");
+            long[] kernel, long[] stride, long[] padding, boolean ceilMode, boolean countIncludePad,
+            Integer divisorOverride) {
+        if (divisorOverride != null && divisorOverride == 0) {
+            throw new ShapeException("avg_pool2d divisor_override must not be zero");
         }
         return new AvgPoolConfig(pair(kernel, "kernel_size"), pair(stride, "stride"), pair(padding, "padding"),
-                countIncludePad);
+                ceilMode, countIncludePad, divisorOverride);
     }
 
     static void validateAvgPool(Tensor input, AvgPoolConfig config) {
@@ -64,9 +63,9 @@ final class Convolution {
         int heightDim = input.dim() - 2;
         int widthDim = input.dim() - 1;
         long height = outputSize(input.size(heightDim), config.padding()[0], 1, config.kernel()[0],
-                config.stride()[0]);
+                config.stride()[0], config.ceilMode());
         long width = outputSize(input.size(widthDim), config.padding()[1], 1, config.kernel()[1],
-                config.stride()[1]);
+                config.stride()[1], config.ceilMode());
         if (input.dim() == 3) {
             return Shape.of(input.size(0), height, width);
         }
@@ -140,9 +139,13 @@ final class Convolution {
                 throw new DTypeException("conv2d bias dtype must match input dtype");
             }
         }
-        if (input.size(1) != weight.size(1)) {
-            throw new ShapeException("conv2d input channels " + input.size(1) + " do not match weight channels "
-                    + weight.size(1));
+        if (weight.size(0) % config.groups() != 0) {
+            throw new ShapeException("conv2d output channels " + weight.size(0) + " must be divisible by groups "
+                    + config.groups());
+        }
+        if (input.size(1) != weight.size(1) * config.groups()) {
+            throw new ShapeException("conv2d input channels " + input.size(1)
+                    + " do not match weight channels " + weight.size(1) + " * groups " + config.groups());
         }
         if (weight.size(2) <= 0 || weight.size(3) <= 0) {
             throw new ShapeException("conv2d kernel dimensions must be positive, got " + weight.shape());
@@ -182,18 +185,27 @@ final class Convolution {
 
     static Shape poolOutputShape(Tensor input, PoolConfig config) {
         long height = outputSize(input.size(2), config.padding()[0], config.dilation()[0],
-                config.kernel()[0], config.stride()[0]);
+                config.kernel()[0], config.stride()[0], config.ceilMode());
         long width = outputSize(input.size(3), config.padding()[1], config.dilation()[1],
-                config.kernel()[1], config.stride()[1]);
+                config.kernel()[1], config.stride()[1], config.ceilMode());
         return Shape.of(input.size(0), input.size(1), height, width);
     }
 
     static long outputSize(long input, int padding, int dilation, int kernel, int stride) {
+        return outputSize(input, padding, dilation, kernel, stride, false);
+    }
+
+    static long outputSize(long input, int padding, int dilation, int kernel, int stride, boolean ceilMode) {
         if (kernel <= 0 || stride <= 0 || dilation <= 0 || padding < 0) {
             throw new ShapeException("kernel, stride and dilation must be positive and padding non-negative");
         }
-        long effective = (long) dilation * (kernel - 1) + 1;
-        long output = Math.floorDiv(input + 2L * padding - effective, stride) + 1;
+        long numerator = input + 2L * padding - (long) dilation * (kernel - 1) - 1;
+        long output = (ceilMode
+                ? Math.floorDiv(numerator + stride - 1, stride)
+                : Math.floorDiv(numerator, stride)) + 1;
+        if (ceilMode && (output - 1) * stride >= input + padding) {
+            output--;
+        }
         if (output <= 0) {
             throw new ShapeException("convolution/pooling produces an empty output dimension from input size "
                     + input + ", padding " + padding + ", dilation " + dilation + ", kernel " + kernel
@@ -217,9 +229,10 @@ final class Convolution {
             throw new ShapeException("conv2d backward grad channels " + grad.size(1)
                     + " do not match weight output channels " + weight.size(0));
         }
-        if (inputShape[1] != weight.size(1)) {
+        if (weight.size(0) % config.groups() != 0
+                || inputShape[1] != weight.size(1) * config.groups()) {
             throw new ShapeException("conv2d backward input channels " + inputShape[1]
-                    + " do not match weight channels " + weight.size(1));
+                    + " do not match weight channels " + weight.size(1) + " * groups " + config.groups());
         }
         if (inputShape[2] <= 0 || inputShape[3] <= 0) {
             throw new ShapeException("conv2d backward input spatial dimensions must be positive");
@@ -244,8 +257,10 @@ final class Convolution {
         if (!input.dtype().isFloatingPoint() || input.dtype() != grad.dtype()) {
             throw new DTypeException("conv2d backward input and grad must share a floating dtype");
         }
-        if (input.size(1) != weightShape[1] || grad.size(1) != weightShape[0]) {
-            throw new ShapeException("conv2d backward shapes do not match the declared weight shape");
+        if (weightShape[0] % config.groups() != 0
+                || input.size(1) != weightShape[1] * config.groups()
+                || grad.size(1) != weightShape[0]) {
+            throw new ShapeException("conv2d backward shapes do not match the declared weight shape and groups");
         }
         if (weightShape[2] <= 0 || weightShape[3] <= 0) {
             throw new ShapeException("conv2d backward weight kernel dimensions must be positive");
