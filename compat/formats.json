@@ -1,0 +1,14 @@
+{
+  "formats": [
+    { "name": "jtorch-checkpoint", "status": "full-semantics", "notes": "Versioned JSON manifest, little-endian payload, SHA-256 digest; corruption, truncation and bad magic are rejected. Supported dtypes: float32/float64/int32/int64/bool." },
+    { "name": "safetensors", "status": "full-semantics", "notes": "Reader and writer; reference file produced by safetensors 0.7.0 is read, and length/offset tampering is rejected." }
+  ],
+  "unsupported": [
+    "PyTorch pickle checkpoints",
+    "ONNX",
+    "GGUF",
+    "float16/bfloat16 payloads",
+    "safetensors metadata blocks (ignored on read, not written)",
+    "sharded checkpoint files"
+  ]
+}

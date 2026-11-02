@@ -1,0 +1,50 @@
+{
+  "operator": "aten::arange.default",
+  "torch": "2.11.0",
+  "python": "3.13.9",
+  "nondeterministic": false,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "int",
+      "value": 5
+    },
+    {
+      "kind": "int",
+      "value": 0
+    },
+    {
+      "kind": "int",
+      "value": -2
+    },
+    {
+      "kind": "dtype",
+      "value": "int64"
+    },
+    {
+      "kind": "device",
+      "value": "cpu"
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "int64",
+      "shape": [
+        3
+      ],
+      "strides": [
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": false,
+      "data": [
+        5,
+        3,
+        1
+      ]
+    }
+  ],
+  "grads": []
+}

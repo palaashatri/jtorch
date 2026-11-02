@@ -1,0 +1,604 @@
+{
+  "generatedFrom": "schema/ops",
+  "total": 99,
+  "byStatus": {
+    "autograd": 68,
+    "forward": 31
+  },
+  "operators": [
+    {
+      "name": "aten::abs.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "abs_backward"
+    },
+    {
+      "name": "aten::add.Tensor",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "add_backward"
+    },
+    {
+      "name": "aten::add_.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::addmm.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "addmm_backward"
+    },
+    {
+      "name": "aten::arange.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::argmax.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::argmin.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::avg_pool2d.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "avg_pool2d_backward"
+    },
+    {
+      "name": "aten::batch_norm.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": null
+    },
+    {
+      "name": "aten::bmm.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "bmm_backward"
+    },
+    {
+      "name": "aten::cat.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "cat_backward"
+    },
+    {
+      "name": "aten::ceil.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::clamp.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "clamp_backward"
+    },
+    {
+      "name": "aten::clone.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "clone_backward"
+    },
+    {
+      "name": "aten::constant_pad_nd.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "constant_pad_nd_backward"
+    },
+    {
+      "name": "aten::contiguous.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "contiguous_backward"
+    },
+    {
+      "name": "aten::conv2d.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "conv2d_backward"
+    },
+    {
+      "name": "aten::copy_.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::cos.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "cos_backward"
+    },
+    {
+      "name": "aten::cross_entropy.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "cross_entropy_backward"
+    },
+    {
+      "name": "aten::detach.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::div.Tensor",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "div_backward"
+    },
+    {
+      "name": "aten::div_.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::empty.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::eq.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::exp.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "exp_backward"
+    },
+    {
+      "name": "aten::expand.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "expand_backward"
+    },
+    {
+      "name": "aten::eye.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::fill_.Scalar",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::flatten.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "flatten_backward"
+    },
+    {
+      "name": "aten::flip.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "flip"
+    },
+    {
+      "name": "aten::floor.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::full.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::gather.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "gather_backward"
+    },
+    {
+      "name": "aten::ge.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::group_norm.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": null
+    },
+    {
+      "name": "aten::gt.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::index_select.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "index_select_backward"
+    },
+    {
+      "name": "aten::layer_norm.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": null
+    },
+    {
+      "name": "aten::le.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::linear.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "linear_backward"
+    },
+    {
+      "name": "aten::log.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "log_backward"
+    },
+    {
+      "name": "aten::log1p.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "log1p_backward"
+    },
+    {
+      "name": "aten::log_softmax.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "log_softmax_backward"
+    },
+    {
+      "name": "aten::logical_not.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::lt.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::matmul.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "matmul_backward"
+    },
+    {
+      "name": "aten::max.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "max_backward"
+    },
+    {
+      "name": "aten::max.dim",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "max_dim_backward"
+    },
+    {
+      "name": "aten::max_pool2d.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "max_pool2d_backward"
+    },
+    {
+      "name": "aten::maximum.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "maximum_backward"
+    },
+    {
+      "name": "aten::mean.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "mean_backward"
+    },
+    {
+      "name": "aten::mean.dim",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "mean_dim_backward"
+    },
+    {
+      "name": "aten::min.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "min_backward"
+    },
+    {
+      "name": "aten::min.dim",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "min_dim_backward"
+    },
+    {
+      "name": "aten::minimum.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "minimum_backward"
+    },
+    {
+      "name": "aten::mm.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "mm_backward"
+    },
+    {
+      "name": "aten::mse_loss.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "mse_loss_backward"
+    },
+    {
+      "name": "aten::mul.Tensor",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "mul_backward"
+    },
+    {
+      "name": "aten::mul_.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::narrow.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "narrow_backward"
+    },
+    {
+      "name": "aten::ne.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::neg.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "neg_backward"
+    },
+    {
+      "name": "aten::ones.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::permute.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "permute_backward"
+    },
+    {
+      "name": "aten::pow.Tensor_Scalar",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "pow_scalar_backward"
+    },
+    {
+      "name": "aten::pow.Tensor_Tensor",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "pow_tensor_backward"
+    },
+    {
+      "name": "aten::prod.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::prod.dim",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::rand.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::randint.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::randn.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::reciprocal.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "reciprocal_backward"
+    },
+    {
+      "name": "aten::relu.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "relu_backward"
+    },
+    {
+      "name": "aten::reshape.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "reshape_backward"
+    },
+    {
+      "name": "aten::scatter.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "scatter_backward_self,scatter_backward_src"
+    },
+    {
+      "name": "aten::select.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "select_backward"
+    },
+    {
+      "name": "aten::sigmoid.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "sigmoid_backward"
+    },
+    {
+      "name": "aten::sign.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::sin.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "sin_backward"
+    },
+    {
+      "name": "aten::slice.Tensor",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "slice_backward"
+    },
+    {
+      "name": "aten::softmax.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "softmax_backward"
+    },
+    {
+      "name": "aten::sqrt.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "sqrt_backward"
+    },
+    {
+      "name": "aten::square.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "square_backward"
+    },
+    {
+      "name": "aten::squeeze.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "squeeze_backward"
+    },
+    {
+      "name": "aten::squeeze.dim",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "squeeze_backward"
+    },
+    {
+      "name": "aten::stack.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "stack_backward"
+    },
+    {
+      "name": "aten::sub.Tensor",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "sub_backward"
+    },
+    {
+      "name": "aten::sub_.Tensor",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::sum.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "sum_backward"
+    },
+    {
+      "name": "aten::sum.dim_IntList",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "sum_dim_backward"
+    },
+    {
+      "name": "aten::t.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "t_backward"
+    },
+    {
+      "name": "aten::tanh.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "tanh_backward"
+    },
+    {
+      "name": "aten::to.dtype",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "to_backward"
+    },
+    {
+      "name": "aten::transpose.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "transpose_backward"
+    },
+    {
+      "name": "aten::unsqueeze.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "unsqueeze_backward"
+    },
+    {
+      "name": "aten::view.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "view_backward"
+    },
+    {
+      "name": "aten::zero_.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    },
+    {
+      "name": "aten::zeros.default",
+      "status": "forward",
+      "differentiable": false,
+      "reverse": null
+    }
+  ]
+}

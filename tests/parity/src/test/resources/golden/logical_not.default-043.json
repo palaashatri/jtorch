@@ -1,0 +1,57 @@
+{
+  "operator": "aten::logical_not.default",
+  "torch": "2.11.0",
+  "python": "3.13.9",
+  "nondeterministic": false,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "tensor",
+      "dtype": "bool",
+      "shape": [
+        2,
+        3
+      ],
+      "strides": [
+        3,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": false,
+      "data": [
+        true,
+        false,
+        true,
+        false,
+        false,
+        true
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "bool",
+      "shape": [
+        2,
+        3
+      ],
+      "strides": [
+        3,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": false,
+      "data": [
+        false,
+        true,
+        false,
+        true,
+        true,
+        false
+      ]
+    }
+  ],
+  "grads": []
+}

@@ -1,0 +1,6 @@
+# Pinned oracle environment. The parity generators must run against exactly
+# these versions; compat/baseline.toml records the same pins.
+torch==2.11.0
+safetensors==0.7.0
+packaging==25.0
+numpy==2.3.5

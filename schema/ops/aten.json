@@ -1,0 +1,2735 @@
+{
+  "schemaVersion": 1,
+  "namespace": "aten",
+  "operators": [
+    {
+      "name": "zeros",
+      "overload": "default",
+      "args": [
+        {
+          "name": "size",
+          "type": "int[]"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        },
+        {
+          "name": "device",
+          "type": "Device"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Creates a tensor filled with zeros.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "ones",
+      "overload": "default",
+      "args": [
+        {
+          "name": "size",
+          "type": "int[]"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        },
+        {
+          "name": "device",
+          "type": "Device"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Creates a tensor filled with ones.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "empty",
+      "overload": "default",
+      "args": [
+        {
+          "name": "size",
+          "type": "int[]"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        },
+        {
+          "name": "device",
+          "type": "Device"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Creates a tensor filled with uninitialised values.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "full",
+      "overload": "default",
+      "args": [
+        {
+          "name": "size",
+          "type": "int[]"
+        },
+        {
+          "name": "fill_value",
+          "type": "Scalar"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        },
+        {
+          "name": "device",
+          "type": "Device"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Creates a tensor filled with a scalar value.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "arange",
+      "overload": "default",
+      "args": [
+        {
+          "name": "start",
+          "type": "Scalar"
+        },
+        {
+          "name": "end",
+          "type": "Scalar"
+        },
+        {
+          "name": "step",
+          "type": "Scalar"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        },
+        {
+          "name": "device",
+          "type": "Device"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Creates a 1-D tensor of evenly spaced values in [start, end).",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "randn",
+      "overload": "default",
+      "args": [
+        {
+          "name": "size",
+          "type": "int[]"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        },
+        {
+          "name": "device",
+          "type": "Device"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Creates a tensor of standard normal samples from the default generator.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "rand",
+      "overload": "default",
+      "args": [
+        {
+          "name": "size",
+          "type": "int[]"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        },
+        {
+          "name": "device",
+          "type": "Device"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Creates a tensor of uniform [0, 1) samples from the default generator.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "randint",
+      "overload": "default",
+      "args": [
+        {
+          "name": "low",
+          "type": "int"
+        },
+        {
+          "name": "high",
+          "type": "int"
+        },
+        {
+          "name": "size",
+          "type": "int[]"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        },
+        {
+          "name": "device",
+          "type": "Device"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Creates a tensor of uniform integers in [low, high).",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "eye",
+      "overload": "default",
+      "args": [
+        {
+          "name": "n",
+          "type": "int"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        },
+        {
+          "name": "device",
+          "type": "Device"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Creates a 2-D identity matrix.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "reshape",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "shape",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Returns a tensor with the requested shape, sharing storage when possible.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "reshape_backward"
+    },
+    {
+      "name": "view",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "shape",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Returns a tensor with the requested shape, sharing storage when possible.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "view_backward"
+    },
+    {
+      "name": "transpose",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim0",
+          "type": "int"
+        },
+        {
+          "name": "dim1",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Swaps two dimensions; the result shares storage.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "transpose_backward"
+    },
+    {
+      "name": "permute",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dims",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Reorders dimensions; the result shares storage.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "permute_backward"
+    },
+    {
+      "name": "narrow",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "start",
+          "type": "int"
+        },
+        {
+          "name": "length",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Returns a contiguous-range view along one dimension.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "narrow_backward"
+    },
+    {
+      "name": "select",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "index",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Removes an indexed position of one dimension; the result shares storage.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "select_backward"
+    },
+    {
+      "name": "squeeze",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Removes all size-1 dimensions.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "squeeze_backward"
+    },
+    {
+      "name": "squeeze",
+      "overload": "dim",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Removes one dimension if it has size 1.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "squeeze_backward"
+    },
+    {
+      "name": "unsqueeze",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Inserts a size-1 dimension.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "unsqueeze_backward"
+    },
+    {
+      "name": "expand",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "size",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Broadcasts size-1 dimensions using zero strides; the result shares storage.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "expand_backward"
+    },
+    {
+      "name": "flatten",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "start_dim",
+          "type": "int"
+        },
+        {
+          "name": "end_dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Flattens a contiguous range of dimensions.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "flatten_backward"
+    },
+    {
+      "name": "t",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Transposes a 2-D tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "t_backward"
+    },
+    {
+      "name": "contiguous",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Returns this tensor when already contiguous, otherwise a contiguous copy.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "contiguous_backward"
+    },
+    {
+      "name": "clone",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Returns a deep copy that does not share storage.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "clone_backward"
+    },
+    {
+      "name": "detach",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Returns a view that shares storage but is detached from the autograd graph.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "to",
+      "overload": "dtype",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dtype",
+          "type": "DType"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Casts a tensor to another supported dtype.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "to_backward"
+    },
+    {
+      "name": "add",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        },
+        {
+          "name": "alpha",
+          "type": "Scalar",
+          "default": "1",
+          "keywordOnly": true
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Elementwise addition of two tensors with an optional alpha scale.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "add_backward"
+    },
+    {
+      "name": "sub",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        },
+        {
+          "name": "alpha",
+          "type": "Scalar",
+          "default": "1",
+          "keywordOnly": true
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Elementwise subtraction with an optional alpha scale.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "sub_backward"
+    },
+    {
+      "name": "mul",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Elementwise multiplication with broadcasting.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "mul_backward"
+    },
+    {
+      "name": "div",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Elementwise true division; integer inputs promote to float32.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "div_backward"
+    },
+    {
+      "name": "pow",
+      "overload": "Tensor_Scalar",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "exponent",
+          "type": "Scalar"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Raises every element to a scalar power.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "pow_scalar_backward"
+    },
+    {
+      "name": "pow",
+      "overload": "Tensor_Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "exponent",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Elementwise tensor power with broadcasting.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "pow_tensor_backward"
+    },
+    {
+      "name": "maximum",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Elementwise maximum, splitting gradients evenly at ties.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "maximum_backward"
+    },
+    {
+      "name": "minimum",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Elementwise minimum, splitting gradients evenly at ties.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "minimum_backward"
+    },
+    {
+      "name": "eq",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Elementwise eq comparison producing a bool tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "ne",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Elementwise ne comparison producing a bool tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "lt",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Elementwise lt comparison producing a bool tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "le",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Elementwise le comparison producing a bool tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "gt",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Elementwise gt comparison producing a bool tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "ge",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Elementwise ge comparison producing a bool tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "logical_not",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Elementwise logical negation producing a bool tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "neg",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Negates every element.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "neg_backward"
+    },
+    {
+      "name": "abs",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Absolute value.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "abs_backward"
+    },
+    {
+      "name": "square",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Elementwise square.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "square_backward"
+    },
+    {
+      "name": "sqrt",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Square root.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "sqrt_backward"
+    },
+    {
+      "name": "exp",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Exponential.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "exp_backward"
+    },
+    {
+      "name": "log",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Natural logarithm.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "log_backward"
+    },
+    {
+      "name": "tanh",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Hyperbolic tangent.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "tanh_backward"
+    },
+    {
+      "name": "sigmoid",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Logistic sigmoid.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "sigmoid_backward"
+    },
+    {
+      "name": "relu",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Rectified linear unit.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "relu_backward"
+    },
+    {
+      "name": "reciprocal",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Elementwise reciprocal 1/x.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "reciprocal_backward"
+    },
+    {
+      "name": "floor",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Largest integer not greater than each element.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "ceil",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Smallest integer not less than each element.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "sign",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Sign of each element.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "sin",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Sine.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "sin_backward"
+    },
+    {
+      "name": "cos",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Cosine.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "cos_backward"
+    },
+    {
+      "name": "log1p",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "log(1 + x).",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "log1p_backward"
+    },
+    {
+      "name": "clamp",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "min",
+          "type": "Scalar?"
+        },
+        {
+          "name": "max",
+          "type": "Scalar?"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Clamps every element into an optional inclusive range.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "clamp_backward"
+    },
+    {
+      "name": "sum",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Sums all elements into a scalar tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "sum_backward"
+    },
+    {
+      "name": "sum",
+      "overload": "dim_IntList",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int[]"
+        },
+        {
+          "name": "keepdim",
+          "type": "bool",
+          "default": "False"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Sums over the given dimensions.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "sum_dim_backward"
+    },
+    {
+      "name": "mean",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Mean of all elements.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "mean_backward"
+    },
+    {
+      "name": "mean",
+      "overload": "dim",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int[]"
+        },
+        {
+          "name": "keepdim",
+          "type": "bool",
+          "default": "False"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Mean over the given dimensions.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "mean_dim_backward"
+    },
+    {
+      "name": "prod",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Product of all elements (forward only; autograd is not implemented in this build).",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "prod",
+      "overload": "dim",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "keepdim",
+          "type": "bool",
+          "default": "False"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Product over one dimension (forward only; autograd is not implemented in this build).",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "max",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Maximum element as a scalar tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "max_backward"
+    },
+    {
+      "name": "max",
+      "overload": "dim",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "keepdim",
+          "type": "bool",
+          "default": "False"
+        }
+      ],
+      "returns": [
+        "Tensor",
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Maximum values and indices along one dimension.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "max_dim_backward"
+    },
+    {
+      "name": "min",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Minimum element as a scalar tensor.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "min_backward"
+    },
+    {
+      "name": "min",
+      "overload": "dim",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "keepdim",
+          "type": "bool",
+          "default": "False"
+        }
+      ],
+      "returns": [
+        "Tensor",
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Minimum values and indices along one dimension.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "min_dim_backward"
+    },
+    {
+      "name": "argmax",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int?"
+        },
+        {
+          "name": "keepdim",
+          "type": "bool",
+          "default": "False"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Index of the maximum element, as int64.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "argmin",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int?"
+        },
+        {
+          "name": "keepdim",
+          "type": "bool",
+          "default": "False"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Index of the minimum element, as int64.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "log_softmax",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Numerically stable log-softmax along one dimension.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": true,
+      "reverse": "log_softmax_backward"
+    },
+    {
+      "name": "softmax",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Softmax along one dimension.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": true,
+      "reverse": "softmax_backward"
+    },
+    {
+      "name": "matmul",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Matrix multiplication with NumPy-style batch broadcasting.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "matmul_backward"
+    },
+    {
+      "name": "mm",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "2-D matrix multiplication.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "mm_backward"
+    },
+    {
+      "name": "bmm",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Batched 3-D matrix multiplication.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "bmm_backward"
+    },
+    {
+      "name": "addmm",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "mat1",
+          "type": "Tensor"
+        },
+        {
+          "name": "mat2",
+          "type": "Tensor"
+        },
+        {
+          "name": "beta",
+          "type": "Scalar",
+          "default": "1"
+        },
+        {
+          "name": "alpha",
+          "type": "Scalar",
+          "default": "1"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "beta * self + alpha * mat1 @ mat2.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "addmm_backward"
+    },
+    {
+      "name": "linear",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor"
+        },
+        {
+          "name": "bias",
+          "type": "Tensor?"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Affine transform input @ weight^T + bias.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": true,
+      "reverse": "linear_backward"
+    },
+    {
+      "name": "cat",
+      "overload": "default",
+      "args": [
+        {
+          "name": "tensors",
+          "type": "Tensor[]"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Concatenates tensors along an existing dimension.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "cat_backward"
+    },
+    {
+      "name": "stack",
+      "overload": "default",
+      "args": [
+        {
+          "name": "tensors",
+          "type": "Tensor[]"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Concatenates tensors along a new dimension.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "stack_backward"
+    },
+    {
+      "name": "mse_loss",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "target",
+          "type": "Tensor"
+        },
+        {
+          "name": "reduction",
+          "type": "str",
+          "default": "mean"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Mean/sum/none squared error.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": true,
+      "reverse": "mse_loss_backward"
+    },
+    {
+      "name": "cross_entropy",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "target",
+          "type": "Tensor"
+        },
+        {
+          "name": "reduction",
+          "type": "str",
+          "default": "mean"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Cross entropy over class logits with int64 class targets.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "cross_entropy_backward"
+    },
+    {
+      "name": "conv2d",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor"
+        },
+        {
+          "name": "bias",
+          "type": "Tensor?"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        },
+        {
+          "name": "groups",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "2-D convolution over NCHW tensors with groups=1.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "conv2d_backward"
+    },
+    {
+      "name": "max_pool2d",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "kernel_size",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        },
+        {
+          "name": "ceil_mode",
+          "type": "bool"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "2-D max pooling over NCHW tensors; ceil_mode is not supported.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "max_pool2d_backward"
+    },
+    {
+      "name": "avg_pool2d",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "kernel_size",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "ceil_mode",
+          "type": "bool"
+        },
+        {
+          "name": "count_include_pad",
+          "type": "bool"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Average pooling over CHW/NCHW tensors; ceil_mode is not supported.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "avg_pool2d_backward"
+    },
+    {
+      "name": "constant_pad_nd",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "pad",
+          "type": "int[]"
+        },
+        {
+          "name": "value",
+          "type": "Scalar"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Constant padding of trailing dimensions (positive or negative) with a scalar fill value.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "constant_pad_nd_backward"
+    },
+    {
+      "name": "flip",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dims",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Reverses the order of elements along the given dimensions.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "flip"
+    },
+    {
+      "name": "gather",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "index",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Gathers values along one dimension using int32 or int64 indices.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "gather_backward"
+    },
+    {
+      "name": "index_select",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "index",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Selects positions along one dimension using int32 or int64 indices.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "index_select_backward"
+    },
+    {
+      "name": "layer_norm",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "normalized_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor?"
+        },
+        {
+          "name": "bias",
+          "type": "Tensor?"
+        },
+        {
+          "name": "eps",
+          "type": "Scalar"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Layer normalization over the trailing dimensions.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": true
+    },
+    {
+      "name": "group_norm",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "num_groups",
+          "type": "int"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor?"
+        },
+        {
+          "name": "bias",
+          "type": "Tensor?"
+        },
+        {
+          "name": "eps",
+          "type": "Scalar"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Group normalization over NCHW tensors.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": true
+    },
+    {
+      "name": "batch_norm",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor?"
+        },
+        {
+          "name": "bias",
+          "type": "Tensor?"
+        },
+        {
+          "name": "running_mean",
+          "type": "Tensor?"
+        },
+        {
+          "name": "running_var",
+          "type": "Tensor?"
+        },
+        {
+          "name": "training",
+          "type": "bool"
+        },
+        {
+          "name": "momentum",
+          "type": "Scalar"
+        },
+        {
+          "name": "eps",
+          "type": "Scalar"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Batch normalization with running statistics; training mode updates the supplied running buffers.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": true
+    },
+    {
+      "name": "slice",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "start",
+          "type": "int?"
+        },
+        {
+          "name": "end",
+          "type": "int?"
+        },
+        {
+          "name": "step",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Returns a strided view of a dimension range.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "slice_backward"
+    },
+    {
+      "name": "scatter",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "index",
+          "type": "Tensor"
+        },
+        {
+          "name": "src",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": true,
+      "status": "autograd",
+      "summary": "Writes src values into self at int32/int64 index positions along one dimension.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false,
+      "reverse": "scatter_backward_self,scatter_backward_src"
+    },
+    {
+      "name": "add_",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        },
+        {
+          "name": "alpha",
+          "type": "Scalar",
+          "default": "1",
+          "keywordOnly": true
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "In-place elementwise addition.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "sub_",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        },
+        {
+          "name": "alpha",
+          "type": "Scalar",
+          "default": "1",
+          "keywordOnly": true
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "In-place elementwise subtraction.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "mul_",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "In-place elementwise multiplication.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "div_",
+      "overload": "Tensor",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "other",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "In-place elementwise division.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "copy_",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "src",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "In-place copy from another tensor with broadcasting.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "zero_",
+      "overload": "default",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "In-place zero fill.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    },
+    {
+      "name": "fill_",
+      "overload": "Scalar",
+      "args": [
+        {
+          "name": "self",
+          "type": "Tensor"
+        },
+        {
+          "name": "value",
+          "type": "Scalar"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "In-place scalar fill.",
+      "variants": [
+        "function",
+        "method"
+      ],
+      "composite": false
+    }
+  ]
+}

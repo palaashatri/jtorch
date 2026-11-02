@@ -1,0 +1,18 @@
+{
+  "oracle": "PyTorch 2.11.0 optimizer fixtures under modules/jtorch-optim/src/test/resources/optimizers.json",
+  "optimizers": [
+    { "name": "SGD", "status": "full-semantics", "options": ["learningRate", "momentum", "weightDecay", "dampening", "nesterov"], "notes": "Updates match PyTorch for three steps across plain, momentum+weight-decay and Nesterov cases." },
+    { "name": "Adam", "status": "full-semantics", "options": ["learningRate", "betas", "epsilon", "weightDecay"], "notes": "Bias-corrected moments match PyTorch; L2 weight decay added to the gradient." },
+    { "name": "AdamW", "status": "full-semantics", "options": ["learningRate", "betas", "epsilon", "weightDecay"], "notes": "Decoupled weight decay matches PyTorch." },
+    { "name": "StepLR", "status": "forward", "notes": "Formula unit-tested; no oracle fixture." },
+    { "name": "ExponentialLR", "status": "forward", "notes": "Formula unit-tested; no oracle fixture." }
+  ],
+  "unsupported": [
+    "amsgrad",
+    "maximize",
+    "foreach/fused implementations",
+    "parameter groups",
+    "optimizer state_dict save/load",
+    "ReduceLROnPlateau and cosine schedules"
+  ]
+}

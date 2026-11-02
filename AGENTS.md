@@ -1,14 +1,14 @@
 # AGENTS.md — JTorch
 
-JTorch is a planned JDK 25-native, Java-first tensor and deep-learning library with PyTorch-compatible semantics: tensors with exact view/alias behaviour, a dispatcher, reverse-mode autograd, `nn` modules and optimizers, running on a pure-Java CPU reference backend first, with optional FFM-based native and GPU backends later.
+JTorch is a JDK 25-native, Java-first tensor and deep-learning library with PyTorch-compatible semantics: tensors with exact view/alias behaviour, a dispatcher, reverse-mode autograd, `nn` modules and optimizers, running on a pure-Java CPU reference backend first, with optional FFM-based native and GPU backends later.
 
-**There is no code yet** — only this file, the README and the design. Nothing about builds or tests below is true until milestone M0 lands; don't describe the project as working anywhere.
+**Status:** the M0–M3 reference build exists in this repository and are tested against PyTorch 2.11.0 fixtures on the development host (macOS arm64, JDK 25, Gradle 9.8.2). Scope and limitations are recorded in [`compat/`](compat/) and [ADR 0005](docs/adr/0005-supported-scope-m0-m3.md). Do not describe M4–M16 capabilities (CUDA, distributed, compiler, broader convolution/normalization, float16/bfloat16, vmap/forward-AD, Python parity) as working; they are design targets, not deliverables yet.
 
 The full design (tensor/storage model, dispatcher, autograd, compiler, backends, demo apps, CI matrix, testing strategy, milestones M0–M16) is [`docs/DESIGN.md`](docs/DESIGN.md); § numbers below refer to it.
 
 ## Where to start
 
-Work the initial backlog in order (§34); the first target is the vertical slice in §0.2:
+M0–M3 are complete for the automated reference scope; manual screen-reader/GUI acceptance remains human work. M4 is in progress. Read the design, then work the remaining backlog in dependency order (§34). The completed first vertical slice is in §0.2 and runs from [`examples/vertical-slice`](examples/vertical-slice):
 
 ```java
 Tensor x = Torch.tensor(new float[] {1, 2, 3, 4}, Shape.of(2, 2)).requiresGrad(true);
@@ -18,19 +18,29 @@ loss.backward();
 SGD.builder().parameters(List.of(new Parameter(w))).learningRate(1e-2).build().step();
 ```
 
-1. **M0:** Gradle 9.1+ wrapper on JDK 25 (Kotlin DSL, multi-project), JPMS module skeleton (`jtorch-api`, `jtorch-core`, `jtorch-tensor`, `jtorch-dispatch`, `jtorch-autograd`, `jtorch-cpu-reference`, …), CI on Linux, Windows and macOS, one operator generated end to end from a schema (§6).
-2. **M1:** immutable `Shape`/`Strides`, `MemorySegment` host storage, dense strided tensors with views, creation/elementwise/reduction/matmul reference kernels (§8).
-3. **M2:** dispatcher with CPU and meta keys, reverse-mode autograd with saved-tensor version checks, `Linear`/`Parameter`/MSE/SGD — the §0.2 slice matching a pinned PyTorch oracle (§9, §11, §25.2).
-4. **M3:** modules, Adam/AdamW, datasets/loaders, safe checkpoints and Safetensors, an MLP/CNN on MNIST in the TensorLab demo.
+Completed in this build: M0 (Gradle wrapper, JPMS skeleton, schema generator, pinned oracle, CI workflow matrix, demo shell/packaging), M1 (shape/strides, FFM storage, strided views, reference kernels), M2 (dispatcher, meta, reverse autograd, Linear/MSE/SGD vertical slice) and most of M3 (modules, Adam/AdamW, tensor datasets and batching, checkpoints/Safetensors, TensorLab with checkpoint resume and packaged launcher). M3's CNN path and real-MNIST acceptance are implemented (`Conv2d`, `MaxPool2d`, TensorLab `--mnist-dir`, 0.95 held-out threshold), as are prefetch and accessibility metadata/keyboard controls with automated checks. M4 has started with `avg_pool2d`, `batch_norm`, `layer_norm`, `group_norm`, indexing/gather/slice/scatter/pad/flip.
 
-Don't start CUDA, distributed training, the compiler, diffusion or the Python facade before M2 is correct on all three OSes (§34).
+Remaining design milestones: M4 remaining dense operators and Vision Inspector, M5 transforms, M6 transformer inference/search, M7 optimized CPU, M8 LLM chat, M9 CUDA/AMP, M10 audio/Transcribe, M11 compiler/export, M12 distributed, M13 diffusion/Image Studio, M14 GC Doctor, M15 ROCm, M16 release candidate. Do not start GPU, distributed, compiler, diffusion or Python-facade work before the preceding capability gates are met (§34).
 
-## Commands (target, once M0 exists)
+Known limitations that must stay documented: only float32/float64/int32/int64/bool, only CPU and meta execution, no in-place autograd on tensors requiring grad, no higher-order gradients, `prod` is forward-only, cross-entropy supports 2-D logits, convolution/pooling support groups=1/NCHW/ceil_mode=false only, optimizer state is not serialized, and TensorLab's default synthetic check uses a labelled synthetic set (real MNIST is available through `--mnist-dir`).
+
+## Commands
 
 ```bash
 ./gradlew clean check demoCheck      # gradlew.bat on Windows
 ./gradlew parityFast                 # differential tests against the pinned PyTorch oracle
+./gradlew demoPackage                # jpackage app image + packaged headless smoke test
 ./gradlew regenerateSchemas verifyGeneratedClean
+./gradlew :examples:vertical-slice:run
+./gradlew :demos:tensorlab:mnistCheck -PmnistDir=/path/to/mnist-idx
+```
+
+The oracle generators are optional Python tools and are never needed for a normal build:
+
+```bash
+python3 tools/oracle/generate.py
+python3 tools/oracle/optimizers.py
+python3 tools/oracle/safetensors_fixture.py
 ```
 
 When you add or change a task, update this section in the same PR so it lists only commands that work.
@@ -66,5 +76,5 @@ When you add or change a task, update this section in the same PR so it lists on
 - **Keep JTorch independent:** Prioritize Java 25 pure-Java CPU tensor, autograd, correctness and cross-platform JVM support. Any Java runtime independently available under a Linux/SLOPOS desktop can use JTorch as a normal library without SLOPOS-specific adapters. A hypothetical PARAMA JVM is an unrelated platform prerequisite, **not a JTorch PARAMA deliverable or current compatibility claim**.
 - **Pi Zero 2 W (four Cortex-A53 cores, 512 MB RAM):** Treat small-tensor correctness/performance as a desired device profile when a suitable JDK 25 works there; do not assume that it currently does. Check actual shape-size and allocator overhead before allocation; use bounded worker pools, small storage footprints, correct tensor/view aliases, lazy optional CPU-vector/FFM/GPU modules and CPU reference fallback. Do not advertise large-model training under 512 MB.
 - **Acceptance:** On any actual supported resource-constrained ARM64 Java platform, run reference tensor and gradient fixtures; measure JVM heap, off-heap and whole-process PSS/peak RSS, GC overhead, CPU utilization, allocation counts, step latency and correctness under pressure. A Pi-specific PASS requires real board and JVM evidence. Handle oversized shapes predictably before host OOM. Benchmarks and model comparisons must not trade away PyTorch-compatible semantics.
-- **Governance:** Maintain existing design-only status, canonical `docs/DESIGN.md` milestones and application/demo separation, and no unsupported platform claims. These are efficiency objectives, not permission to advance milestones or claim a shipped framework.
+- **Governance:** Keep the status recorded in `compat/` and ADR 0005 accurate, keep `docs/DESIGN.md` as the canonical milestone plan, preserve application/demo separation, and make no unsupported platform claims. These are efficiency objectives, not permission to advance milestones or claim a shipped framework.
 

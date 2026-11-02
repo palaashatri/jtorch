@@ -1,0 +1,364 @@
+{
+  "schemaVersion": 1,
+  "namespace": "jtorch",
+  "operators": [
+    {
+      "name": "conv2d_backward_input",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "weight",
+          "type": "Tensor"
+        },
+        {
+          "name": "input_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal conv2d backward helper for the input gradient.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "conv2d_backward_weight",
+      "overload": "default",
+      "args": [
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "weight_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal conv2d backward helper for the weight gradient.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "max_pool2d_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "kernel_size",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "dilation",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal max_pool2d backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "avg_pool2d_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input",
+          "type": "Tensor"
+        },
+        {
+          "name": "kernel_size",
+          "type": "int[]"
+        },
+        {
+          "name": "stride",
+          "type": "int[]"
+        },
+        {
+          "name": "padding",
+          "type": "int[]"
+        },
+        {
+          "name": "count_include_pad",
+          "type": "bool"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal avg_pool2d backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "constant_pad_nd_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "pad",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal constant_pad_nd backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "gather_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "index",
+          "type": "Tensor"
+        },
+        {
+          "name": "self_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal gather backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "index_select_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "index",
+          "type": "Tensor"
+        },
+        {
+          "name": "self_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal index_select backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "slice_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "self_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "start",
+          "type": "int"
+        },
+        {
+          "name": "length",
+          "type": "int"
+        },
+        {
+          "name": "step",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal slice backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "scatter_backward_self",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "index",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal scatter backward for self.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "scatter_backward_src",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "index",
+          "type": "Tensor"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "src_shape",
+          "type": "int[]"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal scatter backward for src.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    }
+  ]
+}

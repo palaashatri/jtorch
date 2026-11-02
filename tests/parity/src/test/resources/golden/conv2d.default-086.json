@@ -1,0 +1,200 @@
+{
+  "operator": "aten::conv2d.default",
+  "torch": "2.11.0",
+  "python": "3.13.9",
+  "nondeterministic": false,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        1,
+        1,
+        3,
+        3
+      ],
+      "strides": [
+        9,
+        9,
+        3,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875,
+        1.0
+      ]
+    },
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        2,
+        1,
+        2,
+        2
+      ],
+      "strides": [
+        4,
+        4,
+        2,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        0.0,
+        0.125,
+        0.25,
+        0.375,
+        0.5,
+        0.625,
+        0.75,
+        0.875
+      ]
+    },
+    {
+      "kind": "none"
+    },
+    {
+      "kind": "list",
+      "value": [
+        1,
+        1
+      ]
+    },
+    {
+      "kind": "list",
+      "value": [
+        1,
+        1
+      ]
+    },
+    {
+      "kind": "list",
+      "value": [
+        2,
+        2
+      ]
+    },
+    {
+      "kind": "int",
+      "value": 1
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        1,
+        2,
+        3,
+        3
+      ],
+      "strides": [
+        18,
+        9,
+        3,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        0.1875,
+        0.328125,
+        0.125,
+        0.34375,
+        0.59375,
+        0.21875,
+        0.0625,
+        0.078125,
+        0.0,
+        0.4375,
+        0.828125,
+        0.375,
+        0.84375,
+        1.59375,
+        0.71875,
+        0.3125,
+        0.578125,
+        0.25
+      ]
+    }
+  ],
+  "grads": [
+    {
+      "argIndex": 0,
+      "grad": {
+        "kind": "tensor",
+        "dtype": "float64",
+        "shape": [
+          1,
+          1,
+          3,
+          3
+        ],
+        "strides": [
+          9,
+          9,
+          3,
+          1
+        ],
+        "storageOffset": 0,
+        "requiresGrad": false,
+        "data": [
+          0.5,
+          1.25,
+          0.75,
+          1.5,
+          3.5,
+          2.0,
+          1.0,
+          2.25,
+          1.25
+        ]
+      }
+    },
+    {
+      "argIndex": 1,
+      "grad": {
+        "kind": "tensor",
+        "dtype": "float64",
+        "shape": [
+          2,
+          1,
+          2,
+          2
+        ],
+        "strides": [
+          4,
+          4,
+          2,
+          1
+        ],
+        "storageOffset": 0,
+        "requiresGrad": false,
+        "data": [
+          1.0,
+          1.5,
+          2.5,
+          3.0,
+          1.0,
+          1.5,
+          2.5,
+          3.0
+        ]
+      }
+    }
+  ]
+}
