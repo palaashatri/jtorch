@@ -93,4 +93,24 @@ class DenseOpsM4Test {
         assertThrows(NotSupportedException.class,
                 () -> weight.embedding(indices, null, false, true));
     }
+
+    @Test
+    void embeddingSupportsNegativePaddingIndex() {
+        Tensor weight = Torch.tensor(new double[] {0, 1, 2, 3, 4, 5}, Shape.of(3, 2))
+                .requiresGrad(true);
+        Tensor indices = Torch.tensor(new long[] {2, 0, 2},
+                Shape.of(3), TensorOptions.defaults().dtype(DType.INT64));
+        Tensor selected = weight.embedding(indices, -1, false, false);
+        assertEquals(Shape.of(3, 2), selected.shape());
+        assertArrayEquals(new double[] {4, 5, 0, 1, 4, 5}, selected.toDoubleArray(), 0);
+        selected.sum().backward();
+        assertArrayEquals(new double[] {1, 1, 0, 0, 0, 0}, weight.grad().toDoubleArray(), 0);
+
+        Tensor firstRowWeight = Torch.tensor(new double[] {0, 1, 2, 3, 4, 5}, Shape.of(3, 2))
+                .requiresGrad(true);
+        Tensor firstRowIndices = Torch.tensor(new long[] {0, 1, 0},
+                Shape.of(3), TensorOptions.defaults().dtype(DType.INT64));
+        firstRowWeight.embedding(firstRowIndices, -3, false, false).sum().backward();
+        assertArrayEquals(new double[] {0, 0, 1, 1, 0, 0}, firstRowWeight.grad().toDoubleArray(), 0);
+    }
 }

@@ -3,7 +3,7 @@ package org.jtorch.vision;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
+import org.jtorch.api.Torch;
 import org.jtorch.core.Tensor;
 import org.jtorch.nn.StateDict;
 import org.jtorch.serialization.Safetensors;
@@ -25,7 +25,7 @@ public final class FixtureClassifier {
 
     public List<Classification> classify(Tensor image) {
         requireImage(image);
-        Tensor logits = model.call(image).select(0, 0);
+        Tensor logits = Torch.noGrad(() -> model.call(image).select(0, 0));
         return Classification.topK(logits, LABELS, LABELS.size());
     }
 

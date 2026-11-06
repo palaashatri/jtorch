@@ -3,7 +3,10 @@ package org.jtorch.vision;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Iterator;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import org.jtorch.api.Torch;
 import org.jtorch.core.DType;
 import org.jtorch.core.Shape;
@@ -12,9 +15,27 @@ import org.jtorch.core.TensorOptions;
 
 /** Decodes images with ImageIO and converts them to normalized CHW float tensors. */
 public final class ImageTensors {
+    /** Largest accepted image side, in pixels. */
+    public static final int MAX_IMAGE_DIMENSION = 4096;
+
+    /** Largest accepted decoded image, in pixels. */
+    public static final long MAX_IMAGE_PIXELS = 16_777_216L;
+
     private ImageTensors() {}
 
-    public static Tensor fromPath(Path path, int size) {
+    /** Rejects decoded images whose dimensions exceed {@link #MAX_IMAGE_DIMENSION} or pixel budget. */
+    public static void requireDecodedSize(int width, int height) {
+        if (width <= 0 || height <= 0 || width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION
+                || (long) width * height > MAX_IMAGE_PIXELS) {
+            throw new IllegalArgumentException(
+                    "Image " + width + "x" + height + " exceeds the decoded size limit (max side "
+                            + MAX_IMAGE_DIMENSION + ", max " + MAX_IMAGE_PIXELS + " pixels)");
+        }
+    }
+
+    /** Decodes an image after enforcing the decoded-size limits, without converting to a tensor. */
+    public static BufferedImage readDecodedImage(Path path) {
+        requireHeaderSizeWithinLimits(path);
         BufferedImage image;
         try {
             image = ImageIO.read(path.toFile());
@@ -24,13 +45,19 @@ public final class ImageTensors {
         if (image == null) {
             throw new IllegalArgumentException("Unsupported or corrupt image " + path);
         }
-        return fromImage(image, size);
+        requireDecodedSize(image.getWidth(), image.getHeight());
+        return image;
+    }
+
+    public static Tensor fromPath(Path path, int size) {
+        return fromImage(readDecodedImage(path), size);
     }
 
     public static Tensor fromImage(BufferedImage image, int size) {
         if (size <= 0) {
             throw new IllegalArgumentException("Image size must be positive");
         }
+        requireDecodedSize(image.getWidth(), image.getHeight());
         Tensor chw = Torch.zeros(Shape.of(1, 3, image.getHeight(), image.getWidth()),
                 TensorOptions.defaults().dtype(DType.FLOAT32));
         for (int y = 0; y < image.getHeight(); y++) {
@@ -57,8 +84,15 @@ public final class ImageTensors {
         if (chw.dim() != 4 || chw.size(0) != 1 || chw.size(1) != 3) {
             throw new IllegalArgumentException("Expected a [1, 3, H, W] tensor");
         }
-        int height = (int) chw.size(2);
-        int width = (int) chw.size(3);
+        long heightLong = chw.size(2);
+        long widthLong = chw.size(3);
+        if (heightLong <= 0 || widthLong <= 0 || heightLong > MAX_IMAGE_DIMENSION
+                || widthLong > MAX_IMAGE_DIMENSION || heightLong * widthLong > MAX_IMAGE_PIXELS) {
+            throw new IllegalArgumentException("Image exceeds the decoded size limit (max side "
+                    + MAX_IMAGE_DIMENSION + ", max " + MAX_IMAGE_PIXELS + " pixels)");
+        }
+        int height = (int) heightLong;
+        int width = (int) widthLong;
         Tensor rgb = chw.mul(0.5).add(0.5).clamp(0.0, 1.0).to(DType.FLOAT64);
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         for (int y = 0; y < height; y++) {
@@ -70,5 +104,31 @@ public final class ImageTensors {
             }
         }
         return image;
+    }
+
+    private static void requireHeaderSizeWithinLimits(Path path) {
+        try (ImageInputStream input = ImageIO.createImageInputStream(path.toFile())) {
+            if (input == null) {
+                return;
+            }
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
+            if (!readers.hasNext()) {
+                return;
+            }
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(input, true, false);
+                if (reader.getNumImages(false) < 1) {
+                    return;
+                }
+                requireDecodedSize(reader.getWidth(0), reader.getHeight(0));
+            } finally {
+                reader.dispose();
+            }
+        } catch (IllegalArgumentException error) {
+            throw error;
+        } catch (IOException ignored) {
+            // Header was unreadable; full decode below reports the failure.
+        }
     }
 }

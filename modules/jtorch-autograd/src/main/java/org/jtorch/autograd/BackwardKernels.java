@@ -802,13 +802,18 @@ final class BackwardKernels {
             @Override
             public Tensor[] backward(Tensor[] g) {
                 Integer paddingIndex = args[2].asOptionalInt();
+                long rows = saved(0).size(0);
+                long normalizedPadding = -1;
+                if (paddingIndex != null) {
+                    normalizedPadding = paddingIndex < 0 ? paddingIndex + rows : paddingIndex;
+                }
                 Tensor gradWeight = Dispatcher.get()
                         .call(
                                 OpRegistry.EMBEDDING_BACKWARD,
                                 Value.tensor(g[0]),
                                 Value.tensor(saved(1)),
                                 Value.integers(saved(0).shape().toArray()),
-                                Value.integer(paddingIndex == null ? -1L : paddingIndex),
+                                Value.integer(normalizedPadding),
                                 Value.bool(args[3].asBoolean()))[0]
                         .asTensor();
                 return new Tensor[] {gradWeight, null};

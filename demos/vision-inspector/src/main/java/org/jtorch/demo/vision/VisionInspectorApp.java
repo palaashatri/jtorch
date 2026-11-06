@@ -156,12 +156,8 @@ public final class VisionInspectorApp {
                 || name.endsWith(".bmp") || name.endsWith(".gif");
     }
 
-    private static BufferedImage readImage(Path path) throws IOException {
-        BufferedImage image = ImageIO.read(path.toFile());
-        if (image == null) {
-            throw new IllegalArgumentException("Unsupported or corrupt image " + path);
-        }
-        return image;
+    private static BufferedImage readImage(Path path) {
+        return ImageTensors.readDecodedImage(path);
     }
 
     private static void requireFiniteSaliency(Tensor heatmap) {

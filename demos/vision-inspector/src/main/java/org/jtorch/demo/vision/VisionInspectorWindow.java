@@ -14,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import javax.imageio.ImageIO;
+import java.util.concurrent.ExecutionException;
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -27,6 +27,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
 import org.jtorch.core.Tensor;
 import org.jtorch.json.Json;
 import org.jtorch.vision.Classification;
@@ -46,6 +47,7 @@ final class VisionInspectorWindow {
     private Tensor currentTensor;
     private List<Classification> currentTopK = List.of();
     private boolean showingSaliency;
+    private boolean running;
 
     VisionInspectorWindow(FixtureClassifier classifier) {
         this.classifier = classifier;
@@ -116,30 +118,51 @@ final class VisionInspectorWindow {
         load(chooser.getSelectedFile().toPath());
     }
 
+    /** Launches decode, conversion and inference off the event-dispatch thread. */
     private void load(Path path) {
-        try {
-            BufferedImage image = ImageIO.read(path.toFile());
-            if (image == null) {
-                throw new IllegalArgumentException("Unsupported or corrupt image " + path);
-            }
-            currentPath = path;
-            currentImage = image;
-            currentTensor = ImageTensors.fromImage(image, FixtureClassifier.IMAGE_SIZE);
-            currentTopK = classifier.classify(currentTensor);
-            showingSaliency = false;
-            preview.setIcon(new ImageIcon(image.getScaledInstance(PREVIEW_SIZE, PREVIEW_SIZE,
-                    java.awt.Image.SCALE_SMOOTH)));
-            StringBuilder text = new StringBuilder("Top predictions\n\n");
-            for (Classification result : currentTopK) {
-                text.append(String.format(Locale.ROOT, "%-12s %.4f%n", result.label(), result.confidence()));
-            }
-            results.setText(text.toString());
-            status.setText(path.getFileName() + " — " + currentTopK.get(0).label());
-        } catch (IOException | RuntimeException error) {
-            status.setText("Failed: " + error.getMessage());
-            JOptionPane.showMessageDialog(frame, error.getMessage(), "Unable to load image",
-                    JOptionPane.ERROR_MESSAGE);
+        if (running) {
+            status.setText("Busy — wait for the current task to finish");
+            return;
         }
+        running = true;
+        status.setText("Loading " + path.getFileName() + " …");
+        SwingWorker<LoadResult, Void> worker = new SwingWorker<>() {
+            @Override
+            protected LoadResult doInBackground() {
+                BufferedImage image = ImageTensors.readDecodedImage(path);
+                Tensor tensor = ImageTensors.fromImage(image, FixtureClassifier.IMAGE_SIZE);
+                List<Classification> topK = classifier.classify(tensor);
+                return new LoadResult(path, image, tensor, topK);
+            }
+
+            @Override
+            protected void done() {
+                running = false;
+                try {
+                    LoadResult result = get();
+                    currentPath = result.path();
+                    currentImage = result.image();
+                    currentTensor = result.tensor();
+                    currentTopK = result.topK();
+                    showingSaliency = false;
+                    preview.setIcon(new ImageIcon(result.image().getScaledInstance(PREVIEW_SIZE, PREVIEW_SIZE,
+                            java.awt.Image.SCALE_SMOOTH)));
+                    StringBuilder text = new StringBuilder("Top predictions\n\n");
+                    for (Classification entry : result.topK()) {
+                        text.append(String.format(Locale.ROOT, "%-12s %.4f%n", entry.label(),
+                                entry.confidence()));
+                    }
+                    results.setText(text.toString());
+                    status.setText(result.path().getFileName() + " — " + result.topK().get(0).label());
+                } catch (ExecutionException error) {
+                    showLoadError(error.getCause());
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    showLoadError(error);
+                }
+            }
+        };
+        worker.execute();
     }
 
     private void toggleSaliency() {
@@ -154,12 +177,41 @@ final class VisionInspectorWindow {
             status.setText(currentPath.getFileName() + " — image");
             return;
         }
-        Tensor heatmap = classifier.saliency(currentTensor, currentTopK.get(0).index());
-        BufferedImage overlay = VisionOverlay.blend(currentImage, heatmap);
-        showingSaliency = true;
-        preview.setIcon(new ImageIcon(overlay.getScaledInstance(PREVIEW_SIZE, PREVIEW_SIZE,
-                java.awt.Image.SCALE_SMOOTH)));
-        status.setText(currentPath.getFileName() + " — saliency");
+        if (running) {
+            status.setText("Busy — wait for the current task to finish");
+            return;
+        }
+        running = true;
+        Tensor tensor = currentTensor;
+        BufferedImage image = currentImage;
+        Path path = currentPath;
+        int classIndex = currentTopK.get(0).index();
+        status.setText("Computing saliency …");
+        SwingWorker<BufferedImage, Void> worker = new SwingWorker<>() {
+            @Override
+            protected BufferedImage doInBackground() {
+                Tensor heatmap = classifier.saliency(tensor, classIndex);
+                return VisionOverlay.blend(image, heatmap);
+            }
+
+            @Override
+            protected void done() {
+                running = false;
+                try {
+                    BufferedImage overlay = get();
+                    showingSaliency = true;
+                    preview.setIcon(new ImageIcon(overlay.getScaledInstance(PREVIEW_SIZE, PREVIEW_SIZE,
+                            java.awt.Image.SCALE_SMOOTH)));
+                    status.setText(path.getFileName() + " — saliency");
+                } catch (ExecutionException error) {
+                    showLoadError(error.getCause());
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    showLoadError(error);
+                }
+            }
+        };
+        worker.execute();
     }
 
     private void openFolder() {
@@ -168,31 +220,56 @@ final class VisionInspectorWindow {
         if (chooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION) {
             return;
         }
-        Path folder = chooser.getSelectedFile().toPath();
-        List<Map<String, Object>> rows = new ArrayList<>();
-        List<Map<String, Object>> errors = new ArrayList<>();
-        try (var files = Files.list(folder)) {
-            for (Path path : files.filter(VisionInspectorWindow::isImage).sorted().toList()) {
-                try {
-                    Tensor input = ImageTensors.fromPath(path, FixtureClassifier.IMAGE_SIZE);
-                    List<Classification> top = classifier.classify(input);
-                    rows.add(Map.of("path", path.toString(), "top1", top.get(0).label(),
-                            "confidence", top.get(0).confidence()));
-                } catch (RuntimeException error) {
-                    errors.add(Map.of("path", path.toString(), "error", error.getMessage()));
-                }
-            }
-        } catch (IOException error) {
-            status.setText("Folder failed: " + error.getMessage());
+        if (running) {
+            status.setText("Busy — wait for the current task to finish");
             return;
         }
-        Map<String, Object> report = new LinkedHashMap<>();
-        report.put("folder", folder.toString());
-        report.put("images", rows);
-        report.put("errors", errors);
-        results.setText("Batch results\n\n" + rows.size() + " images, " + errors.size() + " errors\n\n"
-                + Json.writePretty(report));
-        status.setText("Batch complete — " + rows.size() + " images, " + errors.size() + " errors");
+        Path folder = chooser.getSelectedFile().toPath();
+        running = true;
+        status.setText("Classifying folder …");
+        SwingWorker<BatchResult, Void> worker = new SwingWorker<>() {
+            @Override
+            protected BatchResult doInBackground() throws IOException {
+                List<Map<String, Object>> rows = new ArrayList<>();
+                List<Map<String, Object>> errors = new ArrayList<>();
+                try (var files = Files.list(folder)) {
+                    for (Path entry : files.filter(VisionInspectorWindow::isImage).sorted().toList()) {
+                        try {
+                            Tensor input = ImageTensors.fromPath(entry, FixtureClassifier.IMAGE_SIZE);
+                            List<Classification> top = classifier.classify(input);
+                            rows.add(Map.of("path", entry.toString(), "top1", top.get(0).label(),
+                                    "confidence", top.get(0).confidence()));
+                        } catch (RuntimeException failure) {
+                            errors.add(Map.of("path", entry.toString(),
+                                    "error", String.valueOf(failure.getMessage())));
+                        }
+                    }
+                }
+                return new BatchResult(rows, errors);
+            }
+
+            @Override
+            protected void done() {
+                running = false;
+                try {
+                    BatchResult result = get();
+                    Map<String, Object> report = new LinkedHashMap<>();
+                    report.put("folder", folder.toString());
+                    report.put("images", result.rows());
+                    report.put("errors", result.errors());
+                    results.setText("Batch results\n\n" + result.rows().size() + " images, "
+                            + result.errors().size() + " errors\n\n" + Json.writePretty(report));
+                    status.setText("Batch complete — " + result.rows().size() + " images, "
+                            + result.errors().size() + " errors");
+                } catch (ExecutionException error) {
+                    status.setText("Folder failed: " + failureMessage(error.getCause()));
+                } catch (InterruptedException error) {
+                    Thread.currentThread().interrupt();
+                    status.setText("Folder failed: " + failureMessage(error));
+                }
+            }
+        };
+        worker.execute();
     }
 
     private void saveReport() {
@@ -224,9 +301,26 @@ final class VisionInspectorWindow {
         }
     }
 
+    private void showLoadError(Throwable failure) {
+        String message = failureMessage(failure);
+        status.setText("Failed: " + message);
+        JOptionPane.showMessageDialog(frame, message, "Unable to load image", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private static String failureMessage(Throwable failure) {
+        if (failure == null) {
+            return "Unknown error";
+        }
+        return failure.getMessage() != null ? failure.getMessage() : failure.toString();
+    }
+
     private static boolean isImage(Path path) {
         String name = path.getFileName().toString().toLowerCase(Locale.ROOT);
         return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg")
                 || name.endsWith(".bmp") || name.endsWith(".gif");
     }
+
+    private record LoadResult(Path path, BufferedImage image, Tensor tensor, List<Classification> topK) {}
+
+    private record BatchResult(List<Map<String, Object>> rows, List<Map<String, Object>> errors) {}
 }
