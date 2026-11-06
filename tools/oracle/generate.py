@@ -32,6 +32,8 @@ DTYPE_NAMES = {
     torch.int64: "int64",
     torch.int32: "int32",
     torch.bool: "bool",
+    torch.complex64: "complex64",
+    torch.complex128: "complex128",
 }
 
 torch.set_default_dtype(torch.float64)
@@ -44,19 +46,24 @@ def tensor(values, dtype="float64", requires_grad=False, shape=None):
         "int64": torch.int64,
         "int32": torch.int32,
         "bool": torch.bool,
+        "complex64": torch.complex64,
+        "complex128": torch.complex128,
     }
     t = torch.tensor(values, dtype=dtype_map[dtype])
     if shape is not None:
         t = t.reshape(shape)
     if requires_grad:
-        if not t.is_floating_point():
-            raise ValueError("only floating tensors can require grad")
+        if not (t.is_floating_point() or t.is_complex()):
+            raise ValueError("only floating/complex tensors can require grad")
         t.requires_grad_(True)
     return t
 
 
 def flatten(t):
-    return t.reshape(-1).tolist()
+    flat = t.reshape(-1).tolist()
+    if t.is_complex():
+        return [{"real": complex(v).real, "imag": complex(v).imag} for v in flat]
+    return flat
 
 
 def encode_tensor(t, include_data=True):
@@ -294,6 +301,26 @@ def build_cases():
     embedding_weight = leaf([0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5], (4, 3))
     embedding_indices = tensor([1, 1, 2, 3, 3, 0], dtype="int64")
     case("aten::embedding.default", [embedding_weight, embedding_indices, 1, True, False])
+
+    # ------------------------------------------------------------------ FFT
+    fft_input = leaf([0.0, 1.0, 2.0, 3.0], (4,))
+    case("aten::fft_fft.default", [fft_input, None, -1, None])
+    fft_input = leaf([1.0, 2.0, 3.0, 4.0, 5.0, 6.0], (2, 3))
+    case("aten::fft_fft.default", [fft_input, None, 0, "ortho"])
+    fft_cinput = tensor([1.0 + 0.5j, 2.0 - 1.0j, 0.5 + 0.25j, -1.0 + 2.0j], dtype="complex128")
+    fft_cinput.requires_grad_(True)
+    case("aten::fft_fft.default", [fft_cinput, 5, -1, "forward"])
+    case("aten::fft_ifft.default", [fft_cinput, None, -1, None])
+    rfft_input = leaf([0.0, 1.0, 2.0, 3.0], (4,))
+    case("aten::fft_rfft.default", [rfft_input, None, -1, None])
+    rfft_input = leaf([1.0, 2.0, 3.0, 4.0, 5.0], (5,))
+    case("aten::fft_rfft.default", [rfft_input, None, -1, "ortho"])
+    irfft_input = tensor([1.0 + 0.0j, -2.0 + 2.0j, -2.0 + 0.0j], dtype="complex128")
+    irfft_input.requires_grad_(True)
+    case("aten::fft_irfft.default", [irfft_input, None, -1, None])
+    irfft_input2 = tensor([6.0 + 0.0j, -2.0 + 2.0j, -2.0 + 0.0j], dtype="complex128")
+    irfft_input2.requires_grad_(True)
+    case("aten::fft_irfft.default", [irfft_input2, 6, -1, "forward"])
 
     avg_input = leaf(ramp(32), (1, 2, 4, 4))
     case("aten::avg_pool2d.default", [avg_input, [2, 2], [2, 2], [0, 0], False, True, None])
@@ -563,6 +590,14 @@ def call_case(spec):
     if operator == "aten::embedding.default":
         return [F.embedding(args[1], args[0], padding_idx=args[2], scale_grad_by_freq=args[3],
                             sparse=args[4])]
+    if operator == "aten::fft_fft.default":
+        return [torch.fft.fft(args[0], n=args[1], dim=args[2], norm=args[3])]
+    if operator == "aten::fft_ifft.default":
+        return [torch.fft.ifft(args[0], n=args[1], dim=args[2], norm=args[3])]
+    if operator == "aten::fft_rfft.default":
+        return [torch.fft.rfft(args[0], n=args[1], dim=args[2], norm=args[3])]
+    if operator == "aten::fft_irfft.default":
+        return [torch.fft.irfft(args[0], n=args[1], dim=args[2], norm=args[3])]
     if operator == "aten::avg_pool2d.default":
         return [F.avg_pool2d(args[0], kernel_size=tuple(args[1]), stride=tuple(args[2]),
                              padding=tuple(args[3]), ceil_mode=args[4], count_include_pad=args[5],

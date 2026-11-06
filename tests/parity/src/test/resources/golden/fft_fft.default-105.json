@@ -1,0 +1,89 @@
+{
+  "operator": "aten::fft_fft.default",
+  "torch": "2.11.0+cpu",
+  "python": "3.13.17",
+  "nondeterministic": false,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "tensor",
+      "dtype": "complex128",
+      "shape": [
+        4
+      ],
+      "strides": [
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        {
+          "real": 1.0,
+          "imag": 0.5
+        },
+        {
+          "real": 2.0,
+          "imag": -1.0
+        },
+        {
+          "real": 0.5,
+          "imag": 0.25
+        },
+        {
+          "real": -1.0,
+          "imag": 2.0
+        }
+      ]
+    },
+    {
+      "kind": "int",
+      "value": 5
+    },
+    {
+      "kind": "int",
+      "value": -1
+    },
+    {
+      "kind": "string",
+      "value": "forward"
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "complex128",
+      "shape": [
+        5
+      ],
+      "strides": [
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        {
+          "real": 0.5,
+          "imag": 0.35000000000000003
+        },
+        {
+          "real": 0.008572355626077366,
+          "imag": -0.8826192285495194
+        },
+        {
+          "real": 0.06080423305733543,
+          "imag": 0.45106390031527255
+        },
+        {
+          "real": -0.3698212274322828,
+          "imag": 0.35065819237215906
+        },
+        {
+          "real": 0.8004446387488701,
+          "imag": 0.2308971358620876
+        }
+      ]
+    }
+  ],
+  "grads": []
+}

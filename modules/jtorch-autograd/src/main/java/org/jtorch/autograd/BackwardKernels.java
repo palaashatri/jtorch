@@ -819,6 +819,66 @@ final class BackwardKernels {
                 return new Tensor[] {gradWeight, null};
             }
         });
+        single(dispatcher, OpRegistry.FFT_FFT, (in, out, args) -> new Node("FftBackward0", 1) {
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {Dispatcher.get()
+                        .call(
+                                OpRegistry.FFT_FFT_BACKWARD,
+                                Value.tensor(g[0]),
+                                Value.integers(in[0].shape().toArray()),
+                                Value.dtype(in[0].dtype()),
+                                args[1].isNone() ? Value.none() : Value.integer(args[1].asInt()),
+                                Value.integer(args[2].asInt()),
+                                args[3].isNone() ? Value.none() : Value.string(args[3].asString()))[0]
+                        .asTensor()};
+            }
+        });
+        single(dispatcher, OpRegistry.FFT_IFFT, (in, out, args) -> new Node("IfftBackward0", 1) {
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {Dispatcher.get()
+                        .call(
+                                OpRegistry.FFT_IFFT_BACKWARD,
+                                Value.tensor(g[0]),
+                                Value.integers(in[0].shape().toArray()),
+                                Value.dtype(in[0].dtype()),
+                                args[1].isNone() ? Value.none() : Value.integer(args[1].asInt()),
+                                Value.integer(args[2].asInt()),
+                                args[3].isNone() ? Value.none() : Value.string(args[3].asString()))[0]
+                        .asTensor()};
+            }
+        });
+        single(dispatcher, OpRegistry.FFT_RFFT, (in, out, args) -> new Node("RfftBackward0", 1) {
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {Dispatcher.get()
+                        .call(
+                                OpRegistry.FFT_RFFT_BACKWARD,
+                                Value.tensor(g[0]),
+                                Value.integers(in[0].shape().toArray()),
+                                Value.dtype(in[0].dtype()),
+                                args[1].isNone() ? Value.none() : Value.integer(args[1].asInt()),
+                                Value.integer(args[2].asInt()),
+                                args[3].isNone() ? Value.none() : Value.string(args[3].asString()))[0]
+                        .asTensor()};
+            }
+        });
+        single(dispatcher, OpRegistry.FFT_IRFFT, (in, out, args) -> new Node("IrfftBackward0", 1) {
+            @Override
+            public Tensor[] backward(Tensor[] g) {
+                return new Tensor[] {Dispatcher.get()
+                        .call(
+                                OpRegistry.FFT_IRFFT_BACKWARD,
+                                Value.tensor(g[0]),
+                                Value.integers(in[0].shape().toArray()),
+                                Value.dtype(in[0].dtype()),
+                                args[1].isNone() ? Value.none() : Value.integer(args[1].asInt()),
+                                Value.integer(args[2].asInt()),
+                                args[3].isNone() ? Value.none() : Value.string(args[3].asString()))[0]
+                        .asTensor()};
+            }
+        });
 
         // ---------------------------------------------------------------- losses
         single(dispatcher, OpRegistry.CROSS_ENTROPY, (in, out, args) -> {

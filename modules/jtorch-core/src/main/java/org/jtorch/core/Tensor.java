@@ -659,6 +659,34 @@ public class Tensor {
         return embedding(indices, null, false, false);
     }
 
+    public Tensor fft(Integer n, int dim, String norm) {
+        return first(OpRegistry.FFT_FFT, Value.tensor(this),
+                n == null ? Value.none() : Value.integer(n),
+                Value.integer(dim),
+                norm == null ? Value.none() : Value.string(norm));
+    }
+
+    public Tensor ifft(Integer n, int dim, String norm) {
+        return first(OpRegistry.FFT_IFFT, Value.tensor(this),
+                n == null ? Value.none() : Value.integer(n),
+                Value.integer(dim),
+                norm == null ? Value.none() : Value.string(norm));
+    }
+
+    public Tensor rfft(Integer n, int dim, String norm) {
+        return first(OpRegistry.FFT_RFFT, Value.tensor(this),
+                n == null ? Value.none() : Value.integer(n),
+                Value.integer(dim),
+                norm == null ? Value.none() : Value.string(norm));
+    }
+
+    public Tensor irfft(Integer n, int dim, String norm) {
+        return first(OpRegistry.FFT_IRFFT, Value.tensor(this),
+                n == null ? Value.none() : Value.integer(n),
+                Value.integer(dim),
+                norm == null ? Value.none() : Value.string(norm));
+    }
+
     public Tensor constantPadNd(int[] pad, Scalar value) {
         return first(OpRegistry.CONSTANT_PAD_ND, Value.tensor(this), Value.integers(toLongs(pad)),
                 Value.scalar(value));
@@ -893,8 +921,21 @@ public class Tensor {
     }
 
     public double get(long... indices) {
+        if (dtype().isComplex()) {
+            throw new DTypeException("Complex tensors have no single double value; use getComplexReal/Imaginary");
+        }
         long[] normalized = normalizeIndices(indices);
         return TensorAccess.getDouble(impl, TensorAccess.offsetOf(impl, normalized));
+    }
+
+    public double getComplexReal(long... indices) {
+        long[] normalized = normalizeIndices(indices);
+        return TensorAccess.getComplexReal(impl, TensorAccess.offsetOf(impl, normalized));
+    }
+
+    public double getComplexImaginary(long... indices) {
+        long[] normalized = normalizeIndices(indices);
+        return TensorAccess.getComplexImaginary(impl, TensorAccess.offsetOf(impl, normalized));
     }
 
     public Tensor set(double value, long... indices) {
@@ -905,6 +946,18 @@ public class Tensor {
         } else {
             TensorAccess.setDouble(impl, TensorAccess.offsetOf(impl, normalized), value);
         }
+        impl.bumpVersion();
+        return this;
+    }
+
+    /** Complex scalar set: (real, imaginary) replaces the current value. */
+    public Tensor setComplex(double real, double imaginary, long... indices) {
+        requireWritable();
+        if (!dtype().isComplex()) {
+            throw new DTypeException("setComplex requires a complex dtype, got " + dtype());
+        }
+        long[] normalized = normalizeIndices(indices);
+        TensorAccess.setComplex(impl, TensorAccess.offsetOf(impl, normalized), real, imaginary);
         impl.bumpVersion();
         return this;
     }
@@ -924,6 +977,9 @@ public class Tensor {
     }
 
     public float[] toFloatArray() {
+        if (dtype().isComplex()) {
+            throw new DTypeException("Complex tensors have no single float array; use toComplexArray");
+        }
         int size = checkedArraySize();
         float[] values = new float[size];
         for (int i = 0; i < size; i++) {
@@ -933,10 +989,28 @@ public class Tensor {
     }
 
     public double[] toDoubleArray() {
+        if (dtype().isComplex()) {
+            throw new DTypeException("Complex tensors have no single double array; use toComplexArray");
+        }
         int size = checkedArraySize();
         double[] values = new double[size];
         for (int i = 0; i < size; i++) {
             values[i] = TensorAccess.getDouble(impl, elementOffset(i));
+        }
+        return values;
+    }
+
+    /** Interleaved [real, imag, real, imag, ...] copy for complex tensors. */
+    public double[] toComplexArray() {
+        if (!dtype().isComplex()) {
+            throw new DTypeException("toComplexArray requires a complex dtype, got " + dtype());
+        }
+        int size = checkedArraySize();
+        double[] values = new double[size * 2];
+        for (int i = 0; i < size; i++) {
+            long offset = elementOffset(i);
+            values[2 * i] = TensorAccess.getComplexReal(impl, offset);
+            values[2 * i + 1] = TensorAccess.getComplexImaginary(impl, offset);
         }
         return values;
     }
@@ -1100,6 +1174,9 @@ public class Tensor {
             case INT32, INT64 -> out.append(TensorAccess.getLong(impl, offset));
             case FLOAT32 -> out.append(TensorAccess.getFloat(impl, offset));
             case FLOAT64 -> out.append(TensorAccess.getDouble(impl, offset));
+            case COMPLEX64, COMPLEX128 -> out.append('(').append(TensorAccess.getComplexReal(impl, offset))
+                    .append(TensorAccess.getComplexImaginary(impl, offset) >= 0 ? "+" : "")
+                    .append(TensorAccess.getComplexImaginary(impl, offset)).append('j').append(')');
         }
     }
 

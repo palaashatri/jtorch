@@ -135,6 +135,14 @@ final class MetaKernels {
         dispatcher.registerTensor(OpRegistry.EMBEDDING, DispatchKey.META, MetaKernels::embedding);
         dispatcher.registerTensor(OpRegistry.EMBEDDING_BACKWARD, DispatchKey.META,
                 MetaKernels::embeddingBackward);
+        dispatcher.registerTensor(OpRegistry.FFT_FFT, DispatchKey.META, MetaKernels::fft);
+        dispatcher.registerTensor(OpRegistry.FFT_IFFT, DispatchKey.META, MetaKernels::fft);
+        dispatcher.registerTensor(OpRegistry.FFT_RFFT, DispatchKey.META, MetaKernels::fft);
+        dispatcher.registerTensor(OpRegistry.FFT_IRFFT, DispatchKey.META, MetaKernels::fft);
+        dispatcher.registerTensor(OpRegistry.FFT_FFT_BACKWARD, DispatchKey.META, MetaKernels::fftBackward);
+        dispatcher.registerTensor(OpRegistry.FFT_IFFT_BACKWARD, DispatchKey.META, MetaKernels::fftBackward);
+        dispatcher.registerTensor(OpRegistry.FFT_RFFT_BACKWARD, DispatchKey.META, MetaKernels::fftBackward);
+        dispatcher.registerTensor(OpRegistry.FFT_IRFFT_BACKWARD, DispatchKey.META, MetaKernels::fftBackward);
         dispatcher.registerTensor(OpRegistry.CONSTANT_PAD_ND, DispatchKey.META, MetaKernels::constantPad);
         dispatcher.registerTensor(OpRegistry.CONSTANT_PAD_ND_BACKWARD, DispatchKey.META,
                 MetaKernels::constantPadBackward);
@@ -377,7 +385,7 @@ final class MetaKernels {
     private static Tensor to(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
         DType target = args[1].asDType();
-        boolean requires = outputRequiresGrad(op, args) && target.isFloatingPoint();
+        boolean requires = outputRequiresGrad(op, args) && target.isFloatingOrComplex();
         if (target == input.dtype()) {
             if (requires == input.requiresGrad()) {
                 return input;
@@ -1044,6 +1052,23 @@ final class MetaKernels {
             throw new ShapeException("embedding weight_shape must have two entries");
         }
         return meta(Shape.of(weightShape), args[0].asTensor().dtype(), op, args);
+    }
+
+    private static Tensor fft(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Fft.Kind kind = Fft.kindFor(op.name());
+        int dim = Fft.resolveDim(input, args[2].asInt());
+        Fft.parseNorm(args[3]);
+        Integer n = args[1].asOptionalInt();
+        long transformN = Fft.resolveN(kind, input, dim, n);
+        Shape shape = Fft.outputShape(kind, input, dim, transformN);
+        return Tensor.wrap(TensorImpl.meta(shape, Fft.outputStrides(shape, dim), Fft.outputDtype(kind, input),
+                outputRequiresGrad(op, args)));
+    }
+
+    private static Tensor fftBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Shape inputShape = Shape.of(args[1].asLongArray());
+        return meta(inputShape, args[2].asDType(), op, args);
     }
 
     private static Tensor crossEntropy(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {

@@ -511,6 +511,170 @@
       ],
       "composite": false,
       "internal": true
+    },
+    {
+      "name": "fft_fft_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "input_dtype",
+          "type": "DType"
+        },
+        {
+          "name": "n",
+          "type": "int?"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "norm",
+          "type": "str?"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal fft_fft backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "fft_ifft_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "input_dtype",
+          "type": "DType"
+        },
+        {
+          "name": "n",
+          "type": "int?"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "norm",
+          "type": "str?"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal fft_ifft backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "fft_rfft_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "input_dtype",
+          "type": "DType"
+        },
+        {
+          "name": "n",
+          "type": "int?"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "norm",
+          "type": "str?"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal fft_rfft backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
+    },
+    {
+      "name": "fft_irfft_backward",
+      "overload": "default",
+      "args": [
+        {
+          "name": "grad",
+          "type": "Tensor"
+        },
+        {
+          "name": "input_shape",
+          "type": "int[]"
+        },
+        {
+          "name": "input_dtype",
+          "type": "DType"
+        },
+        {
+          "name": "n",
+          "type": "int?"
+        },
+        {
+          "name": "dim",
+          "type": "int"
+        },
+        {
+          "name": "norm",
+          "type": "str?"
+        }
+      ],
+      "returns": [
+        "Tensor"
+      ],
+      "differentiable": false,
+      "status": "forward",
+      "summary": "Internal fft_irfft backward helper.",
+      "variants": [
+        "function"
+      ],
+      "composite": false,
+      "internal": true
     }
   ]
 }

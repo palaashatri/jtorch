@@ -27,7 +27,8 @@ class DispatchTest {
     void generatedIdentifiersAgreeWithTheSchema() {
         assertEquals(Schemas.ALL.size(), Ops.class.getDeclaredFields().length);
         for (Schemas.Schema schema : Schemas.ALL) {
-            assertTrue(schema.differentiable() || schema.status().equals("forward"));
+            assertTrue(schema.differentiable() || schema.status().equals("forward")
+                    || schema.status().equals("full-semantics"));
             if (schema.differentiable() && !schema.composite()) {
                 assertTrue(schema.reverse() != null, "missing reverse for " + schema.fullName());
             }

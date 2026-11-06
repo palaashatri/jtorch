@@ -2,13 +2,13 @@
 
 JTorch is a JDK 25-native, Java-first tensor and deep-learning library with PyTorch-compatible semantics: tensors with exact view/alias behaviour, a dispatcher, reverse-mode autograd, `nn` modules and optimizers, running on a pure-Java CPU reference backend first, with optional FFM-based native and GPU backends later.
 
-**Status:** the M0–M3 reference build exists in this repository and is tested against PyTorch 2.11.0 fixtures on the development host (macOS arm64, JDK 25, Gradle 9.8.2). M4 is well advanced: dense operators, grouped convolution, ceil-mode pooling, adaptive pooling, interpolation, GELU, embedding, attention, ResNet/ViT fixture models and the Vision Inspector are implemented. Scope and limitations are recorded in [`compat/`](compat/) and [ADR 0005](docs/adr/0005-supported-scope-m0-m3.md). Do not describe M5–M16 capabilities (CUDA, distributed, compiler, FFT, ONNX, float16/bfloat16, vmap/forward-AD, Python parity) as working; they are design targets, not deliverables yet.
+**Status:** the M0–M4 reference build exists in this repository and is tested against PyTorch 2.11.0 fixtures (JDK 25, Gradle 9.8.2). M4 is complete for the automated reference scope: dense operators (86 promoted to `full-semantics`), grouped convolution, ceil-mode pooling, adaptive pooling, interpolation, GELU, embedding, 1D FFT (`fft`/`ifft`/`rfft`/`irfft` with `n`/`dim`/`norm`), complex64/128 dtypes, ONNX import foundations (opset 13–23, import-only), attention, ResNet/ViT fixture models and the Vision Inspector are implemented. Scope and limitations are recorded in [`compat/`](compat/) and [ADRs 0005–0006](docs/adr/). Do not describe M5–M16 capabilities (CUDA, distributed, compiler, 2D/nD FFT, ONNX export, float16/bfloat16, vmap/forward-AD, Python parity) as working; they are design targets, not deliverables yet.
 
 The full design (tensor/storage model, dispatcher, autograd, compiler, backends, demo apps, CI matrix, testing strategy, milestones M0–M16) is [`docs/DESIGN.md`](docs/DESIGN.md); § numbers below refer to it.
 
 ## Where to start
 
-M0–M3 are complete for the automated reference scope; manual screen-reader/GUI acceptance remains human work. M4 is in progress. Read the design, then work the remaining backlog in dependency order (§34). The completed first vertical slice is in §0.2 and runs from [`examples/vertical-slice`](examples/vertical-slice):
+M0–M4 are complete for the automated reference scope; manual screen-reader/GUI acceptance remains human work. Read the design, then work the remaining backlog in dependency order (§34). The completed first vertical slice is in §0.2 and runs from [`examples/vertical-slice`](examples/vertical-slice):
 
 ```java
 Tensor x = Torch.tensor(new float[] {1, 2, 3, 4}, Shape.of(2, 2)).requiresGrad(true);
@@ -18,11 +18,11 @@ loss.backward();
 SGD.builder().parameters(List.of(new Parameter(w))).learningRate(1e-2).build().step();
 ```
 
-Completed in this build: M0 (Gradle wrapper, JPMS skeleton, schema generator, pinned oracle, CI workflow matrix, demo shell/packaging), M1 (shape/strides, FFM storage, strided views, reference kernels), M2 (dispatcher, meta, reverse autograd, Linear/MSE/SGD vertical slice) and most of M3 (modules, Adam/AdamW, tensor datasets and batching, checkpoints/Safetensors, TensorLab with checkpoint resume and packaged launcher). M3's CNN path and real-MNIST acceptance are implemented (`Conv2d`, `MaxPool2d`, TensorLab `--mnist-dir`, 0.95 held-out threshold), as are prefetch and accessibility metadata/keyboard controls with automated checks. M4 now includes convolution groups; ceil-mode and adaptive pooling with divisor override; `interpolate`; `gelu`; `embedding`; batch/layer/group normalization; indexing/gather/slice/scatter/pad/flip; multi-head attention; transformer encoder layers; ResNet9/ViT fixture models; and the `vision-inspector` demo with batch classification and saliency.
+Completed in this build: M0 (Gradle wrapper, JPMS skeleton, schema generator, pinned oracle, CI workflow matrix, demo shell/packaging), M1 (shape/strides, FFM storage, strided views, reference kernels), M2 (dispatcher, meta, reverse autograd, Linear/MSE/SGD vertical slice), M3 (modules, Adam/AdamW, tensor datasets and batching, checkpoints/Safetensors, TensorLab with checkpoint resume and packaged launcher; CNN path with real-MNIST acceptance, prefetch and accessibility checks) and M4 (convolution groups; ceil-mode/adaptive pooling with divisor override; `interpolate`; `gelu`; `embedding`; batch/layer/group normalization; indexing/gather/slice/scatter/pad/flip; 1D FFT with complex64/128; ONNX import foundations; multi-head attention; transformer encoder layers; ResNet9/ViT fixture models; `vision-inspector` demo).
 
-Remaining design milestones: M4 FFT/ONNX and final full-semantics promotion, M5 transforms, M6 transformer inference/search, M7 optimized CPU, M8 LLM chat, M9 CUDA/AMP, M10 audio/Transcribe, M11 compiler/export, M12 distributed, M13 diffusion/Image Studio, M14 GC Doctor, M15 ROCm, M16 release candidate. Do not start GPU, distributed, compiler, diffusion or Python-facade work before the preceding capability gates are met (§34).
+Remaining design milestones: M5 transforms, M6 transformer inference/search, M7 optimized CPU, M8 LLM chat, M9 CUDA/AMP, M10 audio/Transcribe, M11 compiler/export, M12 distributed, M13 diffusion/Image Studio, M14 GC Doctor, M15 ROCm, M16 release candidate. Do not start GPU, distributed, compiler, diffusion or Python-facade work before the preceding capability gates are met (§34).
 
-Known limitations that must stay documented: only float32/float64/int32/int64/bool, only CPU and meta execution, no in-place autograd on tensors requiring grad, no higher-order gradients, `prod` is forward-only, cross-entropy supports 2-D logits, convolutions are NCHW, FFT/ONNX are not implemented, optimizer state is not serialized, and TensorLab's default synthetic check uses a labelled synthetic set (real MNIST is available through `--mnist-dir`). Vision Inspector uses a compact trained fixture model, not real ImageNet weights.
+Known limitations that must stay documented: real dtypes float32/float64/int32/int64/bool plus complex64/128 for FFT only (complex arithmetic rejected elsewhere), only CPU and meta execution, no in-place autograd on tensors requiring grad, no higher-order gradients, `prod` is forward-only, cross-entropy supports 2-D logits, convolutions are NCHW, FFT is 1D only (no fft2/fftn/shift), ONNX is import-only for the documented subset (no export/external data), optimizer state is not serialized, and TensorLab's default synthetic check uses a labelled synthetic set (real MNIST is available through `--mnist-dir`). Vision Inspector uses a compact trained fixture model, not real ImageNet weights.
 
 ## Commands
 
@@ -35,6 +35,7 @@ Known limitations that must stay documented: only float32/float64/int32/int64/bo
 ./gradlew :demos:tensorlab:mnistCheck -PmnistDir=/path/to/mnist-idx
 ./gradlew :demos:vision-inspector:demoCheck
 ./gradlew :demos:vision-inspector:demoPackage
+./gradlew :interop:jtorch-onnx:test
 ```
 
 The oracle generators are optional Python tools and are never needed for a normal build:

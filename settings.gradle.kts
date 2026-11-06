@@ -18,6 +18,7 @@ include(
     "modules:jtorch-data",
     "modules:jtorch-serialization",
     "modules:jtorch-vision",
+    "interop:jtorch-onnx",
     "demos:jtorch-demo-common",
     "demos:tensorlab",
     "demos:vision-inspector",

@@ -122,8 +122,8 @@ public final class TensorImpl {
     }
 
     private void setRequiresGradInternal(boolean value) {
-        if (value && !dtype.isFloatingPoint()) {
-            throw new DTypeException("Only floating point tensors can require gradients, got " + dtype);
+        if (value && !dtype.isFloatingOrComplex()) {
+            throw new DTypeException("Only floating point or complex tensors can require gradients, got " + dtype);
         }
         this.requiresGrad = value;
     }

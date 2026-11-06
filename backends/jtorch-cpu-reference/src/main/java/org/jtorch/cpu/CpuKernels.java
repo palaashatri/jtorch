@@ -127,6 +127,18 @@ final class CpuKernels {
         dispatcher.register(OpRegistry.GELU_BACKWARD, DispatchKey.CPU, CpuKernels::geluBackward);
         dispatcher.register(OpRegistry.EMBEDDING, DispatchKey.CPU, CpuKernels::embedding);
         dispatcher.register(OpRegistry.EMBEDDING_BACKWARD, DispatchKey.CPU, CpuKernels::embeddingBackward);
+        dispatcher.register(OpRegistry.FFT_FFT, DispatchKey.CPU, CpuKernels::fft);
+        dispatcher.register(OpRegistry.FFT_IFFT, DispatchKey.CPU, CpuKernels::fft);
+        dispatcher.register(OpRegistry.FFT_RFFT, DispatchKey.CPU, CpuKernels::fft);
+        dispatcher.register(OpRegistry.FFT_IRFFT, DispatchKey.CPU, CpuKernels::fft);
+        dispatcher.register(OpRegistry.FFT_FFT_BACKWARD, DispatchKey.CPU,
+                (op, args, keys) -> fftBackward(op, args, Fft.Kind.FFT));
+        dispatcher.register(OpRegistry.FFT_IFFT_BACKWARD, DispatchKey.CPU,
+                (op, args, keys) -> fftBackward(op, args, Fft.Kind.IFFT));
+        dispatcher.register(OpRegistry.FFT_RFFT_BACKWARD, DispatchKey.CPU,
+                (op, args, keys) -> fftBackward(op, args, Fft.Kind.RFFT));
+        dispatcher.register(OpRegistry.FFT_IRFFT_BACKWARD, DispatchKey.CPU,
+                (op, args, keys) -> fftBackward(op, args, Fft.Kind.IRFFT));
         dispatcher.register(OpRegistry.CONSTANT_PAD_ND, DispatchKey.CPU, CpuKernels::constantPad);
         dispatcher.register(OpRegistry.CONSTANT_PAD_ND_BACKWARD, DispatchKey.CPU, CpuKernels::constantPadBackward);
         dispatcher.register(OpRegistry.FLIP, DispatchKey.CPU, CpuKernels::flip);
@@ -174,6 +186,11 @@ final class CpuKernels {
     static Tensor fresh(Shape shape, DType dtype, boolean requiresGrad) {
         return Tensor.wrap(TensorImpl.fresh(
                 CpuAllocator.allocate(dtype, shape.numel()), shape, Strides.contiguous(shape), requiresGrad));
+    }
+
+    static Tensor fresh(Shape shape, Strides strides, DType dtype, boolean requiresGrad) {
+        return Tensor.wrap(TensorImpl.fresh(
+                CpuAllocator.allocate(dtype, shape.numel()), shape, strides, requiresGrad));
     }
 
     static Device requireCpuDevice(Device device) {
@@ -448,7 +465,7 @@ final class CpuKernels {
     private static Value[] to(Op op, Value[] args, DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
         DType dtype = args[1].asDType();
-        boolean requiresGrad = outputRequiresGrad(op, args) && dtype.isFloatingPoint();
+        boolean requiresGrad = outputRequiresGrad(op, args) && dtype.isFloatingOrComplex();
         if (input.dtype() == dtype) {
             if (requiresGrad == input.requiresGrad()) {
                 return new Value[] {Value.tensor(input)};
@@ -2624,6 +2641,348 @@ final class CpuKernels {
         return new Value[] {Value.tensor(output)};
     }
 
+    // ------------------------------------------------------------------ FFT
+
+    private static Value[] fft(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Fft.Kind kind = Fft.kindFor(op.name());
+        int dim = Fft.resolveDim(input, args[2].asInt());
+        String norm = Fft.parseNorm(args[3]);
+        Integer n = args[1].asOptionalInt();
+        long transformN = Fft.resolveN(kind, input, dim, n);
+        Shape shape = Fft.outputShape(kind, input, dim, transformN);
+        DType outputDtype = Fft.outputDtype(kind, input);
+        Tensor output = fresh(shape, Fft.outputStrides(shape, dim), outputDtype, outputRequiresGrad(op, args));
+        computeFftSliceWise(input, output, dim, transformN, norm, kind);
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static void computeFftSliceWise(
+            Tensor input, Tensor output, int dim, long transformN, String norm, Fft.Kind kind) {
+        int rank = input.dim();
+        long[] inputSizes = input.shape().toArray();
+        long[] outputSizes = output.shape().toArray();
+        long slices = 1;
+        for (int d = 0; d < rank; d++) {
+            if (d != dim) {
+                slices *= inputSizes[d];
+            }
+        }
+        if (slices == 0) {
+            return;
+        }
+        int n = (int) transformN;
+        double forwardScale = Fft.forwardScale(norm, n);
+        double inverseScale = Fft.inverseScale(norm, n);
+        long outLen = outputSizes[dim];
+        long inLen = inputSizes[dim];
+        long[] sliceIndex = new long[rank];
+        double[] inReal = new double[(int) inLen];
+        double[] inImag = new double[(int) inLen];
+        for (long slice = 0; slice < slices; slice++) {
+            java.util.Arrays.fill(sliceIndex, 0);
+            long remaining = slice;
+            for (int d = rank - 1; d >= 0; d--) {
+                if (d == dim) {
+                    sliceIndex[d] = 0;
+                    continue;
+                }
+                long size = inputSizes[d];
+                sliceIndex[d] = size == 0 ? 0 : remaining % size;
+                remaining = size == 0 ? 0 : remaining / size;
+            }
+            // Gather input vector (real/imag).
+            for (long ni = 0; ni < inLen; ni++) {
+                long offset = input.storageOffset();
+                for (int d = 0; d < rank; d++) {
+                    long coord = d == dim ? ni : sliceIndex[d];
+                    offset += coord * input.stride(d);
+                }
+                if (input.dtype().isComplex()) {
+                    inReal[(int) ni] = TensorAccess.getComplexReal(input.impl(), offset);
+                    inImag[(int) ni] = TensorAccess.getComplexImaginary(input.impl(), offset);
+                } else if (input.dtype().isFloatingPoint()) {
+                    inReal[(int) ni] = TensorAccess.getDouble(input.impl(), offset);
+                    inImag[(int) ni] = 0.0;
+                } else if (input.dtype().isIntegral()) {
+                    inReal[(int) ni] = (double) TensorAccess.getLong(input.impl(), offset);
+                    inImag[(int) ni] = 0.0;
+                } else {
+                    inReal[(int) ni] = TensorAccess.getBoolean(input.impl(), offset) ? 1.0 : 0.0;
+                    inImag[(int) ni] = 0.0;
+                }
+            }
+            switch (kind) {
+                case FFT, IFFT -> {
+                    boolean inverse = kind == Fft.Kind.IFFT;
+                    double scale = inverse ? inverseScale : forwardScale;
+                    for (long k = 0; k < outLen; k++) {
+                        double sumReal = 0.0;
+                        double sumImag = 0.0;
+                        for (long m = 0; m < n; m++) {
+                            double xr = m < inLen ? inReal[(int) m] : 0.0;
+                            double xi = m < inLen ? inImag[(int) m] : 0.0;
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            double wr = cos;
+                            double wi = inverse ? sin : -sin;
+                            sumReal += xr * wr - xi * wi;
+                            sumImag += xr * wi + xi * wr;
+                        }
+                        sumReal *= scale;
+                        sumImag *= scale;
+                        // Non-finite inputs propagate like the oracle (no silent sanitising).
+                        long offset = output.storageOffset();
+                        for (int d = 0; d < rank; d++) {
+                            long coord = d == dim ? k : sliceIndex[d];
+                            offset += coord * output.stride(d);
+                        }
+                        TensorAccess.setComplex(output.impl(), offset, sumReal, sumImag);
+                    }
+                }
+                case RFFT -> {
+                    // Forward DFT of zero-padded real vector, keep first M bins.
+                    for (long k = 0; k < outLen; k++) {
+                        double sumReal = 0.0;
+                        double sumImag = 0.0;
+                        for (long m = 0; m < n; m++) {
+                            double xr = m < inLen ? inReal[(int) m] : 0.0;
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            sumReal += xr * Math.cos(angle);
+                            sumImag -= xr * Math.sin(angle);
+                        }
+                        sumReal *= forwardScale;
+                        sumImag *= forwardScale;
+                        long offset = output.storageOffset();
+                        for (int d = 0; d < rank; d++) {
+                            long coord = d == dim ? k : sliceIndex[d];
+                            offset += coord * output.stride(d);
+                        }
+                        TensorAccess.setComplex(output.impl(), offset, sumReal, sumImag);
+                    }
+                }
+                case IRFFT -> {
+                    // Build Hermitian full spectrum length N, then inverse DFT.
+                    double[] specReal = new double[n];
+                    double[] specImag = new double[n];
+                    for (long k = 0; k < n; k++) {
+                        double sr;
+                        double si;
+                        if (k < inLen) {
+                            sr = inReal[(int) k];
+                            si = inImag[(int) k];
+                        } else if (n - k < inLen) {
+                            sr = inReal[(int) (n - k)];
+                            si = -inImag[(int) (n - k)];
+                        } else {
+                            sr = 0.0;
+                            si = 0.0;
+                        }
+                        if (k == 0 || (n % 2 == 0 && k == n / 2)) {
+                            si = 0.0;
+                        }
+                        specReal[(int) k] = sr;
+                        specImag[(int) k] = si;
+                    }
+                    for (long m = 0; m < outLen; m++) {
+                        double sumReal = 0.0;
+                        double sumImag = 0.0;
+                        for (long k = 0; k < n; k++) {
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sumReal += specReal[(int) k] * cos - specImag[(int) k] * sin;
+                            sumImag += specReal[(int) k] * sin + specImag[(int) k] * cos;
+                        }
+                        sumReal *= inverseScale;
+                        // Imaginary part is zero up to rounding; real inverse returns the real part.
+                        long offset = output.storageOffset();
+                        for (int d = 0; d < rank; d++) {
+                            long coord = d == dim ? m : sliceIndex[d];
+                            offset += coord * output.stride(d);
+                        }
+                        TensorAccess.setDouble(output.impl(), offset, sumReal);
+                    }
+                }
+                default -> throw new IllegalStateException("kind");
+            }
+        }
+    }
+
+    private static Value[] fftBackward(Op op, Value[] args, Fft.Kind kind) {
+        Tensor grad = args[0].asTensor();
+        Shape inputShape = Shape.of(args[1].asLongArray());
+        DType inputDtype = args[2].asDType();
+        int dimRaw = args[4].asInt();
+        String norm = Fft.parseNorm(args[5]);
+        Integer nArg = args[3].asOptionalInt();
+        // Resolve transform length from forward rules using a shape-only view.
+        Tensor inputView = Tensor.wrap(TensorImpl.meta(inputShape, Strides.contiguous(inputShape), inputDtype, false));
+        int dim = Fft.resolveDim(inputView, dimRaw);
+        long transformN = Fft.resolveN(kind, inputView, dim, nArg);
+        int n = (int) transformN;
+        long outLen = grad.size(dim);
+        double forwardScale = Fft.forwardScale(norm, n);
+        double inverseScale = Fft.inverseScale(norm, n);
+        Tensor output = fresh(inputShape, inputDtype, false);
+        int rank = inputShape.rank();
+        long[] inputSizes = inputShape.toArray();
+        long inputLen = inputSizes[dim];
+        long slices = 1;
+        for (int d = 0; d < rank; d++) {
+            if (d != dim) {
+                slices *= inputSizes[d];
+            }
+        }
+        if (slices == 0) {
+            return new Value[] {Value.tensor(output)};
+        }
+        long[] sliceIndex = new long[rank];
+        double[] gradReal = new double[(int) outLen];
+        double[] gradImag = new double[(int) outLen];
+        for (long slice = 0; slice < slices; slice++) {
+            java.util.Arrays.fill(sliceIndex, 0);
+            long remaining = slice;
+            for (int d = rank - 1; d >= 0; d--) {
+                if (d == dim) {
+                    continue;
+                }
+                long size = inputSizes[d];
+                sliceIndex[d] = size == 0 ? 0 : remaining % size;
+                remaining = size == 0 ? 0 : remaining / size;
+            }
+            for (long k = 0; k < outLen; k++) {
+                long offset = grad.storageOffset();
+                for (int d = 0; d < rank; d++) {
+                    long coord = d == dim ? k : sliceIndex[d];
+                    offset += coord * grad.stride(d);
+                }
+                if (grad.dtype().isComplex()) {
+                    gradReal[(int) k] = TensorAccess.getComplexReal(grad.impl(), offset);
+                    gradImag[(int) k] = TensorAccess.getComplexImaginary(grad.impl(), offset);
+                } else {
+                    gradReal[(int) k] = TensorAccess.getDouble(grad.impl(), offset);
+                    gradImag[(int) k] = 0.0;
+                }
+            }
+            double[] gradNReal = new double[n];
+            double[] gradNImag = new double[n];
+            switch (kind) {
+                case FFT -> {
+                    // grad = forwardScale * F^H G = forwardScale * sum_k G_k exp(+2pi i k m / N)
+                    for (int m = 0; m < n; m++) {
+                        double sr = 0.0;
+                        double si = 0.0;
+                        for (int k = 0; k < n; k++) {
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sr += gradReal[k] * cos - gradImag[k] * sin;
+                            si += gradReal[k] * sin + gradImag[k] * cos;
+                        }
+                        gradNReal[m] = sr * forwardScale;
+                        gradNImag[m] = si * forwardScale;
+                    }
+                }
+                case IFFT -> {
+                    // grad = inverseScale * F G = inverseScale * sum_k G_k exp(-2pi i k m / N)
+                    for (int m = 0; m < n; m++) {
+                        double sr = 0.0;
+                        double si = 0.0;
+                        for (int k = 0; k < n; k++) {
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sr += gradReal[k] * cos + gradImag[k] * sin;
+                            si += -gradReal[k] * sin + gradImag[k] * cos;
+                        }
+                        gradNReal[m] = sr * inverseScale;
+                        gradNImag[m] = si * inverseScale;
+                    }
+                }
+                case RFFT -> {
+                    // Hermitian extension of halved G, then forwardScale * inverse DFT (no 1/N).
+                    int mOut = n / 2 + 1;
+                    double[] halvedReal = new double[mOut];
+                    double[] halvedImag = new double[mOut];
+                    for (int k = 0; k < mOut; k++) {
+                        double factor = 1.0;
+                        if (k != 0 && !(n % 2 == 0 && k == n / 2)) {
+                            factor = 0.5;
+                        }
+                        halvedReal[k] = gradReal[k] * factor;
+                        halvedImag[k] = gradImag[k] * factor;
+                    }
+                    for (int m = 0; m < n; m++) {
+                        double sr = 0.0;
+                        double si = 0.0;
+                        for (int k = 0; k < n; k++) {
+                            double hr;
+                            double hi;
+                            if (k < mOut) {
+                                hr = halvedReal[k];
+                                hi = halvedImag[k];
+                            } else {
+                                hr = halvedReal[n - k];
+                                hi = -halvedImag[n - k];
+                            }
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sr += hr * cos - hi * sin;
+                            si += hr * sin + hi * cos;
+                        }
+                        gradNReal[m] = sr * forwardScale;
+                    }
+                }
+                case IRFFT -> {
+                    // R = sum_k G_k exp(-2pi i k m / N) for m < M_exp, double middle, scale by inverseScale.
+                    int mExp = n / 2 + 1;
+                    double[] rReal = new double[mExp];
+                    double[] rImag = new double[mExp];
+                    for (int k = 0; k < mExp; k++) {
+                        double sr = 0.0;
+                        double si = 0.0;
+                        for (int m = 0; m < n; m++) {
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sr += gradReal[m] * cos + gradImag[m] * sin;
+                            si += -gradReal[m] * sin + gradImag[m] * cos;
+                        }
+                        double doubled = (k != 0 && !(n % 2 == 0 && k == n / 2)) ? 2.0 : 1.0;
+                        rReal[k] = sr * doubled * inverseScale;
+                        rImag[k] = si * doubled * inverseScale;
+                    }
+                    System.arraycopy(rReal, 0, gradNReal, 0, Math.min(mExp, n));
+                    System.arraycopy(rImag, 0, gradNImag, 0, Math.min(mExp, n));
+                    // gradN outside M_exp stays zero; output length below is M_in (resize).
+                }
+                default -> throw new IllegalStateException("kind");
+            }
+            for (long i = 0; i < inputLen; i++) {
+                double vr = i < n ? gradNReal[(int) i] : 0.0;
+                double vi = i < n ? gradNImag[(int) i] : 0.0;
+                long offset = output.storageOffset();
+                for (int d = 0; d < rank; d++) {
+                    long coord = d == dim ? i : sliceIndex[d];
+                    offset += coord * output.stride(d);
+                }
+                if (inputDtype.isComplex()) {
+                    TensorAccess.setComplex(output.impl(), offset, vr, vi);
+                } else if (inputDtype.isIntegral()) {
+                    TensorAccess.setLong(output.impl(), offset, (long) vr);
+                } else if (inputDtype.isBoolean()) {
+                    TensorAccess.setBoolean(output.impl(), offset, vr != 0.0);
+                } else {
+                    TensorAccess.setDouble(output.impl(), offset, vr);
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
     // ------------------------------------------------------------------ losses
 
     private static Value[] crossEntropy(Op op, Value[] args, DispatchKeySet keys) {
@@ -2776,8 +3135,26 @@ final class CpuKernels {
     }
 
     private static void copyValue(Tensor output, long outputOffset, Tensor source, long sourceOffset) {
-        if (output.dtype().isIntegral() || output.dtype().isBoolean()) {
+        if (output.dtype().isComplex()) {
+            if (source.dtype().isComplex()) {
+                TensorAccess.setComplex(output.impl(), outputOffset,
+                        TensorAccess.getComplexReal(source.impl(), sourceOffset),
+                        TensorAccess.getComplexImaginary(source.impl(), sourceOffset));
+            } else if (source.dtype().isIntegral()) {
+                TensorAccess.setComplex(output.impl(), outputOffset,
+                        (double) TensorAccess.getLong(source.impl(), sourceOffset), 0.0);
+            } else if (source.dtype().isBoolean()) {
+                TensorAccess.setComplex(output.impl(), outputOffset,
+                        TensorAccess.getBoolean(source.impl(), sourceOffset) ? 1.0 : 0.0, 0.0);
+            } else {
+                TensorAccess.setComplex(output.impl(), outputOffset,
+                        TensorAccess.getDouble(source.impl(), sourceOffset), 0.0);
+            }
+        } else if (output.dtype().isIntegral() || output.dtype().isBoolean()) {
             TensorAccess.setLong(output.impl(), outputOffset, TensorAccess.getLong(source.impl(), sourceOffset));
+        } else if (source.dtype().isComplex()) {
+            TensorAccess.setDouble(output.impl(), outputOffset,
+                    TensorAccess.getComplexReal(source.impl(), sourceOffset));
         } else {
             TensorAccess.setDouble(output.impl(), outputOffset, TensorAccess.getDouble(source.impl(), sourceOffset));
         }

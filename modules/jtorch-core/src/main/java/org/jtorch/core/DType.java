@@ -5,12 +5,16 @@ import java.util.Locale;
 /**
  * Element types supported by the JTorch CPU reference backend.
  *
- * <p>Only types with complete forward and backward kernels are declared. Types that the long-term design
- * mentions but this build does not implement (float16, bfloat16, complex, float8, quantized) are deliberately
- * absent: they are recorded as {@code unsupported} in the compatibility ledger instead of being exposed as
- * silently broken options.
+ * <p>Real types cover float32/float64/int32/int64/bool. Complex types (complex64 as float32 pairs,
+ * complex128 as float64 pairs, interleaved real/imag per element) are supported for FFT foundations; real
+ * arithmetic kernels reject complex explicitly rather than silently coercing. Types that the long-term design
+ * mentions but this build does not implement (float16, bfloat16, float8, quantized) are deliberately absent:
+ * they are recorded as {@code unsupported} in the compatibility ledger instead of being exposed as silently
+ * broken options.
  */
 public enum DType {
+    COMPLEX128("complex128", 16, Kind.COMPLEX),
+    COMPLEX64("complex64", 8, Kind.COMPLEX),
     FLOAT64("float64", 8, Kind.FLOAT),
     FLOAT32("float32", 4, Kind.FLOAT),
     INT64("int64", 8, Kind.INT),
@@ -20,7 +24,8 @@ public enum DType {
     private enum Kind {
         BOOL(0),
         INT(1),
-        FLOAT(2);
+        FLOAT(2),
+        COMPLEX(3);
 
         final int rank;
 
@@ -50,6 +55,26 @@ public enum DType {
 
     public boolean isFloatingPoint() {
         return kind == Kind.FLOAT;
+    }
+
+    public boolean isComplex() {
+        return kind == Kind.COMPLEX;
+    }
+
+    /** Floating or complex; the leaf types that may require gradients. */
+    public boolean isFloatingOrComplex() {
+        return kind == Kind.FLOAT || kind == Kind.COMPLEX;
+    }
+
+    /** Component float dtype for complex types (complex64→float32, complex128→float64). */
+    public DType componentDType() {
+        if (this == COMPLEX64) {
+            return FLOAT32;
+        }
+        if (this == COMPLEX128) {
+            return FLOAT64;
+        }
+        throw new DTypeException("Dtype " + this + " has no float component");
     }
 
     public boolean isIntegral() {
@@ -85,17 +110,26 @@ public enum DType {
             case "int", "int32", "int64" -> normalized.equals("int32") ? INT32 : INT64;
             case "long" -> INT64;
             case "bool" -> BOOL;
+            case "complex", "complex64", "cfloat" -> COMPLEX64;
+            case "complex128", "cdouble" -> COMPLEX128;
             default -> throw new DTypeException("Unknown or unsupported dtype '" + text + "'");
         };
     }
 
     /**
      * PyTorch type promotion for two tensor dtypes. The supported lattice is
-     * bool &lt; int32 &lt; int64 &lt; float32 &lt; float64.
+     * bool &lt; int32 &lt; int64 &lt; float32 &lt; float64 &lt; complex64 &lt; complex128
+     * (complex64 lifts float32/int/bool; adding float64 to complex64 widens to complex128).
      */
     public static DType resultType(DType a, DType b) {
         if (a == b) {
             return a;
+        }
+        if (a.isComplex() || b.isComplex()) {
+            if (a == COMPLEX128 || b == COMPLEX128 || a == FLOAT64 || b == FLOAT64) {
+                return COMPLEX128;
+            }
+            return COMPLEX64;
         }
         if (a.isFloatingPoint() && b.isFloatingPoint()) {
             return a == FLOAT64 || b == FLOAT64 ? FLOAT64 : FLOAT32;
@@ -137,7 +171,10 @@ public enum DType {
         if (dtype.isIntegral()) {
             return 1;
         }
-        return 2;
+        if (dtype.isFloatingPoint()) {
+            return 2;
+        }
+        return 3;
     }
 
     @Override

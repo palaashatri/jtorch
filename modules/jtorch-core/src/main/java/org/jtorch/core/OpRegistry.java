@@ -37,6 +37,10 @@ public final class OpRegistry {
     public static final Op EXP = Op.of(Ops.EXP);
     public static final Op EXPAND = Op.of(Ops.EXPAND);
     public static final Op EYE = Op.of(Ops.EYE);
+    public static final Op FFT_FFT = Op.of(Ops.FFT_FFT);
+    public static final Op FFT_IFFT = Op.of(Ops.FFT_IFFT);
+    public static final Op FFT_IRFFT = Op.of(Ops.FFT_IRFFT);
+    public static final Op FFT_RFFT = Op.of(Ops.FFT_RFFT);
     public static final Op FILL__SCALAR = Op.of(Ops.FILL__SCALAR);
     public static final Op FLATTEN = Op.of(Ops.FLATTEN);
     public static final Op FLIP = Op.of(Ops.FLIP);
@@ -116,6 +120,10 @@ public final class OpRegistry {
     public static final Op CONV2D_BACKWARD_INPUT = Op.of(Ops.CONV2D_BACKWARD_INPUT);
     public static final Op CONV2D_BACKWARD_WEIGHT = Op.of(Ops.CONV2D_BACKWARD_WEIGHT);
     public static final Op EMBEDDING_BACKWARD = Op.of(Ops.EMBEDDING_BACKWARD);
+    public static final Op FFT_FFT_BACKWARD = Op.of(Ops.FFT_FFT_BACKWARD);
+    public static final Op FFT_IFFT_BACKWARD = Op.of(Ops.FFT_IFFT_BACKWARD);
+    public static final Op FFT_IRFFT_BACKWARD = Op.of(Ops.FFT_IRFFT_BACKWARD);
+    public static final Op FFT_RFFT_BACKWARD = Op.of(Ops.FFT_RFFT_BACKWARD);
     public static final Op GATHER_BACKWARD = Op.of(Ops.GATHER_BACKWARD);
     public static final Op GELU_BACKWARD = Op.of(Ops.GELU_BACKWARD);
     public static final Op INDEX_SELECT_BACKWARD = Op.of(Ops.INDEX_SELECT_BACKWARD);

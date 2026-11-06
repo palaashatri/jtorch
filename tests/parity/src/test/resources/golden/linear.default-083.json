@@ -1,7 +1,7 @@
 {
   "operator": "aten::linear.default",
-  "torch": "2.11.0",
-  "python": "3.13.9",
+  "torch": "2.11.0+cpu",
+  "python": "3.13.17",
   "nondeterministic": false,
   "inplace": false,
   "note": null,
@@ -119,10 +119,10 @@
         "requiresGrad": false,
         "data": [
           0.75,
-          0.25,
+          0.25000000000000006,
           0.75,
           0.75,
-          0.25,
+          0.25000000000000006,
           0.75
         ]
       }

@@ -35,6 +35,10 @@ public final class Ops {
     public static final String EXP = "aten::exp.default";
     public static final String EXPAND = "aten::expand.default";
     public static final String EYE = "aten::eye.default";
+    public static final String FFT_FFT = "aten::fft_fft.default";
+    public static final String FFT_IFFT = "aten::fft_ifft.default";
+    public static final String FFT_IRFFT = "aten::fft_irfft.default";
+    public static final String FFT_RFFT = "aten::fft_rfft.default";
     public static final String FILL__SCALAR = "aten::fill_.Scalar";
     public static final String FLATTEN = "aten::flatten.default";
     public static final String FLIP = "aten::flip.default";
@@ -114,6 +118,10 @@ public final class Ops {
     public static final String CONV2D_BACKWARD_INPUT = "jtorch::conv2d_backward_input.default";
     public static final String CONV2D_BACKWARD_WEIGHT = "jtorch::conv2d_backward_weight.default";
     public static final String EMBEDDING_BACKWARD = "jtorch::embedding_backward.default";
+    public static final String FFT_FFT_BACKWARD = "jtorch::fft_fft_backward.default";
+    public static final String FFT_IFFT_BACKWARD = "jtorch::fft_ifft_backward.default";
+    public static final String FFT_IRFFT_BACKWARD = "jtorch::fft_irfft_backward.default";
+    public static final String FFT_RFFT_BACKWARD = "jtorch::fft_rfft_backward.default";
     public static final String GATHER_BACKWARD = "jtorch::gather_backward.default";
     public static final String GELU_BACKWARD = "jtorch::gelu_backward.default";
     public static final String INDEX_SELECT_BACKWARD = "jtorch::index_select_backward.default";

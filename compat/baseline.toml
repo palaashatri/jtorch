@@ -3,8 +3,8 @@
 
 [oracle]
 pytorch = "2.11.0"
-python = "3.13.9"
-platform = "macOS 27.0.1 arm64 (development host); fixtures regenerated on macos-15 in CI"
+python = "3.13.17"
+platform = "Windows 11 x64 (M4 FFT/ONNX regen, torch 2.11.0+cpu); prior macOS arm64 host; CI macos-15"
 extraction = "tools/oracle/generate.py"
 python_packages = ["torch==2.11.0", "safetensors==0.7.0", "packaging==25.0", "numpy==2.3.5"]
 optimizer_extraction = "tools/oracle/optimizers.py"
@@ -20,6 +20,6 @@ deterministic = true
 [scope]
 # The reference build implements these dtypes. Everything else is recorded as unsupported rather than exposed with
 # partial semantics.
-dtypes = ["float64", "float32", "int64", "int32", "bool"]
+dtypes = ["float64", "float32", "int64", "int32", "bool", "complex128", "complex64"]
 devices = ["cpu", "meta"]
 layouts = ["strided"]

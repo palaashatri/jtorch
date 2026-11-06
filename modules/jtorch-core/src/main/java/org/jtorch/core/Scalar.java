@@ -101,7 +101,7 @@ public final class Scalar {
 
     /** Converts this scalar to the given dtype using PyTorch's truncating casts. */
     public long toLong(DType dtype) {
-        if (dtype.isFloatingPoint()) {
+        if (dtype.isFloatingPoint() || dtype.isComplex()) {
             return (long) toDouble();
         }
         if (dtype == DType.BOOL) {
@@ -112,7 +112,8 @@ public final class Scalar {
 
     /** Converts this scalar to the given dtype using PyTorch's truncating casts. */
     public double toDouble(DType dtype) {
-        if (dtype.isFloatingPoint()) {
+        if (dtype.isFloatingPoint() || dtype.isComplex()) {
+            // Wrapped scalars promote to the real part of a complex target (imaginary 0).
             return toDouble();
         }
         if (dtype == DType.BOOL) {

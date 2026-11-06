@@ -209,6 +209,8 @@ class SerializationTest {
                 yield result;
             }
             case FLOAT64 -> tensor.toDoubleArray();
+            case COMPLEX64, COMPLEX128 -> throw new IllegalArgumentException(
+                    "Serialization test helper does not accept complex tensors");
         };
     }
 

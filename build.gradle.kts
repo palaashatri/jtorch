@@ -14,6 +14,7 @@ val javaProjects = setOf(
     "jtorch-data",
     "jtorch-serialization",
     "jtorch-vision",
+    "jtorch-onnx",
     "jtorch-demo-common",
     "tensorlab",
     "vision-inspector",

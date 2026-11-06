@@ -44,7 +44,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Absolute value."),
             new Schema(
                     "aten",
@@ -79,7 +79,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Elementwise addition of two tensors with an optional alpha scale."),
             new Schema(
                     "aten",
@@ -97,7 +97,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "In-place elementwise addition."),
             new Schema(
                     "aten",
@@ -117,7 +117,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "beta * self + alpha * mat1 @ mat2."),
             new Schema(
                     "aten",
@@ -137,7 +137,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Creates a 1-D tensor of evenly spaced values in [start, end)."),
             new Schema(
                     "aten",
@@ -155,7 +155,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Index of the maximum element, as int64."),
             new Schema(
                     "aten",
@@ -173,7 +173,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Index of the minimum element, as int64."),
             new Schema(
                     "aten",
@@ -235,7 +235,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Batched 3-D matrix multiplication."),
             new Schema(
                     "aten",
@@ -252,7 +252,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Concatenates tensors along an existing dimension."),
             new Schema(
                     "aten",
@@ -268,7 +268,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Smallest integer not less than each element."),
             new Schema(
                     "aten",
@@ -286,7 +286,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Clamps every element into an optional inclusive range."),
             new Schema(
                     "aten",
@@ -302,7 +302,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Returns a deep copy that does not share storage."),
             new Schema(
                     "aten",
@@ -336,7 +336,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Returns this tensor when already contiguous, otherwise a contiguous copy."),
             new Schema(
                     "aten",
@@ -375,7 +375,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "In-place copy from another tensor with broadcasting."),
             new Schema(
                     "aten",
@@ -391,7 +391,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Cosine."),
             new Schema(
                     "aten",
@@ -425,7 +425,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Returns a view that shares storage but is detached from the autograd graph."),
             new Schema(
                     "aten",
@@ -442,7 +442,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Elementwise true division; integer inputs promote to float32."),
             new Schema(
                     "aten",
@@ -459,7 +459,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "In-place elementwise division."),
             new Schema(
                     "aten",
@@ -497,7 +497,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Creates a tensor filled with uninitialised values."),
             new Schema(
                     "aten",
@@ -514,7 +514,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Elementwise eq comparison producing a bool tensor."),
             new Schema(
                     "aten",
@@ -530,7 +530,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Exponential."),
             new Schema(
                     "aten",
@@ -547,7 +547,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Broadcasts size-1 dimensions using zero strides; the result shares storage."),
             new Schema(
                     "aten",
@@ -565,8 +565,84 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Creates a 2-D identity matrix."),
+            new Schema(
+                    "aten",
+                    "fft_fft",
+                    "default",
+                    "aten::fft_fft.default",
+                    List.of(
+                            new Arg("self", "Tensor", null, false),
+                            new Arg("n", "int?", null, false),
+                            new Arg("dim", "int", "-1", false),
+                            new Arg("norm", "str?", null, false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    "fft_ifft",
+                    List.of("function", "method"),
+                    false,
+                    false,
+                    "full-semantics",
+                    "One-dimensional FFT along dim with n padding/trimming and backward/ortho/forward norm."),
+            new Schema(
+                    "aten",
+                    "fft_ifft",
+                    "default",
+                    "aten::fft_ifft.default",
+                    List.of(
+                            new Arg("self", "Tensor", null, false),
+                            new Arg("n", "int?", null, false),
+                            new Arg("dim", "int", "-1", false),
+                            new Arg("norm", "str?", null, false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    "fft_fft",
+                    List.of("function", "method"),
+                    false,
+                    false,
+                    "full-semantics",
+                    "One-dimensional inverse FFT along dim with n padding/trimming and backward/ortho/forward norm."),
+            new Schema(
+                    "aten",
+                    "fft_irfft",
+                    "default",
+                    "aten::fft_irfft.default",
+                    List.of(
+                            new Arg("self", "Tensor", null, false),
+                            new Arg("n", "int?", null, false),
+                            new Arg("dim", "int", "-1", false),
+                            new Arg("norm", "str?", null, false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    "fft_rfft",
+                    List.of("function", "method"),
+                    false,
+                    false,
+                    "full-semantics",
+                    "One-dimensional inverse real FFT along dim from Hermitian-truncated complex input."),
+            new Schema(
+                    "aten",
+                    "fft_rfft",
+                    "default",
+                    "aten::fft_rfft.default",
+                    List.of(
+                            new Arg("self", "Tensor", null, false),
+                            new Arg("n", "int?", null, false),
+                            new Arg("dim", "int", "-1", false),
+                            new Arg("norm", "str?", null, false)
+                    ),
+                    List.of("Tensor"),
+                    true,
+                    "fft_irfft",
+                    List.of("function", "method"),
+                    false,
+                    false,
+                    "full-semantics",
+                    "One-dimensional real FFT along dim returning Hermitian-truncated complex output."),
             new Schema(
                     "aten",
                     "fill_",
@@ -582,7 +658,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "In-place scalar fill."),
             new Schema(
                     "aten",
@@ -600,7 +676,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Flattens a contiguous range of dimensions."),
             new Schema(
                     "aten",
@@ -617,7 +693,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Reverses the order of elements along the given dimensions."),
             new Schema(
                     "aten",
@@ -633,7 +709,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Largest integer not greater than each element."),
             new Schema(
                     "aten",
@@ -652,7 +728,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Creates a tensor filled with a scalar value."),
             new Schema(
                     "aten",
@@ -670,7 +746,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Gathers values along one dimension using int32 or int64 indices."),
             new Schema(
                     "aten",
@@ -687,7 +763,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Elementwise ge comparison producing a bool tensor."),
             new Schema(
                     "aten",
@@ -741,7 +817,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Elementwise gt comparison producing a bool tensor."),
             new Schema(
                     "aten",
@@ -759,7 +835,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Selects positions along one dimension using int32 or int64 indices."),
             new Schema(
                     "aten",
@@ -815,7 +891,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Elementwise le comparison producing a bool tensor."),
             new Schema(
                     "aten",
@@ -849,7 +925,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Natural logarithm."),
             new Schema(
                     "aten",
@@ -865,7 +941,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "log(1 + x)."),
             new Schema(
                     "aten",
@@ -898,7 +974,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Elementwise logical negation producing a bool tensor."),
             new Schema(
                     "aten",
@@ -915,7 +991,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Elementwise lt comparison producing a bool tensor."),
             new Schema(
                     "aten",
@@ -932,7 +1008,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Matrix multiplication with NumPy-style batch broadcasting."),
             new Schema(
                     "aten",
@@ -948,7 +1024,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Maximum element as a scalar tensor."),
             new Schema(
                     "aten",
@@ -966,7 +1042,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Maximum values and indices along one dimension."),
             new Schema(
                     "aten",
@@ -1004,7 +1080,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Elementwise maximum, splitting gradients evenly at ties."),
             new Schema(
                     "aten",
@@ -1020,7 +1096,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Mean of all elements."),
             new Schema(
                     "aten",
@@ -1038,7 +1114,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Mean over the given dimensions."),
             new Schema(
                     "aten",
@@ -1054,7 +1130,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Minimum element as a scalar tensor."),
             new Schema(
                     "aten",
@@ -1072,7 +1148,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Minimum values and indices along one dimension."),
             new Schema(
                     "aten",
@@ -1089,7 +1165,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Elementwise minimum, splitting gradients evenly at ties."),
             new Schema(
                     "aten",
@@ -1106,7 +1182,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "2-D matrix multiplication."),
             new Schema(
                     "aten",
@@ -1141,7 +1217,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Elementwise multiplication with broadcasting."),
             new Schema(
                     "aten",
@@ -1158,7 +1234,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "In-place elementwise multiplication."),
             new Schema(
                     "aten",
@@ -1177,7 +1253,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Returns a contiguous-range view along one dimension."),
             new Schema(
                     "aten",
@@ -1194,7 +1270,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Elementwise ne comparison producing a bool tensor."),
             new Schema(
                     "aten",
@@ -1210,7 +1286,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Negates every element."),
             new Schema(
                     "aten",
@@ -1228,7 +1304,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Creates a tensor filled with ones."),
             new Schema(
                     "aten",
@@ -1245,7 +1321,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Reorders dimensions; the result shares storage."),
             new Schema(
                     "aten",
@@ -1262,7 +1338,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Raises every element to a scalar power."),
             new Schema(
                     "aten",
@@ -1279,7 +1355,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Elementwise tensor power with broadcasting."),
             new Schema(
                     "aten",
@@ -1385,7 +1461,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Elementwise reciprocal 1/x."),
             new Schema(
                     "aten",
@@ -1401,7 +1477,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Rectified linear unit."),
             new Schema(
                     "aten",
@@ -1418,7 +1494,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Returns a tensor with the requested shape, sharing storage when possible."),
             new Schema(
                     "aten",
@@ -1437,7 +1513,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Writes src values into self at int32/int64 index positions along one dimension."),
             new Schema(
                     "aten",
@@ -1455,7 +1531,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Removes an indexed position of one dimension; the result shares storage."),
             new Schema(
                     "aten",
@@ -1471,7 +1547,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Logistic sigmoid."),
             new Schema(
                     "aten",
@@ -1487,7 +1563,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Sign of each element."),
             new Schema(
                     "aten",
@@ -1503,7 +1579,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Sine."),
             new Schema(
                     "aten",
@@ -1523,7 +1599,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Returns a strided view of a dimension range."),
             new Schema(
                     "aten",
@@ -1556,7 +1632,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Square root."),
             new Schema(
                     "aten",
@@ -1572,7 +1648,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Elementwise square."),
             new Schema(
                     "aten",
@@ -1588,7 +1664,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Removes all size-1 dimensions."),
             new Schema(
                     "aten",
@@ -1605,7 +1681,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Removes one dimension if it has size 1."),
             new Schema(
                     "aten",
@@ -1622,7 +1698,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Concatenates tensors along a new dimension."),
             new Schema(
                     "aten",
@@ -1640,7 +1716,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Elementwise subtraction with an optional alpha scale."),
             new Schema(
                     "aten",
@@ -1658,7 +1734,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "In-place elementwise subtraction."),
             new Schema(
                     "aten",
@@ -1674,7 +1750,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Sums all elements into a scalar tensor."),
             new Schema(
                     "aten",
@@ -1692,7 +1768,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Sums over the given dimensions."),
             new Schema(
                     "aten",
@@ -1708,7 +1784,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Transposes a 2-D tensor."),
             new Schema(
                     "aten",
@@ -1724,7 +1800,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Hyperbolic tangent."),
             new Schema(
                     "aten",
@@ -1741,7 +1817,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Casts a tensor to another supported dtype."),
             new Schema(
                     "aten",
@@ -1759,7 +1835,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Swaps two dimensions; the result shares storage."),
             new Schema(
                     "aten",
@@ -1776,7 +1852,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Inserts a size-1 dimension."),
             new Schema(
                     "aten",
@@ -1793,7 +1869,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "autograd",
+                    "full-semantics",
                     "Returns a tensor with the requested shape, sharing storage when possible."),
             new Schema(
                     "aten",
@@ -1809,7 +1885,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "In-place zero fill."),
             new Schema(
                     "aten",
@@ -1827,7 +1903,7 @@ public final class Schemas {
                     List.of("function", "method"),
                     false,
                     false,
-                    "forward",
+                    "full-semantics",
                     "Creates a tensor filled with zeros."),
             new Schema(
                     "jtorch",
@@ -1951,6 +2027,90 @@ public final class Schemas {
                     true,
                     "forward",
                     "Internal embedding backward helper."),
+            new Schema(
+                    "jtorch",
+                    "fft_fft_backward",
+                    "default",
+                    "jtorch::fft_fft_backward.default",
+                    List.of(
+                            new Arg("grad", "Tensor", null, false),
+                            new Arg("input_shape", "int[]", null, false),
+                            new Arg("input_dtype", "DType", null, false),
+                            new Arg("n", "int?", null, false),
+                            new Arg("dim", "int", null, false),
+                            new Arg("norm", "str?", null, false)
+                    ),
+                    List.of("Tensor"),
+                    false,
+                    null,
+                    List.of("function"),
+                    false,
+                    true,
+                    "forward",
+                    "Internal fft_fft backward helper."),
+            new Schema(
+                    "jtorch",
+                    "fft_ifft_backward",
+                    "default",
+                    "jtorch::fft_ifft_backward.default",
+                    List.of(
+                            new Arg("grad", "Tensor", null, false),
+                            new Arg("input_shape", "int[]", null, false),
+                            new Arg("input_dtype", "DType", null, false),
+                            new Arg("n", "int?", null, false),
+                            new Arg("dim", "int", null, false),
+                            new Arg("norm", "str?", null, false)
+                    ),
+                    List.of("Tensor"),
+                    false,
+                    null,
+                    List.of("function"),
+                    false,
+                    true,
+                    "forward",
+                    "Internal fft_ifft backward helper."),
+            new Schema(
+                    "jtorch",
+                    "fft_irfft_backward",
+                    "default",
+                    "jtorch::fft_irfft_backward.default",
+                    List.of(
+                            new Arg("grad", "Tensor", null, false),
+                            new Arg("input_shape", "int[]", null, false),
+                            new Arg("input_dtype", "DType", null, false),
+                            new Arg("n", "int?", null, false),
+                            new Arg("dim", "int", null, false),
+                            new Arg("norm", "str?", null, false)
+                    ),
+                    List.of("Tensor"),
+                    false,
+                    null,
+                    List.of("function"),
+                    false,
+                    true,
+                    "forward",
+                    "Internal fft_irfft backward helper."),
+            new Schema(
+                    "jtorch",
+                    "fft_rfft_backward",
+                    "default",
+                    "jtorch::fft_rfft_backward.default",
+                    List.of(
+                            new Arg("grad", "Tensor", null, false),
+                            new Arg("input_shape", "int[]", null, false),
+                            new Arg("input_dtype", "DType", null, false),
+                            new Arg("n", "int?", null, false),
+                            new Arg("dim", "int", null, false),
+                            new Arg("norm", "str?", null, false)
+                    ),
+                    List.of("Tensor"),
+                    false,
+                    null,
+                    List.of("function"),
+                    false,
+                    true,
+                    "forward",
+                    "Internal fft_rfft backward helper."),
             new Schema(
                     "jtorch",
                     "gather_backward",

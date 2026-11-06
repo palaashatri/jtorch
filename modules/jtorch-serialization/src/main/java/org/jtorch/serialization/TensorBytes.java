@@ -28,6 +28,14 @@ final class TensorBytes {
                 case INT64 -> buffer.putLong(TensorAccess.getLong(tensor.impl(), offset));
                 case INT32 -> buffer.putInt((int) TensorAccess.getLong(tensor.impl(), offset));
                 case BOOL -> buffer.put(TensorAccess.getBoolean(tensor.impl(), offset) ? (byte) 1 : (byte) 0);
+                case COMPLEX128 -> {
+                    buffer.putDouble(TensorAccess.getComplexReal(tensor.impl(), offset));
+                    buffer.putDouble(TensorAccess.getComplexImaginary(tensor.impl(), offset));
+                }
+                case COMPLEX64 -> {
+                    buffer.putFloat((float) TensorAccess.getComplexReal(tensor.impl(), offset));
+                    buffer.putFloat((float) TensorAccess.getComplexImaginary(tensor.impl(), offset));
+                }
             }
         }
         return buffer.array();
@@ -49,6 +57,10 @@ final class TensorBytes {
                 case INT64 -> TensorAccess.setLong(tensor.impl(), element, buffer.getLong());
                 case INT32 -> TensorAccess.setLong(tensor.impl(), element, buffer.getInt());
                 case BOOL -> TensorAccess.setBoolean(tensor.impl(), element, buffer.get() != 0);
+                case COMPLEX128 -> TensorAccess.setComplex(
+                        tensor.impl(), element, buffer.getDouble(), buffer.getDouble());
+                case COMPLEX64 -> TensorAccess.setComplex(
+                        tensor.impl(), element, buffer.getFloat(), buffer.getFloat());
             }
         }
         return tensor;
@@ -61,6 +73,8 @@ final class TensorBytes {
             case INT64 -> "I64";
             case INT32 -> "I32";
             case BOOL -> "BOOL";
+            case COMPLEX64, COMPLEX128 -> throw new SerializationException(
+                    "Safetensors has no complex dtype in this build; use the native checkpoint for " + dtype);
         };
     }
 
