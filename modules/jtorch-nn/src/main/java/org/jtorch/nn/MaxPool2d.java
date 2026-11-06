@@ -25,9 +25,6 @@ public final class MaxPool2d extends Module {
                         "MaxPool2d kernel and stride/dilation must be positive and padding non-negative");
             }
         }
-        if (ceilMode) {
-            throw new IllegalArgumentException("MaxPool2d in this build does not support ceilMode=true");
-        }
         this.kernel = kernel.clone();
         this.stride = stride.clone();
         this.padding = padding.clone();

@@ -1,0 +1,83 @@
+{
+  "operator": "aten::fft_ifft.default",
+  "torch": "2.11.0",
+  "python": "3.13.9",
+  "nondeterministic": false,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "tensor",
+      "dtype": "complex128",
+      "shape": [
+        4
+      ],
+      "strides": [
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        {
+          "real": 1.0,
+          "imag": 0.5
+        },
+        {
+          "real": 2.0,
+          "imag": -1.0
+        },
+        {
+          "real": 0.5,
+          "imag": 0.25
+        },
+        {
+          "real": -1.0,
+          "imag": 2.0
+        }
+      ]
+    },
+    {
+      "kind": "none"
+    },
+    {
+      "kind": "int",
+      "value": -1
+    },
+    {
+      "kind": "none"
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "complex128",
+      "shape": [
+        4
+      ],
+      "strides": [
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        {
+          "real": 0.625,
+          "imag": 0.4375
+        },
+        {
+          "real": 0.875,
+          "imag": 0.8125
+        },
+        {
+          "real": 0.125,
+          "imag": -0.0625
+        },
+        {
+          "real": -0.625,
+          "imag": -0.6875
+        }
+      ]
+    }
+  ],
+  "grads": []
+}

@@ -33,11 +33,11 @@ public final class Conv2d extends Module {
             int[] dilation,
             int groups,
             boolean useBias) {
-        if (groups != 1) {
-            throw new IllegalArgumentException("Conv2d in this build supports groups=1 only, got " + groups);
-        }
-        if (inChannels <= 0 || outChannels <= 0 || outChannels % groups != 0) {
+        if (groups <= 0 || inChannels % groups != 0 || outChannels % groups != 0) {
             throw new IllegalArgumentException("Invalid Conv2d channel/groups configuration");
+        }
+        if (inChannels <= 0 || outChannels <= 0) {
+            throw new IllegalArgumentException("Conv2d channels must be positive");
         }
         if (kernel.length != 2 || stride.length != 2 || padding.length != 2 || dilation.length != 2) {
             throw new IllegalArgumentException("Conv2d kernel/stride/padding/dilation need two entries");

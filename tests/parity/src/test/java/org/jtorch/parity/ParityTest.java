@@ -225,7 +225,7 @@ class ParityTest {
         Strides stridesValue = Strides.of(strides);
         if (meta) {
             return Tensor.wrap(TensorImpl.meta(shapeValue, stridesValue, dtype,
-                    requiresGrad && dtype.isFloatingPoint()));
+                    requiresGrad && dtype.isFloatingOrComplex()));
         }
         long storageElements = requiredElements(shapeValue, stridesValue, storageOffset);
         Tensor base = Torch.empty(Shape.of(storageElements), TensorOptions.defaults().dtype(dtype));
@@ -269,6 +269,11 @@ class ParityTest {
             case BOOL -> TensorAccess.setBoolean(tensor.impl(), offset, Json.booleanValue(value));
             case INT32, INT64 -> TensorAccess.setLong(tensor.impl(), offset, Json.longValue(value));
             case FLOAT32, FLOAT64 -> TensorAccess.setDouble(tensor.impl(), offset, Json.doubleValue(value));
+            case COMPLEX64, COMPLEX128 -> {
+                Map<String, Object> pair = Json.object(value);
+                TensorAccess.setComplex(tensor.impl(), offset,
+                        Json.doubleValue(pair.get("real")), Json.doubleValue(pair.get("imag")));
+            }
         }
     }
 
@@ -297,6 +302,18 @@ class ParityTest {
                     double tolerance = 1e-11 * Math.max(1.0, Math.abs(expectedValue));
                     assertTrue(Math.abs(expectedValue - actualValue) <= tolerance,
                             context + " value[" + i + "] expected " + expectedValue + " but was " + actualValue);
+                }
+                case COMPLEX128, COMPLEX64 -> {
+                    Map<String, Object> pair = Json.object(data.get(i));
+                    double expectedReal = Json.doubleValue(pair.get("real"));
+                    double expectedImag = Json.doubleValue(pair.get("imag"));
+                    double actualReal = TensorAccess.getComplexReal(actual.impl(), offset);
+                    double actualImag = TensorAccess.getComplexImaginary(actual.impl(), offset);
+                    double tolerance = dtype == DType.COMPLEX128 ? 1e-11 : 1e-5;
+                    assertTrue(Math.abs(expectedReal - actualReal) <= tolerance * Math.max(1.0, Math.abs(expectedReal)),
+                            context + " value[" + i + "] real expected " + expectedReal + " but was " + actualReal);
+                    assertTrue(Math.abs(expectedImag - actualImag) <= tolerance * Math.max(1.0, Math.abs(expectedImag)),
+                            context + " value[" + i + "] imag expected " + expectedImag + " but was " + actualImag);
                 }
             }
         }

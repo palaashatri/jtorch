@@ -72,14 +72,16 @@ public final class Safetensors {
     }
 
     public static Map<String, Tensor> load(Path path) {
-        byte[] bytes;
         try {
-            bytes = Files.readAllBytes(path);
+            return load(Files.readAllBytes(path));
         } catch (IOException error) {
             throw new SerializationException("Unable to read Safetensors file " + path, error);
         }
+    }
+
+    public static Map<String, Tensor> load(byte[] bytes) {
         if (bytes.length < 8) {
-            throw new SerializationException("Safetensors file is truncated: " + path);
+            throw new SerializationException("Safetensors payload is truncated");
         }
         long headerLength = ByteBuffer.wrap(bytes, 0, 8).order(ByteOrder.LITTLE_ENDIAN).getLong();
         if (headerLength <= 0 || headerLength > MAX_HEADER_BYTES || headerLength > bytes.length - 8) {

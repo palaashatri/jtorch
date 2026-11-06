@@ -118,6 +118,27 @@ final class CpuKernels {
         dispatcher.register(OpRegistry.MAX_POOL2D_BACKWARD, DispatchKey.CPU, CpuKernels::maxPool2dBackward);
         dispatcher.register(OpRegistry.AVG_POOL2D, DispatchKey.CPU, CpuKernels::avgPool2d);
         dispatcher.register(OpRegistry.AVG_POOL2D_BACKWARD, DispatchKey.CPU, CpuKernels::avgPool2dBackward);
+        dispatcher.register(OpRegistry.ADAPTIVE_AVG_POOL2D, DispatchKey.CPU, CpuKernels::adaptiveAvgPool2d);
+        dispatcher.register(OpRegistry.ADAPTIVE_AVG_POOL2D_BACKWARD, DispatchKey.CPU,
+                CpuKernels::adaptiveAvgPool2dBackward);
+        dispatcher.register(OpRegistry.INTERPOLATE, DispatchKey.CPU, CpuKernels::interpolate);
+        dispatcher.register(OpRegistry.INTERPOLATE_BACKWARD, DispatchKey.CPU, CpuKernels::interpolateBackward);
+        dispatcher.register(OpRegistry.GELU, DispatchKey.CPU, CpuKernels::gelu);
+        dispatcher.register(OpRegistry.GELU_BACKWARD, DispatchKey.CPU, CpuKernels::geluBackward);
+        dispatcher.register(OpRegistry.EMBEDDING, DispatchKey.CPU, CpuKernels::embedding);
+        dispatcher.register(OpRegistry.EMBEDDING_BACKWARD, DispatchKey.CPU, CpuKernels::embeddingBackward);
+        dispatcher.register(OpRegistry.FFT_FFT, DispatchKey.CPU, CpuKernels::fft);
+        dispatcher.register(OpRegistry.FFT_IFFT, DispatchKey.CPU, CpuKernels::fft);
+        dispatcher.register(OpRegistry.FFT_RFFT, DispatchKey.CPU, CpuKernels::fft);
+        dispatcher.register(OpRegistry.FFT_IRFFT, DispatchKey.CPU, CpuKernels::fft);
+        dispatcher.register(OpRegistry.FFT_FFT_BACKWARD, DispatchKey.CPU,
+                (op, args, keys) -> fftBackward(op, args, Fft.Kind.FFT));
+        dispatcher.register(OpRegistry.FFT_IFFT_BACKWARD, DispatchKey.CPU,
+                (op, args, keys) -> fftBackward(op, args, Fft.Kind.IFFT));
+        dispatcher.register(OpRegistry.FFT_RFFT_BACKWARD, DispatchKey.CPU,
+                (op, args, keys) -> fftBackward(op, args, Fft.Kind.RFFT));
+        dispatcher.register(OpRegistry.FFT_IRFFT_BACKWARD, DispatchKey.CPU,
+                (op, args, keys) -> fftBackward(op, args, Fft.Kind.IRFFT));
         dispatcher.register(OpRegistry.CONSTANT_PAD_ND, DispatchKey.CPU, CpuKernels::constantPad);
         dispatcher.register(OpRegistry.CONSTANT_PAD_ND_BACKWARD, DispatchKey.CPU, CpuKernels::constantPadBackward);
         dispatcher.register(OpRegistry.FLIP, DispatchKey.CPU, CpuKernels::flip);
@@ -165,6 +186,11 @@ final class CpuKernels {
     static Tensor fresh(Shape shape, DType dtype, boolean requiresGrad) {
         return Tensor.wrap(TensorImpl.fresh(
                 CpuAllocator.allocate(dtype, shape.numel()), shape, Strides.contiguous(shape), requiresGrad));
+    }
+
+    static Tensor fresh(Shape shape, Strides strides, DType dtype, boolean requiresGrad) {
+        return Tensor.wrap(TensorImpl.fresh(
+                CpuAllocator.allocate(dtype, shape.numel()), shape, strides, requiresGrad));
     }
 
     static Device requireCpuDevice(Device device) {
@@ -439,7 +465,7 @@ final class CpuKernels {
     private static Value[] to(Op op, Value[] args, DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
         DType dtype = args[1].asDType();
-        boolean requiresGrad = outputRequiresGrad(op, args) && dtype.isFloatingPoint();
+        boolean requiresGrad = outputRequiresGrad(op, args) && dtype.isFloatingOrComplex();
         if (input.dtype() == dtype) {
             if (requiresGrad == input.requiresGrad()) {
                 return new Value[] {Value.tensor(input)};
@@ -1377,6 +1403,8 @@ final class CpuKernels {
         int batch = (int) input.size(0);
         int outChannels = (int) weight.size(0);
         int inChannels = (int) input.size(1);
+        int channelsPerGroup = inChannels / config.groups();
+        int outputsPerGroup = outChannels / config.groups();
         int kernelH = (int) weight.size(2);
         int kernelW = (int) weight.size(3);
         int outH = (int) shape.dim(2);
@@ -1393,10 +1421,13 @@ final class CpuKernels {
         long weightStrideW = weight.stride(3);
         for (int n = 0; n < batch; n++) {
             for (int o = 0; o < outChannels; o++) {
+                int group = o / outputsPerGroup;
+                int channelBase = group * channelsPerGroup;
                 for (int y = 0; y < outH; y++) {
                     for (int x = 0; x < outW; x++) {
                         double sum = bias == null ? 0 : TensorAccess.getDouble(bias.impl(), offset(bias, o));
-                        for (int c = 0; c < inChannels; c++) {
+                        for (int c = 0; c < channelsPerGroup; c++) {
+                            int inputChannel = channelBase + c;
                             for (int ky = 0; ky < kernelH; ky++) {
                                 int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
                                 if (iy < 0 || iy >= input.size(2)) {
@@ -1408,7 +1439,8 @@ final class CpuKernels {
                                     if (ix < 0 || ix >= input.size(3)) {
                                         continue;
                                     }
-                                    long in = inputOffset + n * strideN + c * strideC + iy * strideH + ix * strideW;
+                                    long in = inputOffset + n * strideN + inputChannel * strideC
+                                            + iy * strideH + ix * strideW;
                                     long w = weightOffset + o * weightStrideO + c * weightStrideC
                                             + ky * weightStrideH + kx * weightStrideW;
                                     sum += TensorAccess.getDouble(input.impl(), in)
@@ -1481,7 +1513,7 @@ final class CpuKernels {
         Tensor weight = args[1].asTensor();
         long[] inputShape = args[2].asLongArray();
         Convolution.ConvConfig config = Convolution.convConfig(
-                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), args[6].asInt());
         Convolution.validateConvBackwardInput(grad, weight, inputShape, config);
         Tensor output = fresh(Shape.of(inputShape), grad.dtype(), false);
         fillLongDouble(output, 0);
@@ -1490,19 +1522,24 @@ final class CpuKernels {
         int height = (int) inputShape[2];
         int width = (int) inputShape[3];
         int outChannels = (int) weight.size(0);
+        int channelsPerGroup = inChannels / config.groups();
+        int outputsPerGroup = outChannels / config.groups();
         int kernelH = (int) weight.size(2);
         int kernelW = (int) weight.size(3);
         int outH = (int) grad.size(2);
         int outW = (int) grad.size(3);
         for (int n = 0; n < batch; n++) {
             for (int o = 0; o < outChannels; o++) {
+                int group = o / outputsPerGroup;
+                int channelBase = group * channelsPerGroup;
                 for (int y = 0; y < outH; y++) {
                     for (int x = 0; x < outW; x++) {
                         double g = TensorAccess.getDouble(grad.impl(), offset(grad,n, o, y, x));
                         if (g == 0) {
                             continue;
                         }
-                        for (int c = 0; c < inChannels; c++) {
+                        for (int c = 0; c < channelsPerGroup; c++) {
+                            int inputChannel = channelBase + c;
                             for (int ky = 0; ky < kernelH; ky++) {
                                 int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
                                 if (iy < 0 || iy >= height) {
@@ -1516,7 +1553,7 @@ final class CpuKernels {
                                     }
                                     double w = TensorAccess.getDouble(weight.impl(),
                                             offset(weight,o, c, ky, kx));
-                                    long offset = offset(output,n, c, iy, ix);
+                                    long offset = offset(output,n, inputChannel, iy, ix);
                                     TensorAccess.setDouble(output.impl(), offset,
                                             TensorAccess.getDouble(output.impl(), offset) + g * w);
                                 }
@@ -1534,7 +1571,7 @@ final class CpuKernels {
         Tensor grad = args[1].asTensor();
         long[] weightShape = args[2].asLongArray();
         Convolution.ConvConfig config = Convolution.convConfig(
-                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), args[6].asInt());
         Convolution.validateConvBackwardWeight(input, grad, weightShape, config);
         Tensor output = fresh(Shape.of(weightShape), grad.dtype(), false);
         fillLongDouble(output, 0);
@@ -1543,19 +1580,24 @@ final class CpuKernels {
         int height = (int) input.size(2);
         int width = (int) input.size(3);
         int outChannels = (int) weightShape[0];
+        int channelsPerGroup = inChannels / config.groups();
+        int outputsPerGroup = outChannels / config.groups();
         int kernelH = (int) weightShape[2];
         int kernelW = (int) weightShape[3];
         int outH = (int) grad.size(2);
         int outW = (int) grad.size(3);
         for (int n = 0; n < batch; n++) {
             for (int o = 0; o < outChannels; o++) {
+                int group = o / outputsPerGroup;
+                int channelBase = group * channelsPerGroup;
                 for (int y = 0; y < outH; y++) {
                     for (int x = 0; x < outW; x++) {
                         double g = TensorAccess.getDouble(grad.impl(), offset(grad,n, o, y, x));
                         if (g == 0) {
                             continue;
                         }
-                        for (int c = 0; c < inChannels; c++) {
+                        for (int c = 0; c < channelsPerGroup; c++) {
+                            int inputChannel = channelBase + c;
                             for (int ky = 0; ky < kernelH; ky++) {
                                 int iy = y * config.stride()[0] - config.padding()[0] + ky * config.dilation()[0];
                                 if (iy < 0 || iy >= height) {
@@ -1571,7 +1613,7 @@ final class CpuKernels {
                                     TensorAccess.setDouble(output.impl(), offset,
                                             TensorAccess.getDouble(output.impl(), offset)
                                                     + g * TensorAccess.getDouble(input.impl(),
-                                                            offset(input,n, c, iy, ix)));
+                                                            offset(input,n, inputChannel, iy, ix)));
                                 }
                             }
                         }
@@ -1586,7 +1628,8 @@ final class CpuKernels {
         Tensor grad = args[0].asTensor();
         Tensor input = args[1].asTensor();
         Convolution.PoolConfig config = Convolution.poolConfig(
-                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), false);
+                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(),
+                args[6].asBoolean());
         Convolution.validateMaxPoolBackward(grad, input, config);
         Tensor output = fresh(input.shape(), grad.dtype(), false);
         fillLongDouble(output, 0);
@@ -1647,11 +1690,35 @@ final class CpuKernels {
 
     // ------------------------------------------------------------------ average pooling, padding and indexing
 
+    private static int avgPoolDivisor(
+            Convolution.AvgPoolConfig config, int height, int width, int y, int x, int valid, int kernelArea) {
+        if (config.divisorOverride() != null) {
+            return config.divisorOverride();
+        }
+        if (!config.countIncludePad()) {
+            return valid;
+        }
+        int count = 0;
+        for (int ky = 0; ky < config.kernel()[0]; ky++) {
+            int iy = y * config.stride()[0] - config.padding()[0] + ky;
+            if (iy < -config.padding()[0] || iy >= height + config.padding()[0]) {
+                continue;
+            }
+            for (int kx = 0; kx < config.kernel()[1]; kx++) {
+                int ix = x * config.stride()[1] - config.padding()[1] + kx;
+                if (ix >= -config.padding()[1] && ix < width + config.padding()[1]) {
+                    count++;
+                }
+            }
+        }
+        return count == 0 ? kernelArea : count;
+    }
+
     private static Value[] avgPool2d(Op op, Value[] args, DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
         Convolution.AvgPoolConfig config = Convolution.avgPoolConfig(
                 args[1].asLongArray(), args[2].asLongArray(), args[3].asLongArray(), args[4].asBoolean(),
-                args[5].asBoolean());
+                args[5].asBoolean(), args[6].asOptionalInt());
         Convolution.validateAvgPool(input, config);
         Shape shape = Convolution.avgPoolOutputShape(input, config);
         Tensor output = fresh(shape, input.dtype(), outputRequiresGrad(op, args));
@@ -1684,7 +1751,7 @@ final class CpuKernels {
                                 valid++;
                             }
                         }
-                        int divisor = config.countIncludePad() ? kernelArea : valid;
+                        int divisor = avgPoolDivisor(config, height, width, y, x, valid, kernelArea);
                         double average = divisor == 0 ? Double.NaN : sum / divisor;
                         long target = batched ? offset(output, n, c, y, x) : offset(output, c, y, x);
                         if (input.dtype().isIntegral()) {
@@ -1703,8 +1770,8 @@ final class CpuKernels {
         Tensor grad = args[0].asTensor();
         Tensor input = args[1].asTensor();
         Convolution.AvgPoolConfig config = Convolution.avgPoolConfig(
-                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), false,
-                args[5].asBoolean());
+                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asBoolean(),
+                args[6].asBoolean(), args[7].asOptionalInt());
         Convolution.validateAvgPool(input, config);
         Shape expected = Convolution.avgPoolOutputShape(input, config);
         if (!grad.shape().equals(expected)) {
@@ -1744,7 +1811,7 @@ final class CpuKernels {
                                 valid++;
                             }
                         }
-                        int divisor = config.countIncludePad() ? kernelArea : valid;
+                        int divisor = avgPoolDivisor(config, height, width, y, x, valid, kernelArea);
                         if (divisor == 0) {
                             continue;
                         }
@@ -2205,6 +2272,717 @@ final class CpuKernels {
         return new Value[] {Value.tensor(output)};
     }
 
+
+    // ------------------------------------------------------------------ adaptive pooling and image resizing
+
+    private static long imageOffset(Tensor tensor, int n, int c, long y, long x) {
+        return tensor.storageOffset() + n * tensor.stride(0) + c * tensor.stride(1)
+                + y * tensor.stride(2) + x * tensor.stride(3);
+    }
+
+    private static long imageOffset3(Tensor tensor, int c, long y, long x) {
+        return tensor.storageOffset() + c * tensor.stride(0) + y * tensor.stride(1) + x * tensor.stride(2);
+    }
+
+    private static Value[] adaptiveAvgPool2d(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        ImageOps.validatePoolInput(input, "adaptive_avg_pool2d");
+        int[] outputSize = ImageOps.adaptiveOutputSize(args[1].asLongArray(),
+                input.size(input.dim() - 2), input.size(input.dim() - 1));
+        Shape shape = ImageOps.adaptiveShape(input, outputSize);
+        Tensor output = fresh(shape, input.dtype(), outputRequiresGrad(op, args));
+        boolean batched = input.dim() == 4;
+        int batch = batched ? (int) input.size(0) : 1;
+        int channels = batched ? (int) input.size(1) : (int) input.size(0);
+        int height = (int) input.size(input.dim() - 2);
+        int width = (int) input.size(input.dim() - 1);
+        for (int n = 0; n < batch; n++) {
+            for (int c = 0; c < channels; c++) {
+                for (int oy = 0; oy < outputSize[0]; oy++) {
+                    long y0 = (long) oy * height / outputSize[0];
+                    long y1 = ((long) (oy + 1) * height + outputSize[0] - 1) / outputSize[0];
+                    for (int ox = 0; ox < outputSize[1]; ox++) {
+                        long x0 = (long) ox * width / outputSize[1];
+                        long x1 = ((long) (ox + 1) * width + outputSize[1] - 1) / outputSize[1];
+                        double sum = 0;
+                        for (long y = y0; y < y1; y++) {
+                            for (long x = x0; x < x1; x++) {
+                                sum += TensorAccess.getDouble(input.impl(), batched
+                                        ? imageOffset(input, n, c, y, x)
+                                        : imageOffset3(input, c, y, x));
+                            }
+                        }
+                        double value = sum / ((double) (y1 - y0) * (x1 - x0));
+                        long target = batched
+                                ? imageOffset(output, n, c, oy, ox)
+                                : imageOffset3(output, c, oy, ox);
+                        TensorAccess.setDouble(output.impl(), target, value);
+                    }
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static Value[] adaptiveAvgPool2dBackward(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        long[] inputShape = args[1].asLongArray();
+        if (inputShape.length != 3 && inputShape.length != 4) {
+            throw new ShapeException("adaptive_avg_pool2d input_shape must have three or four entries");
+        }
+        boolean batched = inputShape.length == 4;
+        int batch = batched ? (int) inputShape[0] : 1;
+        int channels = batched ? (int) inputShape[1] : (int) inputShape[0];
+        int height = (int) inputShape[inputShape.length - 2];
+        int width = (int) inputShape[inputShape.length - 1];
+        int[] outputSize = ImageOps.adaptiveOutputSize(args[2].asLongArray(), height, width);
+        Shape expected = batched
+                ? Shape.of(batch, channels, outputSize[0], outputSize[1])
+                : Shape.of(channels, outputSize[0], outputSize[1]);
+        if (!grad.shape().equals(expected)) {
+            throw new ShapeException("adaptive_avg_pool2d backward grad shape " + grad.shape()
+                    + " does not match " + expected);
+        }
+        if (!grad.dtype().isFloatingPoint()) {
+            throw new DTypeException("adaptive_avg_pool2d backward requires a floating point grad");
+        }
+        Tensor output = fresh(Shape.of(inputShape), grad.dtype(), false);
+        fillLongDouble(output, 0);
+        for (int n = 0; n < batch; n++) {
+            for (int c = 0; c < channels; c++) {
+                for (int oy = 0; oy < outputSize[0]; oy++) {
+                    long y0 = (long) oy * height / outputSize[0];
+                    long y1 = ((long) (oy + 1) * height + outputSize[0] - 1) / outputSize[0];
+                    for (int ox = 0; ox < outputSize[1]; ox++) {
+                        long x0 = (long) ox * width / outputSize[1];
+                        long x1 = ((long) (ox + 1) * width + outputSize[1] - 1) / outputSize[1];
+                        long gradPosition = batched
+                                ? imageOffset(grad, n, c, oy, ox)
+                                : imageOffset3(grad, c, oy, ox);
+                        double share = TensorAccess.getDouble(grad.impl(), gradPosition)
+                                / ((double) (y1 - y0) * (x1 - x0));
+                        for (long y = y0; y < y1; y++) {
+                            for (long x = x0; x < x1; x++) {
+                                long target = batched
+                                        ? imageOffset(output, n, c, y, x)
+                                        : imageOffset3(output, c, y, x);
+                                TensorAccess.setDouble(output.impl(), target,
+                                        TensorAccess.getDouble(output.impl(), target) + share);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static void interpolateSample(
+            Tensor input, Tensor output, int n, int c, int oy, int ox, int outH, int outW,
+            String mode, boolean alignCorners) {
+        int height = (int) input.size(2);
+        int width = (int) input.size(3);
+        double value;
+        if (mode.equals("nearest")) {
+            long y = Math.min(height - 1, (long) Math.floor(oy * (double) height / outH));
+            long x = Math.min(width - 1, (long) Math.floor(ox * (double) width / outW));
+            value = TensorAccess.getDouble(input.impl(), imageOffset(input, n, c, y, x));
+        } else {
+            double sourceY = ImageOps.sourceCoordinate(oy, height, outH, alignCorners);
+            double sourceX = ImageOps.sourceCoordinate(ox, width, outW, alignCorners);
+            sourceY = Math.max(0, Math.min(height - 1, sourceY));
+            sourceX = Math.max(0, Math.min(width - 1, sourceX));
+            int y0 = (int) Math.floor(sourceY);
+            int x0 = (int) Math.floor(sourceX);
+            int y1 = Math.min(height - 1, y0 + 1);
+            int x1 = Math.min(width - 1, x0 + 1);
+            double wy = sourceY - y0;
+            double wx = sourceX - x0;
+            double v00 = TensorAccess.getDouble(input.impl(), imageOffset(input, n, c, y0, x0));
+            double v01 = TensorAccess.getDouble(input.impl(), imageOffset(input, n, c, y0, x1));
+            double v10 = TensorAccess.getDouble(input.impl(), imageOffset(input, n, c, y1, x0));
+            double v11 = TensorAccess.getDouble(input.impl(), imageOffset(input, n, c, y1, x1));
+            value = (1 - wy) * ((1 - wx) * v00 + wx * v01) + wy * ((1 - wx) * v10 + wx * v11);
+        }
+        TensorAccess.setDouble(output.impl(), imageOffset(output, n, c, oy, ox), value);
+    }
+
+    private static Value[] interpolate(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        ImageOps.validateImageInput(input);
+        int[] size = ImageOps.interpolateSize(args[1].asLongArray(), input);
+        String mode = args[2].asString().toLowerCase(java.util.Locale.ROOT);
+        boolean alignCorners = args[3].asBoolean();
+        ImageOps.validateMode(mode, alignCorners);
+        Shape shape = ImageOps.interpolateShape(input, size);
+        Tensor output = fresh(shape, input.dtype(), outputRequiresGrad(op, args));
+        int batch = (int) input.size(0);
+        int channels = (int) input.size(1);
+        for (int n = 0; n < batch; n++) {
+            for (int c = 0; c < channels; c++) {
+                for (int y = 0; y < size[0]; y++) {
+                    for (int x = 0; x < size[1]; x++) {
+                        interpolateSample(input, output, n, c, y, x, size[0], size[1], mode, alignCorners);
+                    }
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static Value[] interpolateBackward(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        long[] inputShape = args[1].asLongArray();
+        if (inputShape.length != 4) {
+            throw new ShapeException("interpolate input_shape must have four entries");
+        }
+        int[] size = ImageOps.interpolateSize(args[2].asLongArray(), grad);
+        String mode = args[3].asString().toLowerCase(java.util.Locale.ROOT);
+        boolean alignCorners = args[4].asBoolean();
+        ImageOps.validateMode(mode, alignCorners);
+        int batch = (int) inputShape[0];
+        int channels = (int) inputShape[1];
+        int height = (int) inputShape[2];
+        int width = (int) inputShape[3];
+        Shape expected = Shape.of(batch, channels, size[0], size[1]);
+        if (!grad.shape().equals(expected)) {
+            throw new ShapeException("interpolate backward grad shape " + grad.shape() + " does not match " + expected);
+        }
+        if (!grad.dtype().isFloatingPoint()) {
+            throw new DTypeException("interpolate backward requires a floating point grad");
+        }
+        Tensor output = fresh(Shape.of(inputShape), grad.dtype(), false);
+        fillLongDouble(output, 0);
+        for (int n = 0; n < batch; n++) {
+            for (int c = 0; c < channels; c++) {
+                for (int oy = 0; oy < size[0]; oy++) {
+                    for (int ox = 0; ox < size[1]; ox++) {
+                        double g = TensorAccess.getDouble(grad.impl(), imageOffset(grad, n, c, oy, ox));
+                        if (g == 0) {
+                            continue;
+                        }
+                        if (mode.equals("nearest")) {
+                            long y = Math.min(height - 1, (long) Math.floor(oy * (double) height / size[0]));
+                            long x = Math.min(width - 1, (long) Math.floor(ox * (double) width / size[1]));
+                            long target = imageOffset(output, n, c, y, x);
+                            TensorAccess.setDouble(output.impl(), target,
+                                    TensorAccess.getDouble(output.impl(), target) + g);
+                        } else {
+                            double sourceY = Math.max(0, Math.min(height - 1,
+                                    ImageOps.sourceCoordinate(oy, height, size[0], alignCorners)));
+                            double sourceX = Math.max(0, Math.min(width - 1,
+                                    ImageOps.sourceCoordinate(ox, width, size[1], alignCorners)));
+                            int y0 = (int) Math.floor(sourceY);
+                            int x0 = (int) Math.floor(sourceX);
+                            int y1 = Math.min(height - 1, y0 + 1);
+                            int x1 = Math.min(width - 1, x0 + 1);
+                            double wy = sourceY - y0;
+                            double wx = sourceX - x0;
+                            accumulate(output, imageOffset(output, n, c, y0, x0), g * (1 - wy) * (1 - wx));
+                            accumulate(output, imageOffset(output, n, c, y0, x1), g * (1 - wy) * wx);
+                            accumulate(output, imageOffset(output, n, c, y1, x0), g * wy * (1 - wx));
+                            accumulate(output, imageOffset(output, n, c, y1, x1), g * wy * wx);
+                        }
+                    }
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static void accumulate(Tensor tensor, long offset, double value) {
+        TensorAccess.setDouble(tensor.impl(), offset, TensorAccess.getDouble(tensor.impl(), offset) + value);
+    }
+
+    private static Value[] gelu(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        boolean tanh = ImageOps.tanhApproximation(args[1].asString());
+        if (!input.dtype().isFloatingPoint()) {
+            throw new DTypeException("gelu requires a floating point tensor, got " + input.dtype());
+        }
+        Tensor output = fresh(input.shape(), input.dtype(), outputRequiresGrad(op, args));
+        for (long i = 0; i < input.numel(); i++) {
+            long position = input.elementOffset(i);
+            TensorAccess.setDouble(output.impl(), output.elementOffset(i),
+                    MathFunctions.gelu(TensorAccess.getDouble(input.impl(), position), tanh));
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static Value[] geluBackward(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        Tensor input = args[1].asTensor();
+        boolean tanh = ImageOps.tanhApproximation(args[2].asString());
+        if (!grad.shape().equals(input.shape())) {
+            throw new ShapeException("gelu backward grad shape " + grad.shape() + " does not match input "
+                    + input.shape());
+        }
+        if (!grad.dtype().isFloatingPoint() || grad.dtype() != input.dtype()) {
+            throw new DTypeException("gelu backward grad and input must share a floating dtype");
+        }
+        Tensor output = fresh(input.shape(), input.dtype(), false);
+        for (long i = 0; i < input.numel(); i++) {
+            double x = TensorAccess.getDouble(input.impl(), input.elementOffset(i));
+            TensorAccess.setDouble(output.impl(), output.elementOffset(i),
+                    TensorAccess.getDouble(grad.impl(), grad.elementOffset(i))
+                            * MathFunctions.geluDerivative(x, tanh));
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static void validateEmbedding(Tensor weight, Tensor indices, boolean sparse) {
+        if (weight.dim() != 2) {
+            throw new ShapeException("embedding weight must be 2-D, got " + weight.shape());
+        }
+        if (!weight.dtype().isFloatingPoint()) {
+            throw new DTypeException("embedding weight must be floating point, got " + weight.dtype());
+        }
+        if (indices.dtype() != DType.INT64 && indices.dtype() != DType.INT32) {
+            throw new DTypeException("embedding indices must be int32 or int64, got " + indices.dtype());
+        }
+        if (sparse) {
+            throw new org.jtorch.core.NotSupportedException("sparse embedding gradients are not implemented");
+        }
+    }
+
+    private static int normalizePaddingIndex(Integer paddingIndex, long rows) {
+        if (paddingIndex == null) {
+            return -1;
+        }
+        long normalized = paddingIndex < 0 ? paddingIndex + rows : paddingIndex;
+        if (normalized < 0 || normalized >= rows) {
+            throw new IndexOutOfBoundsException("embedding padding_idx " + paddingIndex + " is out of range for "
+                    + rows + " rows");
+        }
+        return (int) normalized;
+    }
+
+    private static Value[] embedding(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor weight = args[0].asTensor();
+        Tensor indices = args[1].asTensor();
+        Integer paddingIndex = args[2].asOptionalInt();
+        boolean scaleGradByFreq = args[3].asBoolean();
+        boolean sparse = args[4].asBoolean();
+        validateEmbedding(weight, indices, sparse);
+        int padding = normalizePaddingIndex(paddingIndex, weight.size(0));
+        long[] shape = new long[indices.dim() + 1];
+        for (int d = 0; d < indices.dim(); d++) {
+            shape[d] = indices.size(d);
+        }
+        shape[indices.dim()] = weight.size(1);
+        Tensor output = fresh(Shape.of(shape), weight.dtype(), outputRequiresGrad(op, args));
+        long rows = weight.size(0);
+        long dimensions = weight.size(1);
+        for (long i = 0; i < indices.numel(); i++) {
+            long selected = TensorAccess.getLong(indices.impl(), indices.elementOffset(i));
+            if (selected < 0 || selected >= rows) {
+                throw new IndexOutOfBoundsException("embedding index " + selected + " is out of range for " + rows
+                        + " rows");
+            }
+            for (long d = 0; d < dimensions; d++) {
+                double value = TensorAccess.getDouble(weight.impl(),
+                        weight.storageOffset() + selected * weight.stride(0) + d * weight.stride(1));
+                TensorAccess.setDouble(output.impl(), output.elementOffset(i * dimensions + d), value);
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static Value[] embeddingBackward(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        Tensor indices = args[1].asTensor();
+        long[] weightShape = args[2].asLongArray();
+        int padding = args[3].asInt();
+        boolean scaleGradByFreq = args[4].asBoolean();
+        if (weightShape.length != 2) {
+            throw new ShapeException("embedding weight_shape must have two entries");
+        }
+        if (!grad.dtype().isFloatingPoint()) {
+            throw new DTypeException("embedding backward requires a floating point grad");
+        }
+        if (indices.dtype() != DType.INT64 && indices.dtype() != DType.INT32) {
+            throw new DTypeException("embedding indices must be int32 or int64");
+        }
+        long rows = weightShape[0];
+        long dimensions = weightShape[1];
+        long expectedElements = indices.numel() * dimensions;
+        if (grad.numel() != expectedElements) {
+            throw new ShapeException("embedding backward grad has " + grad.numel()
+                    + " elements but expected " + expectedElements);
+        }
+        Tensor output = fresh(Shape.of(weightShape), grad.dtype(), false);
+        fillLongDouble(output, 0);
+        long[] counts = null;
+        if (scaleGradByFreq) {
+            counts = new long[Math.toIntExact(rows)];
+            for (long i = 0; i < indices.numel(); i++) {
+                long selected = TensorAccess.getLong(indices.impl(), indices.elementOffset(i));
+                if (selected >= 0 && selected < rows) {
+                    counts[(int) selected]++;
+                }
+            }
+        }
+        for (long i = 0; i < indices.numel(); i++) {
+            long selected = TensorAccess.getLong(indices.impl(), indices.elementOffset(i));
+            if (selected < 0 || selected >= rows) {
+                throw new IndexOutOfBoundsException("embedding index " + selected + " is out of range");
+            }
+            if (selected == padding) {
+                continue;
+            }
+            double scale = scaleGradByFreq ? 1.0 / counts[(int) selected] : 1.0;
+            for (long d = 0; d < dimensions; d++) {
+                long target = output.storageOffset() + selected * output.stride(0) + d * output.stride(1);
+                TensorAccess.setDouble(output.impl(), target,
+                        TensorAccess.getDouble(output.impl(), target)
+                                + TensorAccess.getDouble(grad.impl(), grad.elementOffset(i * dimensions + d)) * scale);
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
+    // ------------------------------------------------------------------ FFT
+
+    private static Value[] fft(Op op, Value[] args, DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Fft.Kind kind = Fft.kindFor(op.name());
+        int dim = Fft.resolveDim(input, args[2].asInt());
+        String norm = Fft.parseNorm(args[3]);
+        Integer n = args[1].asOptionalInt();
+        long transformN = Fft.resolveN(kind, input, dim, n);
+        Shape shape = Fft.outputShape(kind, input, dim, transformN);
+        DType outputDtype = Fft.outputDtype(kind, input);
+        Tensor output = fresh(shape, Fft.outputStrides(shape, dim), outputDtype, outputRequiresGrad(op, args));
+        computeFftSliceWise(input, output, dim, transformN, norm, kind);
+        return new Value[] {Value.tensor(output)};
+    }
+
+    private static void computeFftSliceWise(
+            Tensor input, Tensor output, int dim, long transformN, String norm, Fft.Kind kind) {
+        int rank = input.dim();
+        long[] inputSizes = input.shape().toArray();
+        long[] outputSizes = output.shape().toArray();
+        long slices = 1;
+        for (int d = 0; d < rank; d++) {
+            if (d != dim) {
+                slices *= inputSizes[d];
+            }
+        }
+        if (slices == 0) {
+            return;
+        }
+        int n = (int) transformN;
+        double forwardScale = Fft.forwardScale(norm, n);
+        double inverseScale = Fft.inverseScale(norm, n);
+        long outLen = outputSizes[dim];
+        long inLen = inputSizes[dim];
+        long[] sliceIndex = new long[rank];
+        double[] inReal = new double[(int) inLen];
+        double[] inImag = new double[(int) inLen];
+        for (long slice = 0; slice < slices; slice++) {
+            java.util.Arrays.fill(sliceIndex, 0);
+            long remaining = slice;
+            for (int d = rank - 1; d >= 0; d--) {
+                if (d == dim) {
+                    sliceIndex[d] = 0;
+                    continue;
+                }
+                long size = inputSizes[d];
+                sliceIndex[d] = size == 0 ? 0 : remaining % size;
+                remaining = size == 0 ? 0 : remaining / size;
+            }
+            // Gather input vector (real/imag).
+            for (long ni = 0; ni < inLen; ni++) {
+                long offset = input.storageOffset();
+                for (int d = 0; d < rank; d++) {
+                    long coord = d == dim ? ni : sliceIndex[d];
+                    offset += coord * input.stride(d);
+                }
+                if (input.dtype().isComplex()) {
+                    inReal[(int) ni] = TensorAccess.getComplexReal(input.impl(), offset);
+                    inImag[(int) ni] = TensorAccess.getComplexImaginary(input.impl(), offset);
+                } else if (input.dtype().isFloatingPoint()) {
+                    inReal[(int) ni] = TensorAccess.getDouble(input.impl(), offset);
+                    inImag[(int) ni] = 0.0;
+                } else if (input.dtype().isIntegral()) {
+                    inReal[(int) ni] = (double) TensorAccess.getLong(input.impl(), offset);
+                    inImag[(int) ni] = 0.0;
+                } else {
+                    inReal[(int) ni] = TensorAccess.getBoolean(input.impl(), offset) ? 1.0 : 0.0;
+                    inImag[(int) ni] = 0.0;
+                }
+            }
+            switch (kind) {
+                case FFT, IFFT -> {
+                    boolean inverse = kind == Fft.Kind.IFFT;
+                    double scale = inverse ? inverseScale : forwardScale;
+                    for (long k = 0; k < outLen; k++) {
+                        double sumReal = 0.0;
+                        double sumImag = 0.0;
+                        for (long m = 0; m < n; m++) {
+                            double xr = m < inLen ? inReal[(int) m] : 0.0;
+                            double xi = m < inLen ? inImag[(int) m] : 0.0;
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            double wr = cos;
+                            double wi = inverse ? sin : -sin;
+                            sumReal += xr * wr - xi * wi;
+                            sumImag += xr * wi + xi * wr;
+                        }
+                        sumReal *= scale;
+                        sumImag *= scale;
+                        // Non-finite inputs propagate like the oracle (no silent sanitising).
+                        long offset = output.storageOffset();
+                        for (int d = 0; d < rank; d++) {
+                            long coord = d == dim ? k : sliceIndex[d];
+                            offset += coord * output.stride(d);
+                        }
+                        TensorAccess.setComplex(output.impl(), offset, sumReal, sumImag);
+                    }
+                }
+                case RFFT -> {
+                    // Forward DFT of zero-padded real vector, keep first M bins.
+                    for (long k = 0; k < outLen; k++) {
+                        double sumReal = 0.0;
+                        double sumImag = 0.0;
+                        for (long m = 0; m < n; m++) {
+                            double xr = m < inLen ? inReal[(int) m] : 0.0;
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            sumReal += xr * Math.cos(angle);
+                            sumImag -= xr * Math.sin(angle);
+                        }
+                        sumReal *= forwardScale;
+                        sumImag *= forwardScale;
+                        long offset = output.storageOffset();
+                        for (int d = 0; d < rank; d++) {
+                            long coord = d == dim ? k : sliceIndex[d];
+                            offset += coord * output.stride(d);
+                        }
+                        TensorAccess.setComplex(output.impl(), offset, sumReal, sumImag);
+                    }
+                }
+                case IRFFT -> {
+                    // Build Hermitian full spectrum length N, then inverse DFT.
+                    double[] specReal = new double[n];
+                    double[] specImag = new double[n];
+                    for (long k = 0; k < n; k++) {
+                        double sr;
+                        double si;
+                        if (k < inLen) {
+                            sr = inReal[(int) k];
+                            si = inImag[(int) k];
+                        } else if (n - k < inLen) {
+                            sr = inReal[(int) (n - k)];
+                            si = -inImag[(int) (n - k)];
+                        } else {
+                            sr = 0.0;
+                            si = 0.0;
+                        }
+                        if (k == 0 || (n % 2 == 0 && k == n / 2)) {
+                            si = 0.0;
+                        }
+                        specReal[(int) k] = sr;
+                        specImag[(int) k] = si;
+                    }
+                    for (long m = 0; m < outLen; m++) {
+                        double sumReal = 0.0;
+                        double sumImag = 0.0;
+                        for (long k = 0; k < n; k++) {
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sumReal += specReal[(int) k] * cos - specImag[(int) k] * sin;
+                            sumImag += specReal[(int) k] * sin + specImag[(int) k] * cos;
+                        }
+                        sumReal *= inverseScale;
+                        // Imaginary part is zero up to rounding; real inverse returns the real part.
+                        long offset = output.storageOffset();
+                        for (int d = 0; d < rank; d++) {
+                            long coord = d == dim ? m : sliceIndex[d];
+                            offset += coord * output.stride(d);
+                        }
+                        TensorAccess.setDouble(output.impl(), offset, sumReal);
+                    }
+                }
+                default -> throw new IllegalStateException("kind");
+            }
+        }
+    }
+
+    private static Value[] fftBackward(Op op, Value[] args, Fft.Kind kind) {
+        Tensor grad = args[0].asTensor();
+        Shape inputShape = Shape.of(args[1].asLongArray());
+        DType inputDtype = args[2].asDType();
+        int dimRaw = args[4].asInt();
+        String norm = Fft.parseNorm(args[5]);
+        Integer nArg = args[3].asOptionalInt();
+        // Resolve transform length from forward rules using a shape-only view.
+        Tensor inputView = Tensor.wrap(TensorImpl.meta(inputShape, Strides.contiguous(inputShape), inputDtype, false));
+        int dim = Fft.resolveDim(inputView, dimRaw);
+        long transformN = Fft.resolveN(kind, inputView, dim, nArg);
+        int n = (int) transformN;
+        long outLen = grad.size(dim);
+        double forwardScale = Fft.forwardScale(norm, n);
+        double inverseScale = Fft.inverseScale(norm, n);
+        Tensor output = fresh(inputShape, inputDtype, false);
+        int rank = inputShape.rank();
+        long[] inputSizes = inputShape.toArray();
+        long inputLen = inputSizes[dim];
+        long slices = 1;
+        for (int d = 0; d < rank; d++) {
+            if (d != dim) {
+                slices *= inputSizes[d];
+            }
+        }
+        if (slices == 0) {
+            return new Value[] {Value.tensor(output)};
+        }
+        long[] sliceIndex = new long[rank];
+        double[] gradReal = new double[(int) outLen];
+        double[] gradImag = new double[(int) outLen];
+        for (long slice = 0; slice < slices; slice++) {
+            java.util.Arrays.fill(sliceIndex, 0);
+            long remaining = slice;
+            for (int d = rank - 1; d >= 0; d--) {
+                if (d == dim) {
+                    continue;
+                }
+                long size = inputSizes[d];
+                sliceIndex[d] = size == 0 ? 0 : remaining % size;
+                remaining = size == 0 ? 0 : remaining / size;
+            }
+            for (long k = 0; k < outLen; k++) {
+                long offset = grad.storageOffset();
+                for (int d = 0; d < rank; d++) {
+                    long coord = d == dim ? k : sliceIndex[d];
+                    offset += coord * grad.stride(d);
+                }
+                if (grad.dtype().isComplex()) {
+                    gradReal[(int) k] = TensorAccess.getComplexReal(grad.impl(), offset);
+                    gradImag[(int) k] = TensorAccess.getComplexImaginary(grad.impl(), offset);
+                } else {
+                    gradReal[(int) k] = TensorAccess.getDouble(grad.impl(), offset);
+                    gradImag[(int) k] = 0.0;
+                }
+            }
+            double[] gradNReal = new double[n];
+            double[] gradNImag = new double[n];
+            switch (kind) {
+                case FFT -> {
+                    // grad = forwardScale * F^H G = forwardScale * sum_k G_k exp(+2pi i k m / N)
+                    for (int m = 0; m < n; m++) {
+                        double sr = 0.0;
+                        double si = 0.0;
+                        for (int k = 0; k < n; k++) {
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sr += gradReal[k] * cos - gradImag[k] * sin;
+                            si += gradReal[k] * sin + gradImag[k] * cos;
+                        }
+                        gradNReal[m] = sr * forwardScale;
+                        gradNImag[m] = si * forwardScale;
+                    }
+                }
+                case IFFT -> {
+                    // grad = inverseScale * F G = inverseScale * sum_k G_k exp(-2pi i k m / N)
+                    for (int m = 0; m < n; m++) {
+                        double sr = 0.0;
+                        double si = 0.0;
+                        for (int k = 0; k < n; k++) {
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sr += gradReal[k] * cos + gradImag[k] * sin;
+                            si += -gradReal[k] * sin + gradImag[k] * cos;
+                        }
+                        gradNReal[m] = sr * inverseScale;
+                        gradNImag[m] = si * inverseScale;
+                    }
+                }
+                case RFFT -> {
+                    // Hermitian extension of halved G, then forwardScale * inverse DFT (no 1/N).
+                    int mOut = n / 2 + 1;
+                    double[] halvedReal = new double[mOut];
+                    double[] halvedImag = new double[mOut];
+                    for (int k = 0; k < mOut; k++) {
+                        double factor = 1.0;
+                        if (k != 0 && !(n % 2 == 0 && k == n / 2)) {
+                            factor = 0.5;
+                        }
+                        halvedReal[k] = gradReal[k] * factor;
+                        halvedImag[k] = gradImag[k] * factor;
+                    }
+                    for (int m = 0; m < n; m++) {
+                        double sr = 0.0;
+                        double si = 0.0;
+                        for (int k = 0; k < n; k++) {
+                            double hr;
+                            double hi;
+                            if (k < mOut) {
+                                hr = halvedReal[k];
+                                hi = halvedImag[k];
+                            } else {
+                                hr = halvedReal[n - k];
+                                hi = -halvedImag[n - k];
+                            }
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sr += hr * cos - hi * sin;
+                            si += hr * sin + hi * cos;
+                        }
+                        gradNReal[m] = sr * forwardScale;
+                    }
+                }
+                case IRFFT -> {
+                    // R = sum_k G_k exp(-2pi i k m / N) for m < M_exp, double middle, scale by inverseScale.
+                    int mExp = n / 2 + 1;
+                    double[] rReal = new double[mExp];
+                    double[] rImag = new double[mExp];
+                    for (int k = 0; k < mExp; k++) {
+                        double sr = 0.0;
+                        double si = 0.0;
+                        for (int m = 0; m < n; m++) {
+                            double angle = 2.0 * Math.PI * k * m / n;
+                            double cos = Math.cos(angle);
+                            double sin = Math.sin(angle);
+                            sr += gradReal[m] * cos + gradImag[m] * sin;
+                            si += -gradReal[m] * sin + gradImag[m] * cos;
+                        }
+                        double doubled = (k != 0 && !(n % 2 == 0 && k == n / 2)) ? 2.0 : 1.0;
+                        rReal[k] = sr * doubled * inverseScale;
+                        rImag[k] = si * doubled * inverseScale;
+                    }
+                    System.arraycopy(rReal, 0, gradNReal, 0, Math.min(mExp, n));
+                    System.arraycopy(rImag, 0, gradNImag, 0, Math.min(mExp, n));
+                    // gradN outside M_exp stays zero; output length below is M_in (resize).
+                }
+                default -> throw new IllegalStateException("kind");
+            }
+            for (long i = 0; i < inputLen; i++) {
+                double vr = i < n ? gradNReal[(int) i] : 0.0;
+                double vi = i < n ? gradNImag[(int) i] : 0.0;
+                long offset = output.storageOffset();
+                for (int d = 0; d < rank; d++) {
+                    long coord = d == dim ? i : sliceIndex[d];
+                    offset += coord * output.stride(d);
+                }
+                if (inputDtype.isComplex()) {
+                    TensorAccess.setComplex(output.impl(), offset, vr, vi);
+                } else if (inputDtype.isIntegral()) {
+                    TensorAccess.setLong(output.impl(), offset, (long) vr);
+                } else if (inputDtype.isBoolean()) {
+                    TensorAccess.setBoolean(output.impl(), offset, vr != 0.0);
+                } else {
+                    TensorAccess.setDouble(output.impl(), offset, vr);
+                }
+            }
+        }
+        return new Value[] {Value.tensor(output)};
+    }
+
     // ------------------------------------------------------------------ losses
 
     private static Value[] crossEntropy(Op op, Value[] args, DispatchKeySet keys) {
@@ -2357,8 +3135,26 @@ final class CpuKernels {
     }
 
     private static void copyValue(Tensor output, long outputOffset, Tensor source, long sourceOffset) {
-        if (output.dtype().isIntegral() || output.dtype().isBoolean()) {
+        if (output.dtype().isComplex()) {
+            if (source.dtype().isComplex()) {
+                TensorAccess.setComplex(output.impl(), outputOffset,
+                        TensorAccess.getComplexReal(source.impl(), sourceOffset),
+                        TensorAccess.getComplexImaginary(source.impl(), sourceOffset));
+            } else if (source.dtype().isIntegral()) {
+                TensorAccess.setComplex(output.impl(), outputOffset,
+                        (double) TensorAccess.getLong(source.impl(), sourceOffset), 0.0);
+            } else if (source.dtype().isBoolean()) {
+                TensorAccess.setComplex(output.impl(), outputOffset,
+                        TensorAccess.getBoolean(source.impl(), sourceOffset) ? 1.0 : 0.0, 0.0);
+            } else {
+                TensorAccess.setComplex(output.impl(), outputOffset,
+                        TensorAccess.getDouble(source.impl(), sourceOffset), 0.0);
+            }
+        } else if (output.dtype().isIntegral() || output.dtype().isBoolean()) {
             TensorAccess.setLong(output.impl(), outputOffset, TensorAccess.getLong(source.impl(), sourceOffset));
+        } else if (source.dtype().isComplex()) {
+            TensorAccess.setDouble(output.impl(), outputOffset,
+                    TensorAccess.getComplexReal(source.impl(), sourceOffset));
         } else {
             TensorAccess.setDouble(output.impl(), outputOffset, TensorAccess.getDouble(source.impl(), sourceOffset));
         }

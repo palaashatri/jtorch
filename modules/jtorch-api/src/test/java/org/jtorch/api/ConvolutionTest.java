@@ -71,8 +71,8 @@ class ConvolutionTest {
     @Test
     void maxPoolValidatesConfiguration() {
         Tensor input = Torch.ones(Shape.of(1, 1, 4, 4));
-        assertThrows(org.jtorch.core.JTorchException.class, () -> input.maxPool2d(
-                new int[] {2, 2}, new int[] {2, 2}, new int[] {0, 0}, new int[] {1, 1}, true));
+        assertEquals(Shape.of(1, 1, 2, 2), input.maxPool2d(
+                new int[] {2, 2}, new int[] {2, 2}, new int[] {0, 0}, new int[] {1, 1}, true).shape());
         assertThrows(ShapeException.class, () -> input.maxPool2d(
                 new int[] {2, 2}, new int[] {2, 2}, new int[] {2, 2}, new int[] {1, 1}, false));
         assertThrows(DTypeException.class,
@@ -115,6 +115,20 @@ class ConvolutionTest {
     }
 
     @Test
+    void groupedConvolutionBackwardWorksOnMetaTensors() {
+        org.jtorch.core.TensorOptions meta = org.jtorch.core.TensorOptions.defaults()
+                .device(org.jtorch.core.Device.meta());
+        Tensor input = Torch.empty(Shape.of(1, 2, 3, 3), meta).requiresGrad(true);
+        Tensor weight = Torch.empty(Shape.of(4, 1, 1, 1), meta).requiresGrad(true);
+        Tensor output = input.conv2d(weight, null, new int[] {1, 1}, new int[] {0, 0},
+                new int[] {1, 1}, 2);
+        assertEquals(Shape.of(1, 4, 3, 3), output.shape());
+        output.sum().backward();
+        assertEquals(Shape.of(1, 2, 3, 3), input.grad().shape());
+        assertEquals(Shape.of(4, 1, 1, 1), weight.grad().shape());
+    }
+
+    @Test
     void internalBackwardOperatorsValidateTheirArguments() {
         Tensor input = Torch.ones(Shape.of(1, 1, 3, 3));
         Tensor wrongGrad = Torch.ones(Shape.of(1, 1, 1, 4));
@@ -125,7 +139,8 @@ class ConvolutionTest {
                 org.jtorch.core.value.Value.integers(2, 2),
                 org.jtorch.core.value.Value.integers(2, 2),
                 org.jtorch.core.value.Value.integers(0, 0),
-                org.jtorch.core.value.Value.integers(1, 1)));
+                org.jtorch.core.value.Value.integers(1, 1),
+                org.jtorch.core.value.Value.bool(false)));
         assertThrows(ShapeException.class, () -> org.jtorch.core.dispatch.Dispatcher.get().call(
                 org.jtorch.core.OpRegistry.CONV2D_BACKWARD_INPUT,
                 org.jtorch.core.value.Value.tensor(Torch.ones(Shape.of(1, 1, 1, 1))),
@@ -133,7 +148,8 @@ class ConvolutionTest {
                 org.jtorch.core.value.Value.integers(1, 1, 3, 3, 3),
                 org.jtorch.core.value.Value.integers(1, 1),
                 org.jtorch.core.value.Value.integers(0, 0),
-                org.jtorch.core.value.Value.integers(1, 1)));
+                org.jtorch.core.value.Value.integers(1, 1),
+                org.jtorch.core.value.Value.integer(1)));
     }
 
     @Test

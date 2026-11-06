@@ -39,11 +39,29 @@ final class Copy {
     }
 
     private static void copyElement(Tensor source, Tensor target, long sourceOffset, long targetOffset) {
-        if (target.dtype().isBoolean()) {
+        if (target.dtype().isComplex()) {
+            if (source.dtype().isComplex()) {
+                TensorAccess.setComplex(target.impl(), targetOffset,
+                        TensorAccess.getComplexReal(source.impl(), sourceOffset),
+                        TensorAccess.getComplexImaginary(source.impl(), sourceOffset));
+            } else if (source.dtype().isBoolean()) {
+                TensorAccess.setComplex(target.impl(), targetOffset,
+                        TensorAccess.getBoolean(source.impl(), sourceOffset) ? 1.0 : 0.0, 0.0);
+            } else if (source.dtype().isIntegral()) {
+                TensorAccess.setComplex(target.impl(), targetOffset,
+                        (double) TensorAccess.getLong(source.impl(), sourceOffset), 0.0);
+            } else {
+                TensorAccess.setComplex(target.impl(), targetOffset,
+                        TensorAccess.getDouble(source.impl(), sourceOffset), 0.0);
+            }
+        } else if (target.dtype().isBoolean()) {
             TensorAccess.setBoolean(target.impl(), targetOffset,
                     TensorAccess.getBoolean(source.impl(), sourceOffset));
         } else if (target.dtype().isIntegral()) {
             TensorAccess.setLong(target.impl(), targetOffset, TensorAccess.getLong(source.impl(), sourceOffset));
+        } else if (source.dtype().isComplex()) {
+            TensorAccess.setDouble(target.impl(), targetOffset,
+                    TensorAccess.getComplexReal(source.impl(), sourceOffset));
         } else {
             TensorAccess.setDouble(target.impl(), targetOffset, TensorAccess.getDouble(source.impl(), sourceOffset));
         }

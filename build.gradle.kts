@@ -13,8 +13,11 @@ val javaProjects = setOf(
     "jtorch-optim",
     "jtorch-data",
     "jtorch-serialization",
+    "jtorch-vision",
+    "jtorch-onnx",
     "jtorch-demo-common",
     "tensorlab",
+    "vision-inspector",
     "parity",
     "opgen",
     "vertical-slice",
@@ -61,13 +64,13 @@ tasks.named("check") {
 tasks.register("demoCheck") {
     group = "verification"
     description = "Runs headless smoke tests for every demo application."
-    dependsOn(":demos:tensorlab:demoCheck")
+    dependsOn(":demos:tensorlab:demoCheck", ":demos:vision-inspector:demoCheck")
 }
 
 tasks.register("demoPackage") {
     group = "distribution"
     description = "Builds runtime images for every demo application."
-    dependsOn(":demos:tensorlab:demoPackage")
+    dependsOn(":demos:tensorlab:demoPackage", ":demos:vision-inspector:demoPackage")
 }
 
 tasks.register("regenerateSchemas") {

@@ -8,6 +8,7 @@ public final class OpRegistry {
     private OpRegistry() {}
 
     public static final Op ABS = Op.of(Ops.ABS);
+    public static final Op ADAPTIVE_AVG_POOL2D = Op.of(Ops.ADAPTIVE_AVG_POOL2D);
     public static final Op ADD_TENSOR = Op.of(Ops.ADD_TENSOR);
     public static final Op ADD__TENSOR = Op.of(Ops.ADD__TENSOR);
     public static final Op ADDMM = Op.of(Ops.ADDMM);
@@ -30,11 +31,16 @@ public final class OpRegistry {
     public static final Op DETACH = Op.of(Ops.DETACH);
     public static final Op DIV_TENSOR = Op.of(Ops.DIV_TENSOR);
     public static final Op DIV__TENSOR = Op.of(Ops.DIV__TENSOR);
+    public static final Op EMBEDDING = Op.of(Ops.EMBEDDING);
     public static final Op EMPTY = Op.of(Ops.EMPTY);
     public static final Op EQ_TENSOR = Op.of(Ops.EQ_TENSOR);
     public static final Op EXP = Op.of(Ops.EXP);
     public static final Op EXPAND = Op.of(Ops.EXPAND);
     public static final Op EYE = Op.of(Ops.EYE);
+    public static final Op FFT_FFT = Op.of(Ops.FFT_FFT);
+    public static final Op FFT_IFFT = Op.of(Ops.FFT_IFFT);
+    public static final Op FFT_IRFFT = Op.of(Ops.FFT_IRFFT);
+    public static final Op FFT_RFFT = Op.of(Ops.FFT_RFFT);
     public static final Op FILL__SCALAR = Op.of(Ops.FILL__SCALAR);
     public static final Op FLATTEN = Op.of(Ops.FLATTEN);
     public static final Op FLIP = Op.of(Ops.FLIP);
@@ -42,9 +48,11 @@ public final class OpRegistry {
     public static final Op FULL = Op.of(Ops.FULL);
     public static final Op GATHER = Op.of(Ops.GATHER);
     public static final Op GE_TENSOR = Op.of(Ops.GE_TENSOR);
+    public static final Op GELU = Op.of(Ops.GELU);
     public static final Op GROUP_NORM = Op.of(Ops.GROUP_NORM);
     public static final Op GT_TENSOR = Op.of(Ops.GT_TENSOR);
     public static final Op INDEX_SELECT = Op.of(Ops.INDEX_SELECT);
+    public static final Op INTERPOLATE = Op.of(Ops.INTERPOLATE);
     public static final Op LAYER_NORM = Op.of(Ops.LAYER_NORM);
     public static final Op LE_TENSOR = Op.of(Ops.LE_TENSOR);
     public static final Op LINEAR = Op.of(Ops.LINEAR);
@@ -106,12 +114,20 @@ public final class OpRegistry {
     public static final Op VIEW = Op.of(Ops.VIEW);
     public static final Op ZERO_ = Op.of(Ops.ZERO_);
     public static final Op ZEROS = Op.of(Ops.ZEROS);
+    public static final Op ADAPTIVE_AVG_POOL2D_BACKWARD = Op.of(Ops.ADAPTIVE_AVG_POOL2D_BACKWARD);
     public static final Op AVG_POOL2D_BACKWARD = Op.of(Ops.AVG_POOL2D_BACKWARD);
     public static final Op CONSTANT_PAD_ND_BACKWARD = Op.of(Ops.CONSTANT_PAD_ND_BACKWARD);
     public static final Op CONV2D_BACKWARD_INPUT = Op.of(Ops.CONV2D_BACKWARD_INPUT);
     public static final Op CONV2D_BACKWARD_WEIGHT = Op.of(Ops.CONV2D_BACKWARD_WEIGHT);
+    public static final Op EMBEDDING_BACKWARD = Op.of(Ops.EMBEDDING_BACKWARD);
+    public static final Op FFT_FFT_BACKWARD = Op.of(Ops.FFT_FFT_BACKWARD);
+    public static final Op FFT_IFFT_BACKWARD = Op.of(Ops.FFT_IFFT_BACKWARD);
+    public static final Op FFT_IRFFT_BACKWARD = Op.of(Ops.FFT_IRFFT_BACKWARD);
+    public static final Op FFT_RFFT_BACKWARD = Op.of(Ops.FFT_RFFT_BACKWARD);
     public static final Op GATHER_BACKWARD = Op.of(Ops.GATHER_BACKWARD);
+    public static final Op GELU_BACKWARD = Op.of(Ops.GELU_BACKWARD);
     public static final Op INDEX_SELECT_BACKWARD = Op.of(Ops.INDEX_SELECT_BACKWARD);
+    public static final Op INTERPOLATE_BACKWARD = Op.of(Ops.INTERPOLATE_BACKWARD);
     public static final Op MAX_POOL2D_BACKWARD = Op.of(Ops.MAX_POOL2D_BACKWARD);
     public static final Op SCATTER_BACKWARD_SELF = Op.of(Ops.SCATTER_BACKWARD_SELF);
     public static final Op SCATTER_BACKWARD_SRC = Op.of(Ops.SCATTER_BACKWARD_SRC);

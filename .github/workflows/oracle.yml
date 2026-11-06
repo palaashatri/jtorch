@@ -39,3 +39,13 @@ jobs:
         run: |
           git status --porcelain
           git diff --exit-code
+      - name: Upload regenerated fixtures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-fixtures
+          retention-days: 7
+          path: |
+            tests/parity/src/test/resources/golden
+            modules/jtorch-optim/src/test/resources/optimizers.json
+            modules/jtorch-serialization/src/test/resources/golden

@@ -1,50 +1,57 @@
 {
   "generatedFrom": "schema/ops",
-  "total": 99,
+  "total": 107,
   "byStatus": {
-    "autograd": 68,
-    "forward": 31
+    "autograd": 16,
+    "forward": 5,
+    "full-semantics": 86
   },
   "operators": [
     {
       "name": "aten::abs.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "abs_backward"
     },
     {
-      "name": "aten::add.Tensor",
+      "name": "aten::adaptive_avg_pool2d.default",
       "status": "autograd",
+      "differentiable": true,
+      "reverse": "adaptive_avg_pool2d_backward"
+    },
+    {
+      "name": "aten::add.Tensor",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "add_backward"
     },
     {
       "name": "aten::add_.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::addmm.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "addmm_backward"
     },
     {
       "name": "aten::arange.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::argmax.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::argmin.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
@@ -62,31 +69,31 @@
     },
     {
       "name": "aten::bmm.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "bmm_backward"
     },
     {
       "name": "aten::cat.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "cat_backward"
     },
     {
       "name": "aten::ceil.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::clamp.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "clamp_backward"
     },
     {
       "name": "aten::clone.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "clone_backward"
     },
@@ -98,7 +105,7 @@
     },
     {
       "name": "aten::contiguous.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "contiguous_backward"
     },
@@ -110,13 +117,13 @@
     },
     {
       "name": "aten::copy_.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::cos.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "cos_backward"
     },
@@ -128,93 +135,129 @@
     },
     {
       "name": "aten::detach.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::div.Tensor",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "div_backward"
     },
     {
       "name": "aten::div_.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
+      "name": "aten::embedding.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "embedding_backward"
+    },
+    {
       "name": "aten::empty.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::eq.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::exp.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "exp_backward"
     },
     {
       "name": "aten::expand.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "expand_backward"
     },
     {
       "name": "aten::eye.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
+      "name": "aten::fft_fft.default",
+      "status": "full-semantics",
+      "differentiable": true,
+      "reverse": "fft_ifft"
+    },
+    {
+      "name": "aten::fft_ifft.default",
+      "status": "full-semantics",
+      "differentiable": true,
+      "reverse": "fft_fft"
+    },
+    {
+      "name": "aten::fft_irfft.default",
+      "status": "full-semantics",
+      "differentiable": true,
+      "reverse": "fft_rfft"
+    },
+    {
+      "name": "aten::fft_rfft.default",
+      "status": "full-semantics",
+      "differentiable": true,
+      "reverse": "fft_irfft"
+    },
+    {
       "name": "aten::fill_.Scalar",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::flatten.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "flatten_backward"
     },
     {
       "name": "aten::flip.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "flip"
     },
     {
       "name": "aten::floor.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::full.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::gather.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "gather_backward"
     },
     {
       "name": "aten::ge.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
+    },
+    {
+      "name": "aten::gelu.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "gelu_backward"
     },
     {
       "name": "aten::group_norm.default",
@@ -224,15 +267,21 @@
     },
     {
       "name": "aten::gt.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::index_select.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "index_select_backward"
+    },
+    {
+      "name": "aten::interpolate.default",
+      "status": "autograd",
+      "differentiable": true,
+      "reverse": "interpolate_backward"
     },
     {
       "name": "aten::layer_norm.default",
@@ -242,7 +291,7 @@
     },
     {
       "name": "aten::le.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
@@ -254,13 +303,13 @@
     },
     {
       "name": "aten::log.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "log_backward"
     },
     {
       "name": "aten::log1p.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "log1p_backward"
     },
@@ -272,31 +321,31 @@
     },
     {
       "name": "aten::logical_not.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::lt.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::matmul.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "matmul_backward"
     },
     {
       "name": "aten::max.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "max_backward"
     },
     {
       "name": "aten::max.dim",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "max_dim_backward"
     },
@@ -308,43 +357,43 @@
     },
     {
       "name": "aten::maximum.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "maximum_backward"
     },
     {
       "name": "aten::mean.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "mean_backward"
     },
     {
       "name": "aten::mean.dim",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "mean_dim_backward"
     },
     {
       "name": "aten::min.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "min_backward"
     },
     {
       "name": "aten::min.dim",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "min_dim_backward"
     },
     {
       "name": "aten::minimum.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "minimum_backward"
     },
     {
       "name": "aten::mm.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "mm_backward"
     },
@@ -356,55 +405,55 @@
     },
     {
       "name": "aten::mul.Tensor",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "mul_backward"
     },
     {
       "name": "aten::mul_.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::narrow.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "narrow_backward"
     },
     {
       "name": "aten::ne.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::neg.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "neg_backward"
     },
     {
       "name": "aten::ones.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::permute.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "permute_backward"
     },
     {
       "name": "aten::pow.Tensor_Scalar",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "pow_scalar_backward"
     },
     {
       "name": "aten::pow.Tensor_Tensor",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "pow_tensor_backward"
     },
@@ -440,55 +489,55 @@
     },
     {
       "name": "aten::reciprocal.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "reciprocal_backward"
     },
     {
       "name": "aten::relu.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "relu_backward"
     },
     {
       "name": "aten::reshape.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "reshape_backward"
     },
     {
       "name": "aten::scatter.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "scatter_backward_self,scatter_backward_src"
     },
     {
       "name": "aten::select.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "select_backward"
     },
     {
       "name": "aten::sigmoid.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "sigmoid_backward"
     },
     {
       "name": "aten::sign.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::sin.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "sin_backward"
     },
     {
       "name": "aten::slice.Tensor",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "slice_backward"
     },
@@ -500,103 +549,103 @@
     },
     {
       "name": "aten::sqrt.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "sqrt_backward"
     },
     {
       "name": "aten::square.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "square_backward"
     },
     {
       "name": "aten::squeeze.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "squeeze_backward"
     },
     {
       "name": "aten::squeeze.dim",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "squeeze_backward"
     },
     {
       "name": "aten::stack.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "stack_backward"
     },
     {
       "name": "aten::sub.Tensor",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "sub_backward"
     },
     {
       "name": "aten::sub_.Tensor",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::sum.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "sum_backward"
     },
     {
       "name": "aten::sum.dim_IntList",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "sum_dim_backward"
     },
     {
       "name": "aten::t.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "t_backward"
     },
     {
       "name": "aten::tanh.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "tanh_backward"
     },
     {
       "name": "aten::to.dtype",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "to_backward"
     },
     {
       "name": "aten::transpose.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "transpose_backward"
     },
     {
       "name": "aten::unsqueeze.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "unsqueeze_backward"
     },
     {
       "name": "aten::view.default",
-      "status": "autograd",
+      "status": "full-semantics",
       "differentiable": true,
       "reverse": "view_backward"
     },
     {
       "name": "aten::zero_.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     },
     {
       "name": "aten::zeros.default",
-      "status": "forward",
+      "status": "full-semantics",
       "differentiable": false,
       "reverse": null
     }

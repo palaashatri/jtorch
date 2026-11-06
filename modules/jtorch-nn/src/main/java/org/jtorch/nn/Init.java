@@ -20,6 +20,20 @@ final class Init {
         return random.mul(scale).sub(shift);
     }
 
+    /** PyTorch Xavier/Glorot uniform initialisation for a 2-D weight matrix. */
+    static Tensor xavier(Shape shape) {
+        if (shape.rank() != 2) {
+            throw new IllegalArgumentException("Xavier initialisation expects a 2-D weight");
+        }
+        double fanIn = shape.dim(1);
+        double fanOut = shape.dim(0);
+        double bound = Math.sqrt(6.0 / (fanIn + fanOut));
+        Tensor random = Torch.rand(shape);
+        Tensor scale = Torch.full(Shape.scalar(), org.jtorch.core.Scalar.of(2 * bound));
+        Tensor shift = Torch.full(Shape.scalar(), org.jtorch.core.Scalar.of(bound));
+        return random.mul(scale).sub(shift);
+    }
+
     static Tensor zeros(Shape shape) {
         return Torch.zeros(shape, TensorOptions.defaults().dtype(DType.FLOAT32));
     }

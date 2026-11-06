@@ -607,6 +607,12 @@ public class Tensor {
 
     public Tensor avgPool2d(
             int[] kernel, int[] stride, int[] padding, boolean ceilMode, boolean countIncludePad) {
+        return avgPool2d(kernel, stride, padding, ceilMode, countIncludePad, null);
+    }
+
+    public Tensor avgPool2d(
+            int[] kernel, int[] stride, int[] padding, boolean ceilMode, boolean countIncludePad,
+            Integer divisorOverride) {
         return first(
                 OpRegistry.AVG_POOL2D,
                 Value.tensor(this),
@@ -614,7 +620,71 @@ public class Tensor {
                 Value.integers(toLongs(stride)),
                 Value.integers(toLongs(padding)),
                 Value.bool(ceilMode),
-                Value.bool(countIncludePad));
+                Value.bool(countIncludePad),
+                divisorOverride == null ? Value.none() : Value.integer(divisorOverride));
+    }
+
+    public Tensor adaptiveAvgPool2d(int[] outputSize) {
+        return first(OpRegistry.ADAPTIVE_AVG_POOL2D, Value.tensor(this), Value.integers(toLongs(outputSize)));
+    }
+
+    public Tensor interpolate(int[] size, String mode, boolean alignCorners) {
+        return first(
+                OpRegistry.INTERPOLATE,
+                Value.tensor(this),
+                Value.integers(toLongs(size)),
+                Value.string(mode),
+                Value.bool(alignCorners));
+    }
+
+    public Tensor gelu() {
+        return gelu("none");
+    }
+
+    public Tensor gelu(String approximate) {
+        return first(OpRegistry.GELU, Value.tensor(this), Value.string(approximate));
+    }
+
+    public Tensor embedding(Tensor indices, Integer paddingIdx, boolean scaleGradByFreq, boolean sparse) {
+        return first(
+                OpRegistry.EMBEDDING,
+                Value.tensor(this),
+                Value.tensor(indices),
+                paddingIdx == null ? Value.none() : Value.integer(paddingIdx),
+                Value.bool(scaleGradByFreq),
+                Value.bool(sparse));
+    }
+
+    public Tensor embedding(Tensor indices) {
+        return embedding(indices, null, false, false);
+    }
+
+    public Tensor fft(Integer n, int dim, String norm) {
+        return first(OpRegistry.FFT_FFT, Value.tensor(this),
+                n == null ? Value.none() : Value.integer(n),
+                Value.integer(dim),
+                norm == null ? Value.none() : Value.string(norm));
+    }
+
+    public Tensor ifft(Integer n, int dim, String norm) {
+        return first(OpRegistry.FFT_IFFT, Value.tensor(this),
+                n == null ? Value.none() : Value.integer(n),
+                Value.integer(dim),
+                norm == null ? Value.none() : Value.string(norm));
+    }
+
+    public Tensor rfft(Integer n, int dim, String norm) {
+        return first(OpRegistry.FFT_RFFT, Value.tensor(this),
+                n == null ? Value.none() : Value.integer(n),
+                Value.integer(dim),
+                norm == null ? Value.none() : Value.string(norm));
+    }
+
+    public Tensor irfft(Integer n, int dim, String norm) {
+        return first(OpRegistry.FFT_IRFFT, Value.tensor(this),
+                n == null ? Value.none() : Value.integer(n),
+                Value.integer(dim),
+                norm == null ? Value.none() : Value.string(norm));
     }
 
     public Tensor constantPadNd(int[] pad, Scalar value) {
@@ -851,8 +921,21 @@ public class Tensor {
     }
 
     public double get(long... indices) {
+        if (dtype().isComplex()) {
+            throw new DTypeException("Complex tensors have no single double value; use getComplexReal/Imaginary");
+        }
         long[] normalized = normalizeIndices(indices);
         return TensorAccess.getDouble(impl, TensorAccess.offsetOf(impl, normalized));
+    }
+
+    public double getComplexReal(long... indices) {
+        long[] normalized = normalizeIndices(indices);
+        return TensorAccess.getComplexReal(impl, TensorAccess.offsetOf(impl, normalized));
+    }
+
+    public double getComplexImaginary(long... indices) {
+        long[] normalized = normalizeIndices(indices);
+        return TensorAccess.getComplexImaginary(impl, TensorAccess.offsetOf(impl, normalized));
     }
 
     public Tensor set(double value, long... indices) {
@@ -863,6 +946,18 @@ public class Tensor {
         } else {
             TensorAccess.setDouble(impl, TensorAccess.offsetOf(impl, normalized), value);
         }
+        impl.bumpVersion();
+        return this;
+    }
+
+    /** Complex scalar set: (real, imaginary) replaces the current value. */
+    public Tensor setComplex(double real, double imaginary, long... indices) {
+        requireWritable();
+        if (!dtype().isComplex()) {
+            throw new DTypeException("setComplex requires a complex dtype, got " + dtype());
+        }
+        long[] normalized = normalizeIndices(indices);
+        TensorAccess.setComplex(impl, TensorAccess.offsetOf(impl, normalized), real, imaginary);
         impl.bumpVersion();
         return this;
     }
@@ -882,6 +977,9 @@ public class Tensor {
     }
 
     public float[] toFloatArray() {
+        if (dtype().isComplex()) {
+            throw new DTypeException("Complex tensors have no single float array; use toComplexArray");
+        }
         int size = checkedArraySize();
         float[] values = new float[size];
         for (int i = 0; i < size; i++) {
@@ -891,10 +989,28 @@ public class Tensor {
     }
 
     public double[] toDoubleArray() {
+        if (dtype().isComplex()) {
+            throw new DTypeException("Complex tensors have no single double array; use toComplexArray");
+        }
         int size = checkedArraySize();
         double[] values = new double[size];
         for (int i = 0; i < size; i++) {
             values[i] = TensorAccess.getDouble(impl, elementOffset(i));
+        }
+        return values;
+    }
+
+    /** Interleaved [real, imag, real, imag, ...] copy for complex tensors. */
+    public double[] toComplexArray() {
+        if (!dtype().isComplex()) {
+            throw new DTypeException("toComplexArray requires a complex dtype, got " + dtype());
+        }
+        int size = checkedArraySize();
+        double[] values = new double[size * 2];
+        for (int i = 0; i < size; i++) {
+            long offset = elementOffset(i);
+            values[2 * i] = TensorAccess.getComplexReal(impl, offset);
+            values[2 * i + 1] = TensorAccess.getComplexImaginary(impl, offset);
         }
         return values;
     }
@@ -1058,6 +1174,9 @@ public class Tensor {
             case INT32, INT64 -> out.append(TensorAccess.getLong(impl, offset));
             case FLOAT32 -> out.append(TensorAccess.getFloat(impl, offset));
             case FLOAT64 -> out.append(TensorAccess.getDouble(impl, offset));
+            case COMPLEX64, COMPLEX128 -> out.append('(').append(TensorAccess.getComplexReal(impl, offset))
+                    .append(TensorAccess.getComplexImaginary(impl, offset) >= 0 ? "+" : "")
+                    .append(TensorAccess.getComplexImaginary(impl, offset)).append('j').append(')');
         }
     }
 

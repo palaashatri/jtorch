@@ -123,6 +123,26 @@ final class MetaKernels {
         dispatcher.registerTensor(OpRegistry.AVG_POOL2D, DispatchKey.META, MetaKernels::avgPool2d);
         dispatcher.registerTensor(OpRegistry.AVG_POOL2D_BACKWARD, DispatchKey.META,
                 MetaKernels::avgPool2dBackward);
+        dispatcher.registerTensor(OpRegistry.ADAPTIVE_AVG_POOL2D, DispatchKey.META,
+                MetaKernels::adaptiveAvgPool2d);
+        dispatcher.registerTensor(OpRegistry.ADAPTIVE_AVG_POOL2D_BACKWARD, DispatchKey.META,
+                MetaKernels::adaptiveAvgPool2dBackward);
+        dispatcher.registerTensor(OpRegistry.INTERPOLATE, DispatchKey.META, MetaKernels::interpolate);
+        dispatcher.registerTensor(OpRegistry.INTERPOLATE_BACKWARD, DispatchKey.META,
+                MetaKernels::interpolateBackward);
+        dispatcher.registerTensor(OpRegistry.GELU, DispatchKey.META, MetaKernels::gelu);
+        dispatcher.registerTensor(OpRegistry.GELU_BACKWARD, DispatchKey.META, MetaKernels::geluBackward);
+        dispatcher.registerTensor(OpRegistry.EMBEDDING, DispatchKey.META, MetaKernels::embedding);
+        dispatcher.registerTensor(OpRegistry.EMBEDDING_BACKWARD, DispatchKey.META,
+                MetaKernels::embeddingBackward);
+        dispatcher.registerTensor(OpRegistry.FFT_FFT, DispatchKey.META, MetaKernels::fft);
+        dispatcher.registerTensor(OpRegistry.FFT_IFFT, DispatchKey.META, MetaKernels::fft);
+        dispatcher.registerTensor(OpRegistry.FFT_RFFT, DispatchKey.META, MetaKernels::fft);
+        dispatcher.registerTensor(OpRegistry.FFT_IRFFT, DispatchKey.META, MetaKernels::fft);
+        dispatcher.registerTensor(OpRegistry.FFT_FFT_BACKWARD, DispatchKey.META, MetaKernels::fftBackward);
+        dispatcher.registerTensor(OpRegistry.FFT_IFFT_BACKWARD, DispatchKey.META, MetaKernels::fftBackward);
+        dispatcher.registerTensor(OpRegistry.FFT_RFFT_BACKWARD, DispatchKey.META, MetaKernels::fftBackward);
+        dispatcher.registerTensor(OpRegistry.FFT_IRFFT_BACKWARD, DispatchKey.META, MetaKernels::fftBackward);
         dispatcher.registerTensor(OpRegistry.CONSTANT_PAD_ND, DispatchKey.META, MetaKernels::constantPad);
         dispatcher.registerTensor(OpRegistry.CONSTANT_PAD_ND_BACKWARD, DispatchKey.META,
                 MetaKernels::constantPadBackward);
@@ -365,7 +385,7 @@ final class MetaKernels {
     private static Tensor to(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
         Tensor input = args[0].asTensor();
         DType target = args[1].asDType();
-        boolean requires = outputRequiresGrad(op, args) && target.isFloatingPoint();
+        boolean requires = outputRequiresGrad(op, args) && target.isFloatingOrComplex();
         if (target == input.dtype()) {
             if (requires == input.requiresGrad()) {
                 return input;
@@ -674,7 +694,7 @@ final class MetaKernels {
         Tensor weight = args[1].asTensor();
         long[] inputShape = args[2].asLongArray();
         Convolution.ConvConfig config = Convolution.convConfig(
-                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), args[6].asInt());
         Convolution.validateConvBackwardInput(grad, weight, inputShape, config);
         return meta(Shape.of(inputShape), grad.dtype(), op, args);
     }
@@ -684,7 +704,7 @@ final class MetaKernels {
         Tensor grad = args[1].asTensor();
         long[] weightShape = args[2].asLongArray();
         Convolution.ConvConfig config = Convolution.convConfig(
-                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), 1);
+                args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), args[6].asInt());
         Convolution.validateConvBackwardWeight(input, grad, weightShape, config);
         return meta(Shape.of(weightShape), grad.dtype(), op, args);
     }
@@ -693,7 +713,8 @@ final class MetaKernels {
         Tensor grad = args[0].asTensor();
         Tensor input = args[1].asTensor();
         Convolution.PoolConfig config = Convolution.poolConfig(
-                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(), false);
+                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asLongArray(),
+                args[6].asBoolean());
         Convolution.validateMaxPoolBackward(grad, input, config);
         return meta(input.shape(), grad.dtype(), op, args);
     }
@@ -702,7 +723,7 @@ final class MetaKernels {
         Tensor input = args[0].asTensor();
         Convolution.AvgPoolConfig config = Convolution.avgPoolConfig(
                 args[1].asLongArray(), args[2].asLongArray(), args[3].asLongArray(), args[4].asBoolean(),
-                args[5].asBoolean());
+                args[5].asBoolean(), args[6].asOptionalInt());
         Convolution.validateAvgPool(input, config);
         return meta(Convolution.avgPoolOutputShape(input, config), input.dtype(), op, args);
     }
@@ -711,8 +732,8 @@ final class MetaKernels {
         Tensor grad = args[0].asTensor();
         Tensor input = args[1].asTensor();
         Convolution.AvgPoolConfig config = Convolution.avgPoolConfig(
-                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), false,
-                args[5].asBoolean());
+                args[2].asLongArray(), args[3].asLongArray(), args[4].asLongArray(), args[5].asBoolean(),
+                args[6].asBoolean(), args[7].asOptionalInt());
         Convolution.validateAvgPool(input, config);
         Shape expected = Convolution.avgPoolOutputShape(input, config);
         if (!grad.shape().equals(expected)) {
@@ -918,6 +939,136 @@ final class MetaKernels {
             }
         }
         return meta(Shape.of(srcShape), grad.dtype(), op, args);
+    }
+
+
+    private static Tensor adaptiveAvgPool2d(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        ImageOps.validatePoolInput(input, "adaptive_avg_pool2d");
+        int[] size = ImageOps.adaptiveOutputSize(args[1].asLongArray(),
+                input.size(input.dim() - 2), input.size(input.dim() - 1));
+        return meta(ImageOps.adaptiveShape(input, size), input.dtype(), op, args);
+    }
+
+    private static Tensor adaptiveAvgPool2dBackward(
+            Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        long[] inputShape = args[1].asLongArray();
+        if (inputShape.length != 3 && inputShape.length != 4) {
+            throw new ShapeException("adaptive_avg_pool2d input_shape must have three or four entries");
+        }
+        int height = (int) inputShape[inputShape.length - 2];
+        int width = (int) inputShape[inputShape.length - 1];
+        int[] size = ImageOps.adaptiveOutputSize(args[2].asLongArray(), height, width);
+        if (inputShape.length == 4) {
+            Shape expected = Shape.of(inputShape[0], inputShape[1], size[0], size[1]);
+            if (!grad.shape().equals(expected)) {
+                throw new ShapeException("adaptive_avg_pool2d backward grad shape mismatch");
+            }
+        } else {
+            Shape expected = Shape.of(inputShape[0], size[0], size[1]);
+            if (!grad.shape().equals(expected)) {
+                throw new ShapeException("adaptive_avg_pool2d backward grad shape mismatch");
+            }
+        }
+        return meta(Shape.of(inputShape), grad.dtype(), op, args);
+    }
+
+    private static Tensor interpolate(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        ImageOps.validateImageInput(input);
+        int[] size = ImageOps.interpolateSize(args[1].asLongArray(), input);
+        ImageOps.validateMode(args[2].asString(), args[3].asBoolean());
+        return meta(ImageOps.interpolateShape(input, size), input.dtype(), op, args);
+    }
+
+    private static Tensor interpolateBackward(
+            Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        long[] inputShape = args[1].asLongArray();
+        if (inputShape.length != 4) {
+            throw new ShapeException("interpolate input_shape must have four entries");
+        }
+        int[] size = ImageOps.interpolateSize(args[2].asLongArray(), grad);
+        ImageOps.validateMode(args[3].asString(), args[4].asBoolean());
+        Shape expected = Shape.of(inputShape[0], inputShape[1], size[0], size[1]);
+        if (!grad.shape().equals(expected)) {
+            throw new ShapeException("interpolate backward grad shape mismatch");
+        }
+        return meta(Shape.of(inputShape), grad.dtype(), op, args);
+    }
+
+    private static Tensor gelu(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        ImageOps.tanhApproximation(args[1].asString());
+        if (!input.dtype().isFloatingPoint()) {
+            throw new org.jtorch.core.DTypeException("gelu requires a floating point tensor");
+        }
+        return meta(input.shape(), input.dtype(), op, args);
+    }
+
+    private static Tensor geluBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor grad = args[0].asTensor();
+        Tensor input = args[1].asTensor();
+        ImageOps.tanhApproximation(args[2].asString());
+        if (!grad.shape().equals(input.shape())) {
+            throw new ShapeException("gelu backward grad shape mismatch");
+        }
+        return meta(input.shape(), grad.dtype(), op, args);
+    }
+
+    private static Tensor embedding(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor weight = args[0].asTensor();
+        Tensor indices = args[1].asTensor();
+        if (weight.dim() != 2 || !weight.dtype().isFloatingPoint()) {
+            throw new ShapeException("embedding weight must be a floating 2-D tensor");
+        }
+        if (indices.dtype() != org.jtorch.core.DType.INT64
+                && indices.dtype() != org.jtorch.core.DType.INT32) {
+            throw new org.jtorch.core.DTypeException("embedding indices must be int32 or int64");
+        }
+        if (args[4].asBoolean()) {
+            throw new org.jtorch.core.NotSupportedException("sparse embedding gradients are not implemented");
+        }
+        if (!args[2].isNone()) {
+            int padding = args[2].asInt();
+            long normalized = padding < 0 ? padding + weight.size(0) : padding;
+            if (normalized < 0 || normalized >= weight.size(0)) {
+                throw new IndexOutOfBoundsException("embedding padding_idx is out of range");
+            }
+        }
+        long[] shape = new long[indices.dim() + 1];
+        for (int d = 0; d < indices.dim(); d++) {
+            shape[d] = indices.size(d);
+        }
+        shape[indices.dim()] = weight.size(1);
+        return meta(Shape.of(shape), weight.dtype(), op, args);
+    }
+
+    private static Tensor embeddingBackward(
+            Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        long[] weightShape = args[2].asLongArray();
+        if (weightShape.length != 2) {
+            throw new ShapeException("embedding weight_shape must have two entries");
+        }
+        return meta(Shape.of(weightShape), args[0].asTensor().dtype(), op, args);
+    }
+
+    private static Tensor fft(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Tensor input = args[0].asTensor();
+        Fft.Kind kind = Fft.kindFor(op.name());
+        int dim = Fft.resolveDim(input, args[2].asInt());
+        Fft.parseNorm(args[3]);
+        Integer n = args[1].asOptionalInt();
+        long transformN = Fft.resolveN(kind, input, dim, n);
+        Shape shape = Fft.outputShape(kind, input, dim, transformN);
+        return Tensor.wrap(TensorImpl.meta(shape, Fft.outputStrides(shape, dim), Fft.outputDtype(kind, input),
+                outputRequiresGrad(op, args)));
+    }
+
+    private static Tensor fftBackward(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {
+        Shape inputShape = Shape.of(args[1].asLongArray());
+        return meta(inputShape, args[2].asDType(), op, args);
     }
 
     private static Tensor crossEntropy(Op op, Value[] args, org.jtorch.core.dispatch.DispatchKeySet keys) {

@@ -6,6 +6,7 @@ public final class Ops {
     private Ops() {}
 
     public static final String ABS = "aten::abs.default";
+    public static final String ADAPTIVE_AVG_POOL2D = "aten::adaptive_avg_pool2d.default";
     public static final String ADD_TENSOR = "aten::add.Tensor";
     public static final String ADD__TENSOR = "aten::add_.Tensor";
     public static final String ADDMM = "aten::addmm.default";
@@ -28,11 +29,16 @@ public final class Ops {
     public static final String DETACH = "aten::detach.default";
     public static final String DIV_TENSOR = "aten::div.Tensor";
     public static final String DIV__TENSOR = "aten::div_.Tensor";
+    public static final String EMBEDDING = "aten::embedding.default";
     public static final String EMPTY = "aten::empty.default";
     public static final String EQ_TENSOR = "aten::eq.Tensor";
     public static final String EXP = "aten::exp.default";
     public static final String EXPAND = "aten::expand.default";
     public static final String EYE = "aten::eye.default";
+    public static final String FFT_FFT = "aten::fft_fft.default";
+    public static final String FFT_IFFT = "aten::fft_ifft.default";
+    public static final String FFT_IRFFT = "aten::fft_irfft.default";
+    public static final String FFT_RFFT = "aten::fft_rfft.default";
     public static final String FILL__SCALAR = "aten::fill_.Scalar";
     public static final String FLATTEN = "aten::flatten.default";
     public static final String FLIP = "aten::flip.default";
@@ -40,9 +46,11 @@ public final class Ops {
     public static final String FULL = "aten::full.default";
     public static final String GATHER = "aten::gather.default";
     public static final String GE_TENSOR = "aten::ge.Tensor";
+    public static final String GELU = "aten::gelu.default";
     public static final String GROUP_NORM = "aten::group_norm.default";
     public static final String GT_TENSOR = "aten::gt.Tensor";
     public static final String INDEX_SELECT = "aten::index_select.default";
+    public static final String INTERPOLATE = "aten::interpolate.default";
     public static final String LAYER_NORM = "aten::layer_norm.default";
     public static final String LE_TENSOR = "aten::le.Tensor";
     public static final String LINEAR = "aten::linear.default";
@@ -104,12 +112,20 @@ public final class Ops {
     public static final String VIEW = "aten::view.default";
     public static final String ZERO_ = "aten::zero_.default";
     public static final String ZEROS = "aten::zeros.default";
+    public static final String ADAPTIVE_AVG_POOL2D_BACKWARD = "jtorch::adaptive_avg_pool2d_backward.default";
     public static final String AVG_POOL2D_BACKWARD = "jtorch::avg_pool2d_backward.default";
     public static final String CONSTANT_PAD_ND_BACKWARD = "jtorch::constant_pad_nd_backward.default";
     public static final String CONV2D_BACKWARD_INPUT = "jtorch::conv2d_backward_input.default";
     public static final String CONV2D_BACKWARD_WEIGHT = "jtorch::conv2d_backward_weight.default";
+    public static final String EMBEDDING_BACKWARD = "jtorch::embedding_backward.default";
+    public static final String FFT_FFT_BACKWARD = "jtorch::fft_fft_backward.default";
+    public static final String FFT_IFFT_BACKWARD = "jtorch::fft_ifft_backward.default";
+    public static final String FFT_IRFFT_BACKWARD = "jtorch::fft_irfft_backward.default";
+    public static final String FFT_RFFT_BACKWARD = "jtorch::fft_rfft_backward.default";
     public static final String GATHER_BACKWARD = "jtorch::gather_backward.default";
+    public static final String GELU_BACKWARD = "jtorch::gelu_backward.default";
     public static final String INDEX_SELECT_BACKWARD = "jtorch::index_select_backward.default";
+    public static final String INTERPOLATE_BACKWARD = "jtorch::interpolate_backward.default";
     public static final String MAX_POOL2D_BACKWARD = "jtorch::max_pool2d_backward.default";
     public static final String SCATTER_BACKWARD_SELF = "jtorch::scatter_backward_self.default";
     public static final String SCATTER_BACKWARD_SRC = "jtorch::scatter_backward_src.default";

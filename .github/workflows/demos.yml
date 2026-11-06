@@ -40,7 +40,7 @@ jobs:
       - uses: ./.github/actions/setup-jtorch-build
       - name: Package and smoke-test (Unix)
         if: runner.os != 'Windows'
-        run: ./gradlew --no-daemon :demos:tensorlab:demoPackage
+        run: ./gradlew --no-daemon demoPackage
       - name: Package and smoke-test (Windows)
         if: runner.os == 'Windows'
-        run: .\gradlew.bat --no-daemon :demos:tensorlab:demoPackage
+        run: .\gradlew.bat --no-daemon demoPackage

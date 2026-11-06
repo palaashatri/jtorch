@@ -1,0 +1,93 @@
+{
+  "operator": "aten::gelu.default",
+  "torch": "2.11.0",
+  "python": "3.13.9",
+  "nondeterministic": false,
+  "inplace": false,
+  "note": null,
+  "args": [
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        2,
+        4
+      ],
+      "strides": [
+        4,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        -2.0,
+        -1.0,
+        -0.25,
+        0.0,
+        0.25,
+        0.5,
+        1.0,
+        2.0
+      ]
+    },
+    {
+      "kind": "string",
+      "value": "tanh"
+    }
+  ],
+  "outputs": [
+    {
+      "kind": "tensor",
+      "dtype": "float64",
+      "shape": [
+        2,
+        4
+      ],
+      "strides": [
+        4,
+        1
+      ],
+      "storageOffset": 0,
+      "requiresGrad": true,
+      "data": [
+        -0.04540230591222494,
+        -0.1588080093917233,
+        -0.100324649298315,
+        0.0,
+        0.149675350701685,
+        0.34571400982514394,
+        0.8411919906082768,
+        1.954597694087775
+      ]
+    }
+  ],
+  "grads": [
+    {
+      "argIndex": 0,
+      "grad": {
+        "kind": "tensor",
+        "dtype": "float64",
+        "shape": [
+          2,
+          4
+        ],
+        "strides": [
+          4,
+          1
+        ],
+        "storageOffset": 0,
+        "requiresGrad": false,
+        "data": [
+          -0.08609925662361825,
+          -0.08296408384578258,
+          0.30464590484893955,
+          0.5,
+          0.6953540951510604,
+          0.8673699035346424,
+          1.0829640838457826,
+          1.0860992566236183
+        ]
+      }
+    }
+  ]
+}
