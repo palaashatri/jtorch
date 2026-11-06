@@ -1,5 +1,5 @@
 {
-  "torch": "2.11.0+cpu",
+  "torch": "2.11.0",
   "cases": [
     {
       "file": "zeros.default-000.json",

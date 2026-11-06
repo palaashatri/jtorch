@@ -1,7 +1,7 @@
 {
   "operator": "aten::cross_entropy.default",
-  "torch": "2.11.0+cpu",
-  "python": "3.13.17",
+  "torch": "2.11.0",
+  "python": "3.13.9",
   "nondeterministic": false,
   "inplace": false,
   "note": null,
@@ -87,7 +87,7 @@
         "requiresGrad": false,
         "data": [
           -0.25859739398393294,
-          0.20315334586629236,
+          0.2031533458662924,
           0.045329638597835176,
           0.010114409519805408,
           0.017259617099809936,

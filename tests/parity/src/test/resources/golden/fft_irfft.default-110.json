@@ -1,7 +1,7 @@
 {
   "operator": "aten::fft_irfft.default",
-  "torch": "2.11.0+cpu",
-  "python": "3.13.17",
+  "torch": "2.11.0",
+  "python": "3.13.9",
   "nondeterministic": false,
   "inplace": false,
   "note": null,
@@ -59,11 +59,11 @@
       "requiresGrad": true,
       "data": [
         -2.0,
-        2.5358983848622456,
+        2.535898384862245,
         6.535898384862246,
-        6.0,
+        6.000000000000001,
         13.464101615137753,
-        9.464101615137753
+        9.464101615137755
       ]
     }
   ],

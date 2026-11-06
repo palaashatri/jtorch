@@ -1,7 +1,7 @@
 {
   "operator": "aten::fft_rfft.default",
-  "torch": "2.11.0+cpu",
-  "python": "3.13.17",
+  "torch": "2.11.0",
+  "python": "3.13.9",
   "nondeterministic": false,
   "inplace": false,
   "note": null,
@@ -55,12 +55,12 @@
           "imag": 0.0
         },
         {
-          "real": -1.1180339887498945,
+          "real": -1.118033988749895,
           "imag": 1.5388417685876266
         },
         {
-          "real": -1.1180339887498945,
-          "imag": 0.36327126400268056
+          "real": -1.118033988749895,
+          "imag": 0.36327126400268045
         }
       ]
     }

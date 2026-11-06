@@ -1,7 +1,7 @@
 {
   "operator": "aten::scatter.default",
-  "torch": "2.11.0+cpu",
-  "python": "3.13.17",
+  "torch": "2.11.0",
+  "python": "3.13.9",
   "nondeterministic": false,
   "inplace": false,
   "note": null,
