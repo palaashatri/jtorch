@@ -43,10 +43,10 @@ class FftTest {
     }
 
     @Test
-    void fftPreservesPyTorchPermutedStrides() {
+    void fftReturnsContiguousOutput() {
         Tensor output = Torch.tensor(new double[] {1, 2, 3, 4, 5, 6}, Shape.of(2, 3)).fft(null, 0, "ortho");
         assertEquals(Shape.of(2, 3), output.shape());
-        assertArrayEquals(new long[] {1, 2}, output.strides().toArray());
+        assertArrayEquals(new long[] {3, 1}, output.strides().toArray());
         Tensor last = Torch.tensor(new double[] {1, 2, 3, 4, 5, 6}, Shape.of(2, 3)).fft(null, -1, null);
         assertArrayEquals(new long[] {3, 1}, last.strides().toArray());
     }

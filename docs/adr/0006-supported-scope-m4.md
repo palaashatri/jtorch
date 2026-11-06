@@ -28,7 +28,7 @@ Implemented and oracle-tested (PyTorch 2.11.0):
 - `complex64`/`complex128` dtypes (interleaved real/imag) with promotion `bool < int < float < complex`,
   complex `requiresGrad`, checkpoint codec support, and explicit rejection of complex in real-only kernels.
 - 1D FFT foundations: `aten::fft_fft`, `aten::fft_ifft`, `aten::fft_rfft`, `aten::fft_irfft` with `n`
-  padding/trimming, arbitrary `dim`, `backward`/`ortho`/`forward` norms, PyTorch permuted output strides,
+  padding/trimming, arbitrary `dim`, `backward`/`ortho`/`forward` norms, contiguous output strides,
   and reverse-mode adjoints via internal `fft_*_backward` helpers. 2D/nD FFT (`fft2`/`fftn` and shift
   variants) is not implemented.
 - ONNX import foundations in `interop/jtorch-onnx` (opset 13–23, no third-party runtime deps, hand-written
